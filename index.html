@@ -27,9 +27,7 @@
             flex-shrink: 0;
         }
 
-        #sidebar.collapsed {
-            margin-left: -440px;
-        }
+        #sidebar.collapsed { margin-left: -440px; }
 
         /* 浮動收折按鈕 */
         #toggle-sidebar-btn {
@@ -56,7 +54,7 @@
         #toggle-sidebar-btn:hover { background: #2b6cb0; }
         #toggle-sidebar-btn.collapsed { left: 10px; }
 
-        #map { flex: 1; height: 100%; position: relative; }
+        #map { flex: 1; height: 100%; position: relative; background: #262626; }
         h2 { font-size: 18px; color: #1a365d; border-bottom: 2px solid #3182ce; padding-bottom: 6px; }
 
         .area-card { background: #f8fafc; border: 1px solid #cbd5e0; border-radius: 8px; padding: 12px; margin-bottom: 8px; position: relative; }
@@ -108,6 +106,9 @@
         .btn-clear { background: #e2e8f0; color: #4a5568; flex: 1; padding: 10px; }
         .btn-clear:hover { background: #cbd5e0; color: #2d3748; }
 
+        .btn-resort { background: #dd6b20; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 6px; }
+        .btn-resort:hover { background: #c05621; }
+
         .parse-status { margin-top: 8px; padding: 6px 8px; border-radius: 4px; font-size: 12px; line-height: 1.5; }
         .parse-status.ok { background: #f0fff4; border: 1px solid #9ae6b4; color: #22543d; }
         .parse-status.warn { background: #fffaf0; border: 1px solid #fbd38d; color: #7b341e; }
@@ -129,17 +130,49 @@
 
         .formatted-text-single { background: #f7fafc; border: 1px solid #e2e8f0; padding: 8px; border-radius: 4px; white-space: pre-wrap; font-family: "Microsoft JhengHei", monospace; color: #1a202c; line-height: 1.5; font-size: 12px; max-height: 200px; overflow-y: auto; }
 
+        /* 優化海浬標籤樣式，啟用拖拽與選取互動 */
         .dist-label {
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.85);
             color: #ffff00;
             font-weight: bold;
-            font-size: 13px;
+            font-size: 12px;
             padding: 2px 6px;
-            border-radius: 3px;
-            border: none;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 0, 0.5);
             white-space: nowrap;
             text-align: center;
-            box-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            pointer-events: auto;
+            cursor: move;
+            user-select: none;
+            transition: all 0.2s;
+        }
+
+        .dist-label.selected {
+            background: rgba(255, 255, 0, 0.9);
+            color: #000000;
+            border: 2px solid #e53e3e;
+            box-shadow: 0 0 8px rgba(255,0,0,0.8);
+        }
+
+        /* 標籤彈出選單刪除按鈕樣式 */
+        .leaflet-popup-content-wrapper {
+            padding: 4px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .btn-label-del {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .btn-label-del:hover {
+            background: #c53030;
         }
     </style>
 </head>
@@ -197,14 +230,105 @@
         attribution: '&copy; Google Maps'
     }).addTo(map);
 
+    // ResizeObserver 動態監聽地圖容器尺寸改變
+    const mapContainer = document.getElementById('map');
+    const resizeObserver = new ResizeObserver(() => {
+        map.invalidateSize();
+    });
+    resizeObserver.observe(mapContainer);
+
     let cardCount = 0;
-    let areaMapObjects = {}; // 儲存各區域對應的圖層與標籤
+    let areaMapObjects = {}; 
     let allParsedAreas = []; 
     let showLabels = true;
+    let cardParsedResults = {}; 
+    let selectedLabelMarker = null;
 
     window.onload = function() {
         addAreaCard();
+        setTimeout(() => { map.invalidateSize(); }, 200);
     };
+
+    // 鍵盤按下 Delete 或 Backspace 刪除選取的標籤
+    document.addEventListener('keydown', function(e) {
+        if ((e.key === 'Delete' || e.key === 'Backspace') && selectedLabelMarker) {
+            deleteSelectedLabel();
+        }
+    });
+
+    // 點擊地圖空白處取消標籤選取
+    map.on('click', function(e) {
+        if (selectedLabelMarker) {
+            deselectCurrentLabel();
+        }
+    });
+
+    function selectLabelMarker(marker) {
+        if (selectedLabelMarker && selectedLabelMarker !== marker) {
+            deselectCurrentLabel();
+        }
+        selectedLabelMarker = marker;
+        const el = marker.getElement();
+        if (el) {
+            const labelDiv = el.querySelector('.dist-label') || el;
+            labelDiv.classList.add('selected');
+        }
+    }
+
+    function deselectCurrentLabel() {
+        if (selectedLabelMarker) {
+            const el = selectedLabelMarker.getElement();
+            if (el) {
+                const labelDiv = el.querySelector('.dist-label') || el;
+                labelDiv.classList.remove('selected');
+            }
+            selectedLabelMarker = null;
+        }
+    }
+
+    function deleteSelectedLabel() {
+        if (!selectedLabelMarker) return;
+        
+        // 從 areaMapObjects 移除紀錄
+        Object.keys(areaMapObjects).forEach(cardId => {
+            const obj = areaMapObjects[cardId];
+            const idx = obj.labels.indexOf(selectedLabelMarker);
+            if (idx !== -1) {
+                obj.labels.splice(idx, 1);
+            }
+        });
+
+        map.removeLayer(selectedLabelMarker);
+        selectedLabelMarker = null;
+    }
+
+    function createLabelMarker(lat, lon, htmlText, iconSize, iconAnchor) {
+        const labelIcon = L.divIcon({
+            className: 'dist-label',
+            html: htmlText,
+            iconSize: iconSize,
+            iconAnchor: iconAnchor
+        });
+
+        const marker = L.marker([lat, lon], { 
+            icon: labelIcon,
+            draggable: true 
+        });
+
+        // 綁定點擊彈出刪除按鈕與高亮
+        marker.bindPopup('<button class="btn-label-del" onclick="deleteSelectedLabel()">🗑️ 刪除標籤</button>', {
+            offset: [0, -10],
+            closeButton: false
+        });
+
+        marker.on('click', function(e) {
+            L.DomEvent.stopPropagation(e);
+            selectLabelMarker(marker);
+            marker.openPopup();
+        });
+
+        return marker;
+    }
 
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
@@ -212,6 +336,7 @@
         sidebar.classList.toggle('collapsed');
         btn.classList.toggle('collapsed');
         btn.innerText = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+        
         setTimeout(() => { map.invalidateSize(); }, 300);
     }
 
@@ -238,7 +363,7 @@
                         ${cardCount > 1 ? `<button class="btn-del" onclick="removeAreaCard('${cardId}')">刪除</button>` : ''}
                     </div>
                 </div>
-                <textarea class="area-input" placeholder="請貼入航警原始文字..."></textarea>
+                <textarea class="area-input" placeholder="請貼入航警或 FAA / ICAO NOTAM 原始文字..."></textarea>
                 <div class="parse-status" id="status-${cardId}" style="display:none;"></div>
             </div>
         `;
@@ -252,6 +377,7 @@
             removeAreaFromMap(cardId);
             delete areaMapObjects[cardId];
         }
+        delete cardParsedResults[cardId];
     }
 
     function toggleAreaVisibility(cardId) {
@@ -295,6 +421,56 @@
         return (R * c * 0.539957).toFixed(0);
     }
 
+    function destinationPoint(lat, lon, distanceNM, bearingDeg) {
+        const R = 6371;
+        const d = (distanceNM * 1.852) / R;
+        const brng = bearingDeg * Math.PI / 180;
+        const lat1 = lat * Math.PI / 180;
+        const lon1 = lon * Math.PI / 180;
+
+        const lat2 = Math.asin(Math.sin(lat1) * Math.cos(d) + Math.cos(lat1) * Math.sin(d) * Math.cos(brng));
+        const lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(d) * Math.cos(lat1), Math.cos(d) - Math.sin(lat1) * Math.sin(lat2));
+
+        return {
+            lat: lat2 * 180 / Math.PI,
+            lon: lon2 * 180 / Math.PI
+        };
+    }
+
+    function calculateBearing(lat1, lon1, lat2, lon2) {
+        const φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180;
+        const Δλ = (lon2 - lon1) * Math.PI / 180;
+        const y = Math.sin(Δλ) * Math.cos(φ2);
+        const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+        const θ = Math.atan2(y, x);
+        return (θ * 180 / Math.PI + 360) % 360;
+    }
+
+    function parseDirectionToBearing(text) {
+        if (!text) return 0;
+        text = text.trim();
+        const baseMap = {
+            '正東': 90, '正南': 180, '正西': 270, '正北': 0,
+            '東': 90, '南': 180, '西': 270, '北': 0,
+            '東北': 45, '東南': 135, '西南': 225, '西北': 315
+        };
+
+        const offsetMatch = text.match(/(正東|正南|正西|正北|東|南|西|北)(?:偏|向)(東|南|西|北)\s*(\d+(?:\.\d+)?)/);
+        if (offsetMatch) {
+            const baseDir = offsetMatch[1];
+            const turnDir = offsetMatch[2];
+            const deg = parseFloat(offsetMatch[3]);
+            let baseAngle = baseMap[baseDir] !== undefined ? baseMap[baseDir] : 0;
+            if (turnDir === '東' || turnDir === 'E') return (baseAngle + deg) % 360;
+            if (turnDir === '西' || turnDir === 'W') return (baseAngle - deg + 360) % 360;
+            if (turnDir === '南' || turnDir === 'S') return (baseAngle + deg) % 360;
+            if (turnDir === '北' || turnDir === 'N') return (baseAngle - deg + 360) % 360;
+        }
+
+        if (baseMap[text] !== undefined) return baseMap[text];
+        return 0;
+    }
+
     function normalizeChineseCoordText(text) {
         return text
             .replace(/北緯|北纬/g, ' N')
@@ -315,6 +491,11 @@
         }
 
         str = str.replace(/[°'"]\s*/g, ' ').replace(/[-–]/g, ' ').trim();
+        
+        if ((str.match(/\./g) || []).length > 1) {
+            str = str.replace(/\./g, ' ');
+        }
+
         const parts = str.split(/\s+/).map(Number).filter(n => !isNaN(n));
 
         let val = 0;
@@ -386,9 +567,96 @@
         });
     }
 
+    function checkSegmentsIntersect(p1, p2, p3, p4) {
+        function ccw(a, b, c) {
+            return (c.lat - a.lat) * (b.lon - a.lon) > (b.lat - a.lat) * (c.lon - a.lon);
+        }
+        if ((p1.lat === p3.lat && p1.lon === p3.lon) || (p1.lat === p4.lat && p1.lon === p4.lon) ||
+            (p2.lat === p3.lat && p2.lon === p3.lon) || (p2.lat === p4.lat && p4.lon === p4.lon)) {
+            return false;
+        }
+        return (ccw(p1, p3, p4) !== ccw(p2, p3, p4)) && (ccw(p1, p2, p3) !== ccw(p1, p2, p4));
+    }
+
+    function checkSelfIntersection(points) {
+        if (points.length < 4) return false;
+        const n = points.length;
+        for (let i = 0; i < n; i++) {
+            const p1 = points[i];
+            const p2 = points[(i + 1) % n];
+            for (let j = i + 1; j < n; j++) {
+                if (Math.abs(i - j) <= 1 || Math.abs(i - j) === n - 1) continue;
+                const p3 = points[j];
+                const p4 = points[(j + 1) % n];
+                if (checkSegmentsIntersect(p1, p2, p3, p4)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     function parseCoordinates(text) {
         let cleanText = normalizeChineseCoordText(text);
         cleanText = cleanText.replace(/、/g, ' ').replace(/，/g, ' ').replace(/\\/g, ' ').replace(/\//g, ' ');
+
+        const isSectorText = text.includes("扇形") || text.includes("圓心角") || text.includes("扇形區域");
+        if (isSectorText) {
+            const parsedObj = parsePointsFromText(cleanText);
+            const rawPoints = parsedObj.points;
+
+            if (rawPoints.length >= 1) {
+                const centerPoint = rawPoints[0];
+                let startBearing = 0;
+                let endBearing = 0;
+                let radiusNM = 0;
+
+                const dirMatch = text.match(/(正[東西南北](?:偏[東西南北]\s*\d+°?)?|[東西南北]偏[東西南北]\s*\d+°?)\s*(?:方向)?\s*至\s*(正[東西南北](?:偏[東西南北]\s*\d+°?)?|[東西南北]偏[東西南北]\s*\d+°?)/);
+                if (dirMatch) {
+                    startBearing = parseDirectionToBearing(dirMatch[1]);
+                    endBearing = parseDirectionToBearing(dirMatch[2]);
+                }
+
+                if (rawPoints.length >= 2) {
+                    radiusNM = parseFloat(calculateDistanceNM(centerPoint.lat, centerPoint.lon, rawPoints[1].lat, rawPoints[1].lon));
+                } else {
+                    const rMatch = text.match(/([\d\.]+)\s*(?:海里|海浬|nm|NM)/i);
+                    if (rMatch) radiusNM = parseFloat(rMatch[1]);
+                }
+
+                if (rawPoints.length >= 3 && startBearing === endBearing) {
+                    startBearing = calculateBearing(centerPoint.lat, centerPoint.lon, rawPoints[1].lat, rawPoints[1].lon);
+                    endBearing = calculateBearing(centerPoint.lat, centerPoint.lon, rawPoints[2].lat, rawPoints[2].lon);
+                }
+
+                const sectorPoints = [];
+                sectorPoints.push(centerPoint);
+
+                let diff = endBearing - startBearing;
+                if (diff < 0) diff += 360;
+
+                const step = 2;
+                const count = Math.floor(diff / step);
+
+                for (let i = 0; i <= count; i++) {
+                    let b = (startBearing + i * step) % 360;
+                    sectorPoints.push(destinationPoint(centerPoint.lat, centerPoint.lon, radiusNM, b));
+                }
+                sectorPoints.push(destinationPoint(centerPoint.lat, centerPoint.lon, radiusNM, endBearing));
+
+                return {
+                    type: 'sector',
+                    points: sectorPoints,
+                    center: centerPoint,
+                    radiusNM: radiusNM,
+                    startBearing: startBearing,
+                    endBearing: endBearing,
+                    rawPoints: rawPoints,
+                    invalidCount: parsedObj.invalidCount,
+                    hasSelfIntersection: false
+                };
+            }
+        }
 
         const circleRadiusMatch = text.match(/([\d\.]+)\s*(?:海里|海浬|nm|NM)\s*(?:為|为)?\s*半(?:徑|径)/i) || 
                                   text.match(/半(?:徑|径)\s*(?:為|为)?\s*([\d\.]+)\s*(?:海里|海浬|nm|NM)/i);
@@ -401,114 +669,187 @@
                     type: 'circle',
                     points: [coords.points[0]],
                     radiusNM: radiusNM,
-                    invalidCount: coords.invalidCount
+                    invalidCount: coords.invalidCount,
+                    hasSelfIntersection: false
                 };
             }
         }
 
         const polygonResult = parsePointsFromText(cleanText);
-        const sortedPoints = sortPolygonPointsClockwise(polygonResult.points);
+        const originalPoints = polygonResult.points;
+        const hasSelfIntersection = checkSelfIntersection(originalPoints);
 
         return {
             type: 'polygon',
-            points: sortedPoints,
+            points: originalPoints,
             radiusNM: 0,
-            invalidCount: polygonResult.invalidCount
+            invalidCount: polygonResult.invalidCount,
+            hasSelfIntersection: hasSelfIntersection
         };
     }
 
+    // 去重輔助函式：判斷經緯度是否近乎相同
+    function isSamePoint(pt1, pt2) {
+        return Math.abs(pt1.lat - pt2.lat) < 0.00001 && Math.abs(pt1.lon - pt2.lon) < 0.00001;
+    }
+
     function parsePointsFromText(cleanText) {
-        const coords = [];
+        let rawCoords = [];
         let invalidCount = 0;
 
         const pushIfValid = (lat, lon) => {
             if (lat === null || lon === null || isNaN(lat) || isNaN(lon)) return;
             if (Math.abs(lat) > 90 || Math.abs(lon) > 180) { invalidCount++; return; }
-            coords.push({ lat, lon });
+            rawCoords.push({ lat, lon });
         };
 
-        const suffixRegex = /([\d°'\"\.\-\s]+[NSns])\s*[,;、\s]*\s*([\d°'\"\.\-\s]+[EWew])/g;
-        let match;
-        while ((match = suffixRegex.exec(cleanText)) !== null) {
-            pushIfValid(parseSingleCoordinate(match[1], false), parseSingleCoordinate(match[2], true));
+        // 支援 FAA / ICAO DMS 座標模式
+        const faaDmsRegex = /\b(\d{4,6})\s*([NS])\s*(\d{5,7})\s*([EW])\b/gi;
+        let faaMatch;
+        let foundFaa = false;
+        while ((faaMatch = faaDmsRegex.exec(cleanText)) !== null) {
+            foundFaa = true;
+            const latVal = parseSingleCoordinate(faaMatch[1] + faaMatch[2], false);
+            const lonVal = parseSingleCoordinate(faaMatch[3] + faaMatch[4], true);
+            pushIfValid(latVal, lonVal);
         }
 
-        if (coords.length === 0) {
-            const prefixRegex = /([NSns][\d°'\"\.\-\s]+)\s*[,;、\s]*\s*([EWew][\d°'\"\.\-\s]+)/g;
-            while ((match = prefixRegex.exec(cleanText)) !== null) {
+        if (!foundFaa || rawCoords.length === 0) {
+            const suffixRegex1 = /([\d°'\"\.\-\s]+[NSns])\s*[,;、\s]*\s*([\d°'\"\.\-\s]+[EWew])/g;
+            let match;
+            while ((match = suffixRegex1.exec(cleanText)) !== null) {
                 pushIfValid(parseSingleCoordinate(match[1], false), parseSingleCoordinate(match[2], true));
             }
-        }
 
-        if (coords.length === 0) {
-            const decimalRegex = /(-?\d+\.\d+)\s*[,;\s]+\s*(-?\d+\.\d+)/g;
-            while ((match = decimalRegex.exec(cleanText)) !== null) {
-                pushIfValid(parseFloat(match[1]), parseFloat(match[2]));
+            if (rawCoords.length === 0) {
+                const suffixRegex2 = /([\d°'\"\.\-\s]+[EWew])\s*[,;、\s]*\s*([\d°'\"\.\-\s]+[NSns])/g;
+                while ((match = suffixRegex2.exec(cleanText)) !== null) {
+                    pushIfValid(parseSingleCoordinate(match[2], false), parseSingleCoordinate(match[1], true));
+                }
+            }
+
+            if (rawCoords.length === 0) {
+                const prefixRegex = /([NSns][\d°'\"\.\-\s]+)\s*[,;、\s]*\s*([EWew][\d°'\"\.\-\s]+)/g;
+                while ((match = prefixRegex.exec(cleanText)) !== null) {
+                    pushIfValid(parseSingleCoordinate(match[1], false), parseSingleCoordinate(match[2], true));
+                }
+            }
+
+            if (rawCoords.length === 0) {
+                const decimalRegex = /(-?\d+\.\d+)\s*[,;\s]+\s*(-?\d+\.\d+)/g;
+                while ((match = decimalRegex.exec(cleanText)) !== null) {
+                    pushIfValid(parseFloat(match[1]), parseFloat(match[2]));
+                }
             }
         }
 
-        return { points: coords, invalidCount };
+        // 執行點位去重 (排除連續相同點或末尾與首點重複的情況)
+        const uniqueCoords = [];
+        for (let i = 0; i < rawCoords.length; i++) {
+            const current = rawCoords[i];
+            const prev = uniqueCoords[uniqueCoords.length - 1];
+            if (!prev || !isSamePoint(current, prev)) {
+                uniqueCoords.push(current);
+            }
+        }
+
+        // 如果點數大於等於 3，且最後一點與第一點相同（常見的封閉多邊形標註），排除該重複末點
+        if (uniqueCoords.length >= 3 && isSamePoint(uniqueCoords[0], uniqueCoords[uniqueCoords.length - 1])) {
+            uniqueCoords.pop();
+        }
+
+        return { points: uniqueCoords, invalidCount };
     }
 
-    /* 全面強化版時間與元資料解析引擎 */
+    // 時區加 8 小時轉換輔助函式
+    function parseAndAdd8Hours(yearStr, monthStr, dayStr, hourStr, minStr = "00") {
+        let yr = parseInt(yearStr, 10);
+        if (yr < 100) yr += 2000;
+        let mo = parseInt(monthStr, 10) - 1;
+        let dy = parseInt(dayStr, 10);
+        let hr = parseInt(hourStr, 10);
+        let mn = parseInt(minStr, 10);
+
+        let dt = new Date(Date.UTC(yr, mo, dy, hr, mn));
+        dt.setUTCHours(dt.getUTCHours() + 8);
+
+        return {
+            month: dt.getUTCMonth() + 1,
+            day: dt.getUTCDate(),
+            hour: String(dt.getUTCHours()).padStart(2, '0') + String(dt.getUTCMinutes()).padStart(2, '0')
+        };
+    }
+
     function extractMetadata(rawText) {
         let title = "航警";
         let location = "海域";
         let timeRange = "X月X日XXXX時至X月X日XXXX時";
         let purpose = "軍事演習";
 
-        // 1. 標題 (如：瓊航警160/26)
+        // FAA / ICAO NOTAM 編號與 Facility 判斷
+        const notamMatch = rawText.match(/([A-Z]\d{4}\/\d{2}|\b[A-Z]\d{4}\b|\b\d{4}\/\d{2}\b)/i);
+        const facilityMatch = rawText.match(/\b([A-Z]{4})\b/);
+        
         const titleMatch = rawText.match(/([\u4e00-\u9fa5]{1,2}航警\s*[\d\/]+)/);
-        if (titleMatch) title = titleMatch[1].replace(/\s+/g, '');
-
-        // 2. 海域
-        const locMatch = rawText.match(/(南海|東海|黃海|渤海|北部灣|台灣海峽|臺灣海峽|珠江口|北部湾)/);
-        if (locMatch) {
-            location = locMatch[1].replace('北部湾', '北部灣').replace('臺灣海峽', '台灣海峽');
-        }
-
-        // 3. 全面優化時間提取邏輯
-        // 模式 A：每日循環模式 (如：自8月12日至8月18日，每日0900时至1800时)
-        const patternDaily = /(?:自)?\s*(\d{1,2}月\d{1,2}日)\s*(?:至|-|~|—)\s*(\d{1,2}月\d{1,2}日)\s*[,，、\s]*\s*(?:每日|每天)\s*(\d{4})\s*(?:[時时])?\s*(?:至|-|~|—)\s*(\d{4})\s*[時时]?/;
-        
-        // 模式 B：跨日連續模式 (如：自8月12日0900时至8月18日1800时)
-        const patternFull = /(?:自)?\s*(\d{1,2}月\d{1,2}日)\s*(\d{4})\s*(?:[時时])?\s*(?:至|-|~|—)\s*(\d{1,2}月\d{1,2}日)\s*(\d{4})\s*[時时]?/;
-        
-        // 模式 C：單日模式 (如：自8月12日0900时至1800时)
-        const patternSingle = /(?:自)?\s*(\d{1,2}月\d{1,2}日)\s*(\d{4})\s*(?:[時时])?\s*(?:至|-|~|—)\s*(\d{4})\s*[時时]?/;
-
-        const mDaily = rawText.match(patternDaily);
-        const mFull = rawText.match(patternFull);
-        const mSingle = rawText.match(patternSingle);
-
-        if (mDaily) {
-            timeRange = `${mDaily[1]}至${mDaily[2]}，每日${mDaily[3]}時至${mDaily[4]}時`;
-        } else if (mFull) {
-            timeRange = `${mFull[1]}${mFull[2]}時至${mFull[3]}${mFull[4]}時`;
-        } else if (mSingle) {
-            timeRange = `${mSingle[1]}${mSingle[2]}時至${mSingle[3]}時`;
-        } else {
-            // 備用匹配：若上述正則均未命中，提取所有出現的月日與 4 位數時間
-            const dates = rawText.match(/\d{1,2}月\d{1,2}日/g);
-            const times = rawText.match(/\b\d{4}\b/g);
-            const hasDaily = /每日|每天/.test(rawText);
-
-            if (dates && dates.length >= 2 && times && times.length >= 2) {
-                if (hasDaily) {
-                    timeRange = `${dates[0]}至${dates[1]}，每日${times[0]}時至${times[1]}時`;
-                } else {
-                    timeRange = `${dates[0]}${times[0]}時至${dates[1]}${times[1]}時`;
-                }
-            } else if (dates && dates.length >= 1 && times && times.length >= 2) {
-                timeRange = `${dates[0]}${times[0]}時至${times[1]}時`;
+        if (titleMatch) {
+            title = titleMatch[1].replace(/\s+/g, '');
+        } else if (notamMatch) {
+            let facility = facilityMatch ? facilityMatch[1] : '';
+            if (rawText.includes("FAA") || rawText.includes("NOTAM")) {
+                title = `美國聯邦航空總署${notamMatch[1]}${facility ? '/' + facility : ''}`;
+            } else {
+                title = `國際民航組織${notamMatch[1]}${facility ? '/' + facility : ''}`;
             }
         }
 
-        // 4. 性質/目的
-        if (rawText.includes("火箭發射") || rawText.includes("火箭发射")) purpose = "火箭發射";
+        const locMatch = rawText.match(/(南海|東海|黃海|渤海|北部灣|台灣海峽|臺灣海峽|珠江口|北部湾)/);
+        if (locMatch) {
+            location = locMatch[1].replace('北部湾', '北部灣').replace('臺灣海峽', '台灣海峽');
+        } else {
+            location = "空域";
+        }
+
+        // ICAO / FAA NOTAM UTC 時間格式自動換算 (+8h)
+        const icaoB = rawText.match(/B\)\s*(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/);
+        const icaoC = rawText.match(/C\)\s*(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/);
+
+        if (icaoB && icaoC) {
+            let tStart = parseAndAdd8Hours(icaoB[1], icaoB[2], icaoB[3], icaoB[4], icaoB[5]);
+            let tEnd = parseAndAdd8Hours(icaoC[1], icaoC[2], icaoC[3], icaoC[4], icaoC[5]);
+            timeRange = `${tStart.month}月${tStart.day}日${tStart.hour}時至${tEnd.month}月${tEnd.day}日${tEnd.hour}時`;
+        } else {
+            const patternDaily = /(?:自)?\s*(\d{1,2}月\d{1,2}日)\s*(?:至|-|~|—)\s*(\d{1,2}月\d{1,2}日)\s*[,，、\s]*\s*(?:每日|每天)\s*(\d{4})\s*(?:[時时])?\s*(?:至|-|~|—)\s*(\d{4})\s*[時时]?/;
+            const patternFull = /(?:自)?\s*(\d{1,2}月\d{1,2}日)\s*(\d{4})\s*(?:[時时])?\s*(?:至|-|~|—)\s*(\d{1,2}月\d{1,2}日)\s*(\d{4})\s*[時时]?/;
+            const patternSingle = /(?:自)?\s*(\d{1,2}月\d{1,2}日)\s*(\d{4})\s*(?:[時时])?\s*(?:至|-|~|—)\s*(\d{4})\s*[時时]?/;
+
+            const mDaily = rawText.match(patternDaily);
+            const mFull = rawText.match(patternFull);
+            const mSingle = rawText.match(patternSingle);
+
+            if (mDaily) {
+                timeRange = `${mDaily[1]}至${mDaily[2]}，每日${mDaily[3]}時至${mDaily[4]}時`;
+            } else if (mFull) {
+                timeRange = `${mFull[1]}${mFull[2]}時至${mFull[3]}${mFull[4]}時`;
+            } else if (mSingle) {
+                timeRange = `${mSingle[1]}${mSingle[2]}時至${mSingle[3]}時`;
+            } else {
+                const dates = rawText.match(/\d{1,2}月\d{1,2}日/g);
+                const times = rawText.match(/\b\d{4}\b/g);
+                const hasDaily = /每日|每天/.test(rawText);
+
+                if (dates && dates.length >= 2 && times && times.length >= 2) {
+                    timeRange = hasDaily ? `${dates[0]}至${dates[1]}，每日${times[0]}時至${times[1]}時` : `${dates[0]}${times[0]}時至${dates[1]}${times[1]}時`;
+                } else if (dates && dates.length >= 1 && times && times.length >= 2) {
+                    timeRange = `${dates[0]}${times[0]}時至${times[1]}時`;
+                }
+            }
+        }
+
+        if (rawText.includes("航天發射") || rawText.includes("航天发射") || rawText.includes("SPACE LAUNCH") || rawText.includes("ROCKET")) purpose = "航天發射任務";
+        else if (rawText.includes("火箭發射") || rawText.includes("火箭发射")) purpose = "火箭發射";
         else if (rawText.includes("實彈") || rawText.includes("实弹")) purpose = "實彈射擊";
         else if (rawText.includes("軍事訓練") || rawText.includes("军事训练")) purpose = "軍事訓練";
-        else if (rawText.includes("軍事演習") || rawText.includes("军事演习")) purpose = "軍事演習";
+        else if (rawText.includes("軍事演習") || rawText.includes("军事演习") || rawText.includes("EXERCISE")) purpose = "軍事演習";
         else if (rawText.includes("軍事任務") || rawText.includes("军事任务")) purpose = "軍事任務";
 
         return { title, location, timeRange, purpose };
@@ -516,61 +857,72 @@
 
     function buildFormattedText(area) {
         const meta = area.meta;
-        // 避免出現 "自自..." 重複詞
         const timePrefix = meta.timeRange.startsWith('自') ? '' : '自';
 
         if (area.type === 'circle') {
             const formatted = formatCoordString(area.points[0].lat, area.points[0].lon);
-            return `${meta.title}，${meta.location}，${timePrefix}${meta.timeRange}，在以${formatted.latStr} ${formatted.lonStr}為中心，${area.radiusNM}海里為半徑的圓形區域內進行${meta.purpose}，禁止駛入。\n(初判： )`;
+            return `${meta.title}，${meta.location}，${timePrefix}${meta.timeRange}，在以${formatted.latStr} ${formatted.lonStr}為中心，${area.radiusNM}海里為半徑的圓形區域內進行${meta.purpose}，禁止駛入。\n(初判：${meta.purpose} )`;
+        } else if (area.type === 'sector') {
+            const formatted = formatCoordString(area.center.lat, area.center.lon);
+            return `${meta.title}，${meta.location}，${timePrefix}${meta.timeRange}，在以${formatted.latStr} ${formatted.lonStr}為圓心，半徑${area.radiusNM}海里的扇形區域內進行${meta.purpose}，禁止駛入。\n(初判：${meta.purpose} )`;
         } else {
             let coordLines = "";
             area.points.forEach((p, idx) => {
                 const formatted = formatCoordString(p.lat, p.lon);
                 coordLines += `(${idx + 1}) ${formatted.latStr} ${formatted.lonStr}\n`;
             });
-            return `${meta.title}，${meta.location}，${timePrefix}${meta.timeRange}，在\n${coordLines}諸點連線範圍內進行${meta.purpose}，禁止駛入。\n(初判： )`;
+            return `${meta.title}，${meta.location}，${timePrefix}${meta.timeRange}，在\n${coordLines}諸點連線範圍進行空域管制，禁止駛入。\n(初判：${meta.purpose} )`;
         }
     }
 
-    function computePolygonCentroid(points) {
-        let area = 0, cx = 0, cy = 0;
-        const n = points.length;
-        for (let i = 0; i < n; i++) {
-            const p1 = points[i];
-            const p2 = points[(i + 1) % n];
-            const cross = p1.lon * p2.lat - p2.lon * p1.lat;
-            area += cross;
-            cx += (p1.lon + p2.lon) * cross;
-            cy += (p1.lat + p2.lat) * cross;
-        }
-        area = area / 2;
-        if (Math.abs(area) < 1e-9) {
-            let latSum = 0, lonSum = 0;
-            points.forEach(p => { latSum += p.lat; lonSum += p.lon; });
-            return { lat: latSum / n, lon: lonSum / n };
-        }
-        cx = cx / (6 * area);
-        cy = cy / (6 * area);
-        return { lat: cy, lon: cx };
-    }
-
-    function computeBoundingExtent(points) {
+    function computeBoundingBoxCenter(points) {
         let minLat = 90, maxLat = -90, minLon = 180, maxLon = -180;
         points.forEach(p => {
-            minLat = Math.min(minLat, p.lat); maxLat = Math.max(maxLat, p.lat);
-            minLon = Math.min(minLon, p.lon); maxLon = Math.max(maxLon, p.lon);
+            minLat = Math.min(minLat, p.lat);
+            maxLat = Math.max(maxLat, p.lat);
+            minLon = Math.min(minLon, p.lon);
+            maxLon = Math.max(maxLon, p.lon);
         });
-        return Math.max(maxLat - minLat, maxLon - minLon);
+        return {
+            lat: (minLat + maxLat) / 2,
+            lon: (minLon + maxLon) / 2
+        };
     }
 
-    function computeEdgeLabelPosition(p1, p2, centroid, offsetDeg) {
+    function computeEdgeLabelPosition(p1, p2, center) {
         const midLat = (p1.lat + p2.lat) / 2;
         const midLon = (p1.lon + p2.lon) / 2;
-        let dirLat = midLat - centroid.lat;
-        let dirLon = midLon - centroid.lon;
-        const dirLen = Math.sqrt(dirLat * dirLat + dirLon * dirLon) || 1;
-        dirLat /= dirLen; dirLon /= dirLen;
-        return { lat: midLat + dirLat * offsetDeg, lon: midLon + dirLon * offsetDeg };
+        
+        const dx = p2.lon - p1.lon;
+        const dy = p2.lat - p1.lat;
+        const len = Math.sqrt(dx * dx + dy * dy) || 1;
+        
+        let nx = -dy / len;
+        let ny = dx / len;
+        
+        const toCenterX = center.lon - midLon;
+        const toCenterY = center.lat - midLat;
+        if (nx * toCenterX + ny * toCenterY > 0) {
+            nx = -nx;
+            ny = -ny;
+        }
+
+        const offset = Math.min(Math.max(len * 0.15, 0.012), 0.035);
+
+        return {
+            lat: midLat + ny * offset,
+            lon: midLon + nx * offset
+        };
+    }
+
+    function resortAreaPoints(cardId) {
+        if (!cardParsedResults[cardId]) return;
+        const res = cardParsedResults[cardId];
+        if (res.type === 'polygon' && res.points.length >= 3) {
+            res.points = sortPolygonPointsClockwise(res.points);
+            res.hasSelfIntersection = checkSelfIntersection(res.points);
+            processAllData();
+        }
     }
 
     function renderParseStatus(cardId, result, rawText) {
@@ -591,6 +943,13 @@
             return;
         }
 
+        if (result.type === 'sector') {
+            const f = formatCoordString(result.center.lat, result.center.lon);
+            statusEl.className = 'parse-status ok';
+            statusEl.innerHTML = `✅ 成功解析【扇形禁航區】：<br>圓心：${f.latStr} ${f.lonStr}<br>半徑：${result.radiusNM} 海里`;
+            return;
+        }
+
         if (result.points.length < 3) {
             statusEl.className = 'parse-status fail';
             let msg = `⚠️ 解析失敗：只找到 ${result.points.length} 個有效座標點（至少需要 3 點才能構成多邊形）。`;
@@ -604,17 +963,27 @@
             return `(${i + 1}) ${f.latStr} ${f.lonStr}`;
         }).join('\n');
 
-        if (result.invalidCount > 0) {
+        let warningBanner = "";
+        if (result.hasSelfIntersection) {
+            warningBanner = `
+                <div style="color: #c53030; font-weight: bold; margin-bottom: 4px;">
+                    ⚠️ 警告：偵測到點位連接線段交叉！
+                </div>
+                <button class="btn-resort" onclick="resortAreaPoints('${cardId}')">🔄 嘗試順序重排</button>
+            `;
+        }
+
+        if (result.invalidCount > 0 || result.hasSelfIntersection) {
             statusEl.className = 'parse-status warn';
-            statusEl.innerHTML = `⚠️ 成功解析 ${result.points.length} 點（已自動進行環狀順序重排），但另有 ${result.invalidCount} 個座標數值超出合理範圍已被忽略：<div class="coord-preview">${preview}</div>`;
+            statusEl.innerHTML = `${warningBanner}⚠️ 成功解析 ${result.points.length} 點：<div class="coord-preview">${preview}</div>`;
         } else {
             statusEl.className = 'parse-status ok';
-            statusEl.innerHTML = `✅ 成功解析 ${result.points.length} 點多邊形（已自動進行環狀順序重排，防止邊線交叉）：<div class="coord-preview">${preview}</div>`;
+            statusEl.innerHTML = `${warningBanner}✅ 成功解析 ${result.points.length} 點多邊形：<div class="coord-preview">${preview}</div>`;
         }
     }
 
     function processAllData() {
-        // 清除地圖舊圖層
+        deselectCurrentLabel();
         Object.keys(areaMapObjects).forEach(cardId => removeAreaFromMap(cardId));
         areaMapObjects = {};
         allParsedAreas = [];
@@ -626,17 +995,25 @@
             const cardId = card.id;
             const num = card.dataset.num;
             const text = card.querySelector('.area-input').value.trim();
-            const result = parseCoordinates(text);
+            
+            let result;
+            if (cardParsedResults[cardId] && cardParsedResults[cardId].rawText === text) {
+                result = cardParsedResults[cardId];
+            } else {
+                result = parseCoordinates(text);
+                result.rawText = text;
+                cardParsedResults[cardId] = result;
+            }
 
             renderParseStatus(cardId, result, text);
 
             if (!text) return;
             if (result.type === 'polygon' && result.points.length < 3) return;
             if (result.type === 'circle' && result.points.length < 1) return;
+            if (result.type === 'sector' && result.points.length < 3) return;
 
-            const points = result.points;
             const meta = extractMetadata(text);
-            const areaData = { cardId, num, text, type: result.type, points, radiusNM: result.radiusNM, meta };
+            const areaData = { cardId, num, text, type: result.type, points: result.points, center: result.center, radiusNM: result.radiusNM, meta };
             allParsedAreas.push(areaData);
 
             let shapeLayer = null;
@@ -644,7 +1021,7 @@
 
             if (result.type === 'circle') {
                 const radiusMeters = result.radiusNM * 1852;
-                shapeLayer = L.circle([points[0].lat, points[0].lon], {
+                shapeLayer = L.circle([result.points[0].lat, result.points[0].lon], {
                     radius: radiusMeters,
                     color: 'red',
                     weight: 3,
@@ -655,18 +1032,18 @@
                 featureGroup.addLayer(shapeLayer);
 
                 const latOffset = (result.radiusNM / 60) * 1.05;
-                const labelIcon = L.divIcon({
-                    className: 'dist-label',
-                    html: `${result.radiusNM}浬 (半徑)`,
-                    iconSize: [80, 20],
-                    iconAnchor: [40, 10]
-                });
-                const marker = L.marker([points[0].lat + latOffset, points[0].lon], { icon: labelIcon });
+                const marker = createLabelMarker(
+                    result.points[0].lat + latOffset, 
+                    result.points[0].lon, 
+                    `${result.radiusNM}浬 (半徑)`, 
+                    [80, 20], 
+                    [40, 10]
+                );
                 currentLabels.push(marker);
                 if (showLabels) marker.addTo(map);
 
             } else {
-                const latLngs = points.map(p => [p.lat, p.lon]);
+                const latLngs = result.points.map(p => [p.lat, p.lon]);
                 shapeLayer = L.polygon(latLngs, {
                     color: 'red',
                     weight: 3,
@@ -676,37 +1053,41 @@
 
                 featureGroup.addLayer(shapeLayer);
 
-                const centroid = computePolygonCentroid(points);
-                const extent = computeBoundingExtent(points);
-                const offsetDeg = Math.max(extent * 0.06, 0.02);
-
-                for (let i = 0; i < points.length; i++) {
-                    const p1 = points[i];
-                    const p2 = points[(i + 1) % points.length];
-                    const dist = calculateDistanceNM(p1.lat, p1.lon, p2.lat, p2.lon);
-                    const labelPos = computeEdgeLabelPosition(p1, p2, centroid, offsetDeg);
-
-                    const labelIcon = L.divIcon({
-                        className: 'dist-label',
-                        html: `${dist}浬`,
-                        iconSize: [42, 20],
-                        iconAnchor: [21, 10]
-                    });
-
-                    const marker = L.marker([labelPos.lat, labelPos.lon], { icon: labelIcon });
+                if (result.type === 'sector') {
+                    const labelPos = destinationPoint(result.center.lat, result.center.lon, result.radiusNM * 0.5, (result.startBearing + result.endBearing) / 2);
+                    const marker = createLabelMarker(
+                        labelPos.lat, 
+                        labelPos.lon, 
+                        `${result.radiusNM}浬 (半徑)`, 
+                        [80, 20], 
+                        [40, 10]
+                    );
                     currentLabels.push(marker);
                     if (showLabels) marker.addTo(map);
+                } else {
+                    const bboxCenter = computeBoundingBoxCenter(result.points);
+
+                    for (let i = 0; i < result.points.length; i++) {
+                        const p1 = result.points[i];
+                        const p2 = result.points[(i + 1) % result.points.length];
+                        const dist = calculateDistanceNM(p1.lat, p1.lon, p2.lat, p2.lon);
+                        const labelPos = computeEdgeLabelPosition(p1, p2, bboxCenter);
+
+                        const marker = createLabelMarker(
+                            labelPos.lat, 
+                            labelPos.lon, 
+                            `${dist}浬`, 
+                            [42, 20], 
+                            [21, 10]
+                        );
+                        currentLabels.push(marker);
+                        if (showLabels) marker.addTo(map);
+                    }
                 }
             }
 
-            // 紀錄區域對象
-            areaMapObjects[cardId] = {
-                shape: shapeLayer,
-                labels: currentLabels,
-                visible: true
-            };
+            areaMapObjects[cardId] = { shape: shapeLayer, labels: currentLabels, visible: true };
 
-            // 重置卡片按鈕狀態
             const visBtn = document.getElementById(`btn-vis-${cardId}`);
             if (visBtn) {
                 visBtn.innerText = '👁 顯示';
@@ -721,17 +1102,22 @@
         }
 
         map.fitBounds(featureGroup.getBounds(), { padding: [50, 50] });
+
+        setTimeout(() => {
+            map.invalidateSize();
+        }, 200);
+
         renderAreaOutputs();
         document.getElementById('output-section').style.display = 'block';
     }
 
     function clearAllData() {
-        // 清除地圖上的所有圖層與標籤
+        deselectCurrentLabel();
         Object.keys(areaMapObjects).forEach(cardId => removeAreaFromMap(cardId));
         areaMapObjects = {};
         allParsedAreas = [];
+        cardParsedResults = {};
 
-        // 清空所有卡片中的使用者輸入與解析狀態
         const inputs = document.querySelectorAll('.area-input');
         inputs.forEach(input => input.value = '');
 
@@ -741,7 +1127,6 @@
             el.innerHTML = '';
         });
 
-        // 隱藏並清空 PPT 輸出區
         document.getElementById('output-section').style.display = 'none';
         document.getElementById('areaOutputContainer').innerHTML = '';
     }
@@ -752,7 +1137,10 @@
 
         allParsedAreas.forEach((area) => {
             const blockId = `output-${area.cardId}`;
-            const titleDesc = area.type === 'circle' ? `圓形 (半徑 ${area.radiusNM} 浬)` : `多邊形 (${area.points.length} 點)`;
+            let titleDesc = `多邊形 (${area.points.length} 點)`;
+            if (area.type === 'circle') titleDesc = `圓形 (半徑 ${area.radiusNM} 浬)`;
+            if (area.type === 'sector') titleDesc = `扇形 (半徑 ${area.radiusNM} 浬)`;
+
             const html = `
                 <div class="area-output" id="${blockId}" data-card-id="${area.cardId}">
                     <div class="area-output-header">
@@ -822,17 +1210,10 @@
 
     function generateCircleKMLCoords(centerLat, centerLon, radiusNM, numPoints = 64) {
         const coords = [];
-        const R = 6371;
-        const radiusKm = radiusNM * 1.852;
-        const latRad = centerLat * Math.PI / 180;
-        const lonRad = centerLon * Math.PI / 180;
-        const d = radiusKm / R;
-
         for (let i = 0; i <= numPoints; i++) {
-            const bearing = (i * 360 / numPoints) * Math.PI / 180;
-            const pLat = Math.asin(Math.sin(latRad) * Math.cos(d) + Math.cos(latRad) * Math.sin(d) * Math.cos(bearing));
-            const pLon = lonRad + Math.atan2(Math.sin(bearing) * Math.sin(d) * Math.cos(latRad), Math.cos(d) - Math.sin(latRad) * Math.sin(pLat));
-            coords.push(`${(pLon * 180 / Math.PI).toFixed(6)},${(pLat * 180 / Math.PI).toFixed(6)},0`);
+            const bearing = (i * 360 / numPoints);
+            const pt = destinationPoint(centerLat, centerLon, radiusNM, bearing);
+            coords.push(`${pt.lon.toFixed(6)},${pt.lat.toFixed(6)},0`);
         }
         return coords.join('\n');
     }
@@ -857,7 +1238,7 @@
 
             let placemarks = `
     <Placemark>
-      <name>禁航區 #${area.num} (${area.type === 'circle' ? '圓形' : '多邊形'})</name>
+      <name>禁航區 #${area.num} (${area.type})</name>
       <description><![CDATA[${buildFormattedText(area).replace(/\n/g, '<br>')}]]></description>
       <styleUrl>#redAreaStyle</styleUrl>
       <Polygon>
@@ -871,52 +1252,6 @@ ${kmlCoords}
       </Polygon>
     </Placemark>`;
 
-            if (showLabels) {
-                if (area.type === 'circle') {
-                    const latOffset = (area.radiusNM / 60) * 1.05;
-                    placemarks += `
-        <Placemark>
-            <name>#${area.num}: ${area.radiusNM}浬 (半徑)</name>
-            <Style>
-                <IconStyle><Icon/></IconStyle>
-                <LabelStyle>
-                    <color>ff00ffff</color>
-                    <scale>1.1</scale>
-                </LabelStyle>
-            </Style>
-            <Point>
-                <coordinates>${area.points[0].lon},${area.points[0].lat + latOffset},0</coordinates>
-            </Point>
-        </Placemark>`;
-                } else {
-                    const centroid = computePolygonCentroid(area.points);
-                    const extent = computeBoundingExtent(area.points);
-                    const offsetDeg = Math.max(extent * 0.06, 0.02);
-
-                    for (let i = 0; i < area.points.length; i++) {
-                        const p1 = area.points[i];
-                        const p2 = area.points[(i + 1) % area.points.length];
-                        const dist = calculateDistanceNM(p1.lat, p1.lon, p2.lat, p2.lon);
-                        const labelPos = computeEdgeLabelPosition(p1, p2, centroid, offsetDeg);
-
-                        placemarks += `
-        <Placemark>
-            <name>#${area.num}: ${dist}浬</name>
-            <Style>
-                <IconStyle><Icon/></IconStyle>
-                <LabelStyle>
-                    <color>ff00ffff</color>
-                    <scale>1.1</scale>
-                </LabelStyle>
-            </Style>
-            <Point>
-                <coordinates>${labelPos.lon},${labelPos.lat},0</coordinates>
-            </Point>
-        </Placemark>`;
-                    }
-                }
-            }
-
             kmlFolders += `
     <Folder>
       <name>禁航區 #${area.num}</name>
@@ -928,19 +1263,11 @@ ${kmlCoords}
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
     <name>禁航區圖資</name>
-
     <Style id="redAreaStyle">
-      <LineStyle>
-        <color>ff0000ff</color>
-        <width>3</width>
-      </LineStyle>
-      <PolyStyle>
-        <color>800000ff</color>
-      </PolyStyle>
+      <LineStyle><color>ff0000ff</color><width>3</width></LineStyle>
+      <PolyStyle><color>800000ff</color></PolyStyle>
     </Style>
-
     ${kmlFolders}
-
   </Document>
 </kml>`;
 
