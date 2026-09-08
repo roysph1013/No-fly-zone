@@ -658,11 +658,18 @@
             }
         }
 
-        const circleRadiusMatch = text.match(/([\d\.]+)\s*(?:海里|海浬|nm|NM)\s*(?:為|为)?\s*半(?:徑|径)/i) || 
-                                  text.match(/半(?:徑|径)\s*(?:為|为)?\s*([\d\.]+)\s*(?:海里|海浬|nm|NM)/i);
+        // 優化半徑解析：新增對公尺 (M / m / MTRS / METERS) 的匹配支援，並自動轉換為海浬 (NM)
+        const circleRadiusMatch = text.match(/RADIUS\s+OF\s+([\d,]+(?:\.\d+)?)\s*(M|MTRS|METERS|NM)\b/i) ||
+                                  text.match(/([\d,]+(?:\.\d+)?)\s*(?:海里|海浬|nm|NM)\s*(?:為|为)?\s*半(?:徑|径)/i) || 
+                                  text.match(/半(?:徑|径)\s*(?:為|为)?\s*([\d,]+(?:\.\d+)?)\s*(?:海里|海浬|nm|NM)/i);
 
         if (circleRadiusMatch) {
-            const radiusNM = parseFloat(circleRadiusMatch[1]);
+            let val = parseFloat(circleRadiusMatch[1].replace(/,/g, ''));
+            let unit = circleRadiusMatch[2] ? circleRadiusMatch[2].toUpperCase() : 'NM';
+            
+            // 若單位為公尺，自動換算為海浬 (1 NM = 1852 M)
+            let radiusNM = (unit === 'M' || unit === 'MTRS' || unit === 'METERS') ? parseFloat((val / 1852).toFixed(2)) : val;
+
             const coords = parsePointsFromText(cleanText);
             if (coords.points.length >= 1) {
                 return {
@@ -703,42 +710,55 @@
             rawCoords.push({ lat, lon });
         };
 
-        // 支援 FAA / ICAO DMS 座標模式
-        const faaDmsRegex = /\b(\d{4,6})\s*([NS])\s*(\d{5,7})\s*([EW])\b/gi;
-        let faaMatch;
-        let foundFaa = false;
-        while ((faaMatch = faaDmsRegex.exec(cleanText)) !== null) {
-            foundFaa = true;
-            const latVal = parseSingleCoordinate(faaMatch[1] + faaMatch[2], false);
-            const lonVal = parseSingleCoordinate(faaMatch[3] + faaMatch[4], true);
+        // 擴充支援帶有小數點的 DMS 格式 (如 N305356.10E1215608.82)
+        const dmsWithDotRegex = /([NS])\s*(\d{6}(?:\.\d+)?)\s*([EW])\s*(\d{7}(?:\.\d+)?)/gi;
+        let dmsDotMatch;
+        let foundDmsDot = false;
+        while ((dmsDotMatch = dmsWithDotRegex.exec(cleanText)) !== null) {
+            foundDmsDot = true;
+            const latVal = parseSingleCoordinate(dmsDotMatch[2] + dmsDotMatch[1], false);
+            const lonVal = parseSingleCoordinate(dmsDotMatch[4] + dmsDotMatch[3], true);
             pushIfValid(latVal, lonVal);
         }
 
-        if (!foundFaa || rawCoords.length === 0) {
-            const suffixRegex1 = /([\d°'\"\.\-\s]+[NSns])\s*[,;、\s]*\s*([\d°'\"\.\-\s]+[EWew])/g;
-            let match;
-            while ((match = suffixRegex1.exec(cleanText)) !== null) {
-                pushIfValid(parseSingleCoordinate(match[1], false), parseSingleCoordinate(match[2], true));
+        if (!foundDmsDot || rawCoords.length === 0) {
+            // 支援 FAA / ICAO DMS 座標模式
+            const faaDmsRegex = /\b(\d{4,6})\s*([NS])\s*(\d{5,7})\s*([EW])\b/gi;
+            let faaMatch;
+            let foundFaa = false;
+            while ((faaMatch = faaDmsRegex.exec(cleanText)) !== null) {
+                foundFaa = true;
+                const latVal = parseSingleCoordinate(faaMatch[1] + faaMatch[2], false);
+                const lonVal = parseSingleCoordinate(faaMatch[3] + faaMatch[4], true);
+                pushIfValid(latVal, lonVal);
             }
 
-            if (rawCoords.length === 0) {
-                const suffixRegex2 = /([\d°'\"\.\-\s]+[EWew])\s*[,;、\s]*\s*([\d°'\"\.\-\s]+[NSns])/g;
-                while ((match = suffixRegex2.exec(cleanText)) !== null) {
-                    pushIfValid(parseSingleCoordinate(match[2], false), parseSingleCoordinate(match[1], true));
-                }
-            }
-
-            if (rawCoords.length === 0) {
-                const prefixRegex = /([NSns][\d°'\"\.\-\s]+)\s*[,;、\s]*\s*([EWew][\d°'\"\.\-\s]+)/g;
-                while ((match = prefixRegex.exec(cleanText)) !== null) {
+            if (!foundFaa || rawCoords.length === 0) {
+                const suffixRegex1 = /([\d°'\"\.\-\s]+[NSns])\s*[,;、\s]*\s*([\d°'\"\.\-\s]+[EWew])/g;
+                let match;
+                while ((match = suffixRegex1.exec(cleanText)) !== null) {
                     pushIfValid(parseSingleCoordinate(match[1], false), parseSingleCoordinate(match[2], true));
                 }
-            }
 
-            if (rawCoords.length === 0) {
-                const decimalRegex = /(-?\d+\.\d+)\s*[,;\s]+\s*(-?\d+\.\d+)/g;
-                while ((match = decimalRegex.exec(cleanText)) !== null) {
-                    pushIfValid(parseFloat(match[1]), parseFloat(match[2]));
+                if (rawCoords.length === 0) {
+                    const suffixRegex2 = /([\d°'\"\.\-\s]+[EWew])\s*[,;、\s]*\s*([\d°'\"\.\-\s]+[NSns])/g;
+                    while ((match = suffixRegex2.exec(cleanText)) !== null) {
+                        pushIfValid(parseSingleCoordinate(match[2], false), parseSingleCoordinate(match[1], true));
+                    }
+                }
+
+                if (rawCoords.length === 0) {
+                    const prefixRegex = /([NSns][\d°'\"\.\-\s]+)\s*[,;、\s]*\s*([EWew][\d°'\"\.\-\s]+)/g;
+                    while ((match = prefixRegex.exec(cleanText)) !== null) {
+                        pushIfValid(parseSingleCoordinate(match[1], false), parseSingleCoordinate(match[2], true));
+                    }
+                }
+
+                if (rawCoords.length === 0) {
+                    const decimalRegex = /(-?\d+\.\d+)\s*[,;\s]+\s*(-?\d+\.\d+)/g;
+                    while ((match = decimalRegex.exec(cleanText)) !== null) {
+                        pushIfValid(parseFloat(match[1]), parseFloat(match[2]));
+                    }
                 }
             }
         }
@@ -845,7 +865,8 @@
             }
         }
 
-        if (rawText.includes("航天發射") || rawText.includes("航天发射") || rawText.includes("SPACE LAUNCH") || rawText.includes("ROCKET")) purpose = "航天發射任務";
+        if (rawText.includes("FIREWORK") || rawText.includes("煙火") || rawText.includes("烟花")) purpose = "煙火施放";
+        else if (rawText.includes("航天發射") || rawText.includes("航天发射") || rawText.includes("SPACE LAUNCH") || rawText.includes("ROCKET")) purpose = "航天發射任務";
         else if (rawText.includes("火箭發射") || rawText.includes("火箭发射")) purpose = "火箭發射";
         else if (rawText.includes("實彈") || rawText.includes("实弹")) purpose = "實彈射擊";
         else if (rawText.includes("軍事訓練") || rawText.includes("军事训练")) purpose = "軍事訓練";
