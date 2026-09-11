@@ -7,6 +7,9 @@
     <!-- Leaflet 地圖套件 -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet.draw：僅使用其繪製互動引擎，介面完全自訂，不使用其預設工具列外觀 -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: "Microsoft JhengHei", Arial, sans-serif; display: flex; height: 100vh; background: #f0f2f5; overflow: hidden; }
@@ -100,10 +103,13 @@
         .btn-parse { background: #3182ce; width: 100%; padding: 12px; font-size: 14px; box-shadow: 0 2px 4px rgba(49, 130, 206, 0.3); }
         .btn-parse:hover { background: #2b6cb0; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(49, 130, 206, 0.4); }
 
-        .btn-kml { background: #38a169; flex: 2; padding: 10px; }
+        .btn-kml { background: #38a169; flex: 1.4; padding: 10px 6px; font-size: 12px; }
         .btn-kml:hover { background: #2f855a; }
 
-        .btn-clear { background: #e2e8f0; color: #4a5568; flex: 1; padding: 10px; }
+        .btn-import { background: #2b6cb0; flex: 1.4; padding: 10px 6px; font-size: 12px; }
+        .btn-import:hover { background: #2c5282; }
+
+        .btn-clear { background: #e2e8f0; color: #4a5568; flex: 1; padding: 10px 6px; font-size: 12px; }
         .btn-clear:hover { background: #cbd5e0; color: #2d3748; }
 
         .btn-resort { background: #dd6b20; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 6px; }
@@ -173,6 +179,111 @@
         .btn-label-del:hover {
             background: #c53030;
         }
+
+        /* ===== 測量與繪圖工具（右上角）===== */
+        /* 尺寸對齊 Leaflet 圖層按鈕實際大小（.leaflet-control-layers-toggle 為 36x36px） */
+        .leaflet-control-measure-toggle {
+            width: 36px !important;
+            height: 36px !important;
+            line-height: 36px !important;
+            font-size: 20px;
+            text-align: center;
+            display: block;
+            text-decoration: none;
+        }
+        .leaflet-control-measure-toggle.active {
+            background: #3182ce !important;
+            filter: brightness(1.1);
+        }
+
+        .measure-submenu a {
+            width: 36px !important;
+            height: 36px !important;
+            line-height: 36px !important;
+            font-size: 18px;
+            text-align: center;
+            display: block;
+            text-decoration: none;
+        }
+        .measure-submenu a.active {
+            background: #3182ce !important;
+            color: #fff;
+        }
+        .measure-submenu.hidden { display: none; }
+        .measure-submenu a.tool-clear-all { border-top: 1px solid #ccc; }
+
+        /* 點位名稱標籤（區別於黃底的距離/半徑標籤） */
+        .point-label {
+            background: rgba(26, 54, 93, 0.9);
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 12px;
+            padding: 2px 7px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            white-space: nowrap;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            pointer-events: auto;
+            cursor: move;
+            user-select: none;
+        }
+        .point-label.selected {
+            background: rgba(255, 255, 255, 0.95);
+            color: #1a365d;
+            border: 2px solid #e53e3e;
+        }
+        .point-label.label-hidden { display: none; }
+
+        .point-marker-dot {
+            width: 12px; height: 12px;
+            background: #e53e3e;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .point-edit-popup input[type="text"] {
+            width: 130px;
+            font-size: 12px;
+            padding: 4px 6px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            margin-bottom: 6px;
+        }
+        .point-edit-popup label {
+            display: flex; align-items: center; gap: 4px;
+            font-size: 12px; margin-bottom: 6px; color: #4a5568;
+        }
+        .point-edit-popup .popup-btn-row { display: flex; gap: 6px; }
+        .point-edit-popup .popup-btn-row button {
+            font-size: 11px; padding: 4px 8px;
+        }
+
+        /* KML 匯出選擇選單 */
+        .kml-export-menu {
+            position: absolute;
+            background: #ffffff;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            padding: 6px;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 2000;
+            min-width: 200px;
+        }
+        .kml-export-menu.show { display: flex; }
+        .kml-export-menu button {
+            width: 100%;
+            justify-content: flex-start;
+            background: #f7fafc;
+            color: #2d3748;
+            font-size: 12px;
+            padding: 8px 10px;
+        }
+        .kml-export-menu button:hover { background: #e2e8f0; }
     </style>
 </head>
 <body>
@@ -199,10 +310,16 @@
         <button class="btn-parse" onclick="processAllData()">
             <span>一鍵繪製</span>
         </button>
-        <div class="btn-row">
-            <button class="btn-kml" onclick="downloadKML()">匯出全部 KML</button>
+        <div class="btn-row" style="position: relative;">
+            <button class="btn-kml" onclick="toggleKmlExportMenu(event)">匯出 KML ▾</button>
+            <button class="btn-import" onclick="document.getElementById('kmlImportInput').click()">📥 匯入 KML</button>
             <button class="btn-clear" onclick="clearAllData()">全部清空</button>
+            <div class="kml-export-menu" id="kmlExportMenu">
+                <button onclick="downloadKML(); closeKmlExportMenu();">📦 匯出禁航區資料</button>
+                <button onclick="exportDrawnFeaturesKML(); closeKmlExportMenu();">📍 匯出測量與標記圖資</button>
+            </div>
         </div>
+        <input type="file" id="kmlImportInput" accept=".kml" style="display:none" onchange="handleKmlImport(event)">
     </div>
 
     <div id="output-section">
@@ -250,7 +367,389 @@
     // Layer Control 放置於右上角
     L.control.layers(baseMaps, overlayMaps, { position: 'topright', collapsed: true }).addTo(map);
 
-    // --- 台灣防空識別區 (Taiwan ADIZ) 圖層繪製 ---
+    // ============================================================
+    // 測量與繪圖工具（右上角圖示按鈕 + 子選單）
+    // 使用 Leaflet.draw 的繪製引擎，但完全自訂外觀，不使用其預設工具列
+    // ============================================================
+
+    let activeDrawHandler = null;   // 目前啟用中的 Leaflet.draw handler
+    let activeToolType = null;      // 'polyline' | 'circle' | 'rectangle' | 'marker' | null
+    let selectedFeature = null;     // 目前選取（可刪除）的繪製圖形
+
+    const drawnFeatures = { lines: [], circles: [], rectangles: [], points: [] };
+    let drawnFeatureCounter = 0;
+
+    // --- 主開關按鈕（📐）---
+    const MeasureToggleControl = L.Control.extend({
+        options: { position: 'topright' },
+        onAdd: function () {
+            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+            const link = L.DomUtil.create('a', 'leaflet-control-measure-toggle', container);
+            link.innerHTML = '📐';
+            link.href = '#';
+            link.title = '測量與繪圖工具';
+            L.DomEvent.disableClickPropagation(container);
+            L.DomEvent.on(link, 'click', L.DomEvent.stop).on(link, 'click', function () {
+                toggleMeasureSubmenu(link);
+            });
+            this._link = link;
+            return container;
+        }
+    });
+    const measureToggleControl = new MeasureToggleControl();
+    measureToggleControl.addTo(map);
+
+    // --- 子選單（測距線 / 圓形 / 矩形 / 點位）---
+    const MeasureSubmenuControl = L.Control.extend({
+        options: { position: 'topright' },
+        onAdd: function () {
+            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control measure-submenu hidden');
+            const tools = [
+                { type: 'polyline', icon: '📏', title: '測量距離 / 畫線（海浬＋公里）' },
+                { type: 'circle', icon: '⭕', title: '繪製圓形（顯示半徑）' },
+                { type: 'rectangle', icon: '▭', title: '繪製矩形' },
+                { type: 'marker', icon: '📍', title: '標示點位' }
+            ];
+            this._links = {};
+            tools.forEach(t => {
+                const link = L.DomUtil.create('a', '', container);
+                link.innerHTML = t.icon;
+                link.href = '#';
+                link.title = t.title;
+                L.DomEvent.on(link, 'click', L.DomEvent.stop).on(link, 'click', function () {
+                    activateDrawTool(t.type);
+                });
+                this._links[t.type] = link;
+            });
+
+            // 一鍵清除所有測量／繪製圖形與點位（不含禁航區）
+            const clearLink = L.DomUtil.create('a', 'tool-clear-all', container);
+            clearLink.innerHTML = '🗑️';
+            clearLink.href = '#';
+            clearLink.title = '清除所有測量圖形與點位（不含禁航區）';
+            L.DomEvent.on(clearLink, 'click', L.DomEvent.stop).on(clearLink, 'click', function () {
+                clearAllDrawnFeatures();
+            });
+            L.DomEvent.disableClickPropagation(container);
+            this._container = container;
+            return container;
+        }
+    });
+    const measureSubmenuControl = new MeasureSubmenuControl();
+    measureSubmenuControl.addTo(map);
+
+    function toggleMeasureSubmenu(toggleLink) {
+        const submenuEl = measureSubmenuControl._container;
+        const isHidden = submenuEl.classList.contains('hidden');
+        if (isHidden) {
+            submenuEl.classList.remove('hidden');
+            toggleLink.classList.add('active');
+        } else {
+            submenuEl.classList.add('hidden');
+            toggleLink.classList.remove('active');
+            cancelActiveDrawTool();
+        }
+    }
+
+    function setActiveToolIcon(type) {
+        Object.keys(measureSubmenuControl._links).forEach(key => {
+            measureSubmenuControl._links[key].classList.toggle('active', key === type);
+        });
+    }
+
+    function cancelActiveDrawTool() {
+        if (activeDrawHandler) {
+            activeDrawHandler.disable();
+            activeDrawHandler = null;
+        }
+        activeToolType = null;
+        setActiveToolIcon(null);
+    }
+
+    function activateDrawTool(type) {
+        // 再次點擊同一個工具 = 取消該工具
+        if (activeToolType === type) {
+            cancelActiveDrawTool();
+            return;
+        }
+        if (activeDrawHandler) {
+            activeDrawHandler.disable();
+        }
+        deselectFeature();
+
+        const shapeStyle = { color: '#dd6b20', weight: 3, opacity: 0.9, fillOpacity: 0.08 };
+
+        if (type === 'polyline') {
+            activeDrawHandler = new L.Draw.Polyline(map, { shapeOptions: shapeStyle, metric: false });
+        } else if (type === 'circle') {
+            activeDrawHandler = new L.Draw.Circle(map, { shapeOptions: shapeStyle, showRadius: false });
+        } else if (type === 'rectangle') {
+            activeDrawHandler = new L.Draw.Rectangle(map, { shapeOptions: shapeStyle });
+        } else if (type === 'marker') {
+            activeDrawHandler = new L.Draw.Marker(map, {});
+        }
+
+        activeDrawHandler.enable();
+        activeToolType = type;
+        setActiveToolIcon(type);
+    }
+
+    // 繪製完成事件（所有工具共用）
+    map.on(L.Draw.Event.CREATED, function (e) {
+        const layer = e.layer;
+        const type = e.layerType;
+
+        if (type === 'polyline') {
+            registerLine(layer);
+        } else if (type === 'circle') {
+            registerCircle(layer);
+        } else if (type === 'rectangle') {
+            registerRectangle(layer);
+        } else if (type === 'marker') {
+            promptAndRegisterPoint(layer.getLatLng());
+        }
+
+        // 完成一次繪製後自動回到「未選取工具」狀態，避免誤觸連續繪製
+        activeDrawHandler = null;
+        activeToolType = null;
+        setActiveToolIcon(null);
+    });
+
+    // --- 距離／面積計算輔助 ---
+    function calcDistanceKmNm(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) ** 2 +
+                  Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2) ** 2;
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const km = R * c;
+        return { km: km, nm: km * 0.539957 };
+    }
+
+    function polylineTotalDistance(latlngs) {
+        let totalKm = 0;
+        for (let i = 0; i < latlngs.length - 1; i++) {
+            totalKm += calcDistanceKmNm(latlngs[i].lat, latlngs[i].lng, latlngs[i+1].lat, latlngs[i+1].lng).km;
+        }
+        return { km: totalKm, nm: totalKm * 0.539957 };
+    }
+
+    // --- 通用可拖曳標籤（測距／半徑／點位名稱），供新工具使用 ---
+    function createDraggableLabel(lat, lon, htmlText, className, popupHtml) {
+        const icon = L.divIcon({ className: className, html: htmlText, iconSize: null });
+        const marker = L.marker([lat, lon], { icon: icon, draggable: true, zIndexOffset: 500 });
+        if (popupHtml) {
+            marker.bindPopup(popupHtml, { offset: [0, -10], closeButton: false });
+        }
+        return marker;
+    }
+
+    function deselectFeature() {
+        if (selectedFeature && selectedFeature.layer && selectedFeature.layer.setStyle) {
+            selectedFeature.layer.setStyle({ weight: selectedFeature.baseWeight || 3 });
+        }
+        selectedFeature = null;
+    }
+
+    function selectFeatureForDelete(featureObj) {
+        deselectFeature();
+        selectedFeature = featureObj;
+        if (featureObj.layer.setStyle) {
+            featureObj.baseWeight = featureObj.layer.options.weight || 3;
+            featureObj.layer.setStyle({ weight: (featureObj.baseWeight) + 2 });
+        }
+    }
+
+    function deleteFeature(list, featureObj) {
+        const idx = list.indexOf(featureObj);
+        if (idx !== -1) list.splice(idx, 1);
+        if (featureObj.layer && map.hasLayer(featureObj.layer)) map.removeLayer(featureObj.layer);
+        if (featureObj.label && map.hasLayer(featureObj.label)) map.removeLayer(featureObj.label);
+        if (selectedFeature === featureObj) selectedFeature = null;
+    }
+
+    function clearAllDrawnFeatures() {
+        const total = drawnFeatures.lines.length + drawnFeatures.circles.length +
+                      drawnFeatures.rectangles.length + drawnFeatures.points.length;
+        if (total === 0) return;
+        if (!confirm('確定要清除所有測量線條、圓形、矩形與標記點位嗎？（不會影響禁航區資料）')) return;
+
+        [...drawnFeatures.lines].forEach(f => deleteFeature(drawnFeatures.lines, f));
+        [...drawnFeatures.circles].forEach(f => deleteFeature(drawnFeatures.circles, f));
+        [...drawnFeatures.rectangles].forEach(f => deleteFeature(drawnFeatures.rectangles, f));
+        [...drawnFeatures.points].forEach(f => {
+            if (f.marker && map.hasLayer(f.marker)) map.removeLayer(f.marker);
+            deleteFeature(drawnFeatures.points, f);
+        });
+        cancelActiveDrawTool();
+    }
+
+    // 刪除圖形彈窗：改用全域函式＋純數字 ID 呼叫（避免函式轉字串後遺失變數綁定的問題），
+    // 且只依賴 Leaflet bindPopup 內建的點擊開關機制，不額外疊加 click 監聽，避免互相打架。
+    function deleteDrawnFeatureById(category, id) {
+        const list = drawnFeatures[category];
+        if (!list) return;
+        const f = list.find(x => x.id === id);
+        if (f) deleteFeature(list, f);
+    }
+
+    function buildDeletePopupHtml(category, id) {
+        return `<button class="btn-label-del" onclick="deleteDrawnFeatureById('${category}', ${id})">🗑️ 刪除此圖形</button>`;
+    }
+
+    // --- 線段（測量距離）---
+    function registerLine(layer) {
+        layer.setStyle({ color: '#dd6b20', weight: 3 });
+        layer.addTo(map);
+        const latlngs = layer.getLatLngs();
+        const { km, nm } = polylineTotalDistance(latlngs);
+        const mid = latlngs[Math.floor((latlngs.length - 1) / 2)];
+        const endPt = latlngs[latlngs.length - 1];
+        const labelLatLng = latlngs.length % 2 === 0 ? mid : endPt;
+
+        const featureObj = { id: ++drawnFeatureCounter, layer, km, nm, latlngs: latlngs.map(p => ({ lat: p.lat, lon: p.lng })) };
+        const popupHtml = buildDeletePopupHtml('lines', featureObj.id);
+        layer.bindPopup(popupHtml, { closeButton: false });
+
+        const label = createDraggableLabel(
+            labelLatLng.lat, labelLatLng.lng,
+            `${nm.toFixed(2)} 浬 ／ ${km.toFixed(2)} 公里`,
+            'dist-label',
+            popupHtml
+        );
+        label.addTo(map);
+        featureObj.label = label;
+
+        drawnFeatures.lines.push(featureObj);
+    }
+
+    // --- 圓形（顯示半徑）---
+    function registerCircle(layer) {
+        layer.setStyle({ color: '#dd6b20', weight: 3, fillOpacity: 0.08 });
+        layer.addTo(map);
+        const center = layer.getLatLng();
+        const radiusM = layer.getRadius();
+        const radiusKm = radiusM / 1000;
+        const radiusNm = radiusKm * 0.539957;
+
+        const featureObj = { id: ++drawnFeatureCounter, layer, center: { lat: center.lat, lon: center.lng }, radiusKm, radiusNm };
+        const popupHtml = buildDeletePopupHtml('circles', featureObj.id);
+        layer.bindPopup(popupHtml, { closeButton: false });
+
+        const labelPt = destinationPoint(center.lat, center.lng, radiusNm, 90);
+        const label = createDraggableLabel(
+            labelPt.lat, labelPt.lon,
+            `半徑 ${radiusNm.toFixed(2)} 浬 ／ ${radiusKm.toFixed(2)} 公里`,
+            'dist-label',
+            popupHtml
+        );
+        label.addTo(map);
+        featureObj.label = label;
+
+        drawnFeatures.circles.push(featureObj);
+    }
+
+    // --- 矩形 ---
+    function registerRectangle(layer) {
+        layer.setStyle({ color: '#dd6b20', weight: 3, fillOpacity: 0.08 });
+        layer.addTo(map);
+        const bounds = layer.getBounds();
+        const featureObj = {
+            id: ++drawnFeatureCounter, layer,
+            bounds: { north: bounds.getNorth(), south: bounds.getSouth(), east: bounds.getEast(), west: bounds.getWest() }
+        };
+        const popupHtml = buildDeletePopupHtml('rectangles', featureObj.id);
+        layer.bindPopup(popupHtml, { closeButton: false });
+
+        drawnFeatures.rectangles.push(featureObj);
+    }
+
+    // --- 點位（標示點位＋可命名／顯示或隱藏／編輯）---
+    function promptAndRegisterPoint(latlng, presetName, presetVisible) {
+        const name = (presetName !== undefined) ? presetName : (prompt('請輸入點位名稱：', '') || '未命名點位');
+        const visible = (presetVisible !== undefined) ? presetVisible : true;
+
+        const dot = L.divIcon({ className: '', html: '<div class="point-marker-dot"></div>', iconSize: [12, 12], iconAnchor: [6, 6] });
+        const marker = L.marker(latlng, { icon: dot, draggable: false });
+        marker.addTo(map);
+
+        const featureObj = { id: ++drawnFeatureCounter, marker, lat: latlng.lat, lon: latlng.lng, name, visible };
+
+        const label = createDraggableLabel(
+            latlng.lat, latlng.lng,
+            escapeHtml(name),
+            'point-label' + (visible ? '' : ' label-hidden')
+        );
+        label.addTo(map);
+        featureObj.label = label;
+
+        // 綁定一次空白彈窗，每次「開啟」時才重新產生內容（含最新名稱/顯示狀態）。
+        // 不額外加 click 監聽，避免跟 Leaflet bindPopup 內建的點擊開關機制互相打架
+        // （這正是先前「只能編輯一次」的成因：兩邊各自切換開/關，第二次點擊會被立刻關掉）。
+        marker.bindPopup('', { closeButton: true });
+        marker.on('popupopen', function () {
+            marker.setPopupContent(buildPointPopupHtml(featureObj));
+        });
+
+        drawnFeatures.points.push(featureObj);
+        return featureObj;
+    }
+
+    function buildPointPopupHtml(featureObj) {
+        const popupId = 'point-edit-' + featureObj.id;
+        return `
+            <div class="point-edit-popup">
+                <input type="text" id="${popupId}-name" value="${escapeAttr(featureObj.name)}">
+                <label><input type="checkbox" id="${popupId}-vis" ${featureObj.visible ? 'checked' : ''}> 顯示名稱標籤</label>
+                <div class="popup-btn-row">
+                    <button class="btn-vis" onclick="applyPointEdit(${featureObj.id})">✔ 套用</button>
+                    <button class="btn-del" onclick="deletePointFeature(${featureObj.id})">🗑️ 刪除</button>
+                </div>
+            </div>`;
+    }
+
+    function findPointFeature(id) {
+        return drawnFeatures.points.find(p => p.id === id);
+    }
+
+    function applyPointEdit(id) {
+        const f = findPointFeature(id);
+        if (!f) return;
+        const nameInput = document.getElementById(`point-edit-${id}-name`);
+        const visInput = document.getElementById(`point-edit-${id}-vis`);
+        f.name = nameInput.value || '未命名點位';
+        f.visible = visInput.checked;
+
+        const labelEl = f.label.getElement();
+        const inner = labelEl ? labelEl.querySelector('.point-label') || labelEl : null;
+        if (inner) {
+            inner.innerHTML = escapeHtml(f.name);
+            inner.classList.toggle('label-hidden', !f.visible);
+        }
+        f.marker.closePopup();
+    }
+
+    function deletePointFeature(id) {
+        const f = findPointFeature(id);
+        if (!f) return;
+        deleteFeature(drawnFeatures.points, f);
+        if (f.marker && map.hasLayer(f.marker)) map.removeLayer(f.marker);
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+    }
+    // 註：escapeAttr 共用檔案後方既有的同名函式（用於後製文字欄位跳脫），避免重複定義
+
+    // --- 點擊地圖空白處，取消工具/選取狀態（沿用既有的空白點擊監聽）---
+    map.on('click', function () {
+        if (activeToolType === null) {
+            deselectFeature();
+        }
+    });
+
+    // --- ADIZ 圖層繪製 ---
     // 座標依規範之 5 個轉角點（度分秒 / WGS84 → 小數經緯度），依序連接後封閉回西南角
     const adizCoords = [
         [21.0, 117.5],  // 西南角（起始點）：北緯21°00'00"、東經117°30'00"
@@ -263,11 +762,10 @@
 
     const adizLayer = L.polygon(adizCoords, {
         color: '#3182CE',     // 淺藍色線條（依附件按鈕色參考）
-        weight: 2.5,
-        opacity: 0.9,
-        dashArray: '8, 6',    // 虛線風格，契合軍方示意圖樣式
+        weight: 3,
+        opacity: 1,
         fillColor: '#3182CE',
-        fillOpacity: 0.06,
+        fillOpacity: 0,
         interactive: false
     });
 
@@ -1326,6 +1824,295 @@ ${kmlCoords}
         link.href = URL.createObjectURL(blob);
         link.download = '禁航區圖資.kml';
         link.click();
+    }
+
+    // ============================================================
+    // 匯出選單開關（禁航區資料 vs 測量與標記圖資）
+    // ============================================================
+    function toggleKmlExportMenu(evt) {
+        const menu = document.getElementById('kmlExportMenu');
+        const btn = evt.currentTarget;
+        const btnRect = btn.getBoundingClientRect();
+        const rowRect = btn.parentElement.getBoundingClientRect();
+        menu.style.top = (btnRect.bottom - rowRect.top + 4) + 'px';
+        menu.style.left = '0px';
+        menu.classList.toggle('show');
+    }
+    function closeKmlExportMenu() {
+        document.getElementById('kmlExportMenu').classList.remove('show');
+    }
+    document.addEventListener('click', function (e) {
+        const menu = document.getElementById('kmlExportMenu');
+        if (!menu) return;
+        if (menu.classList.contains('show') && !menu.contains(e.target) && e.target.closest('.btn-kml') === null) {
+            menu.classList.remove('show');
+        }
+    });
+
+    // ============================================================
+    // 測量與標記圖資 —— KML 匯出（線／圓／矩形／點位）
+    // 使用標準幾何（LineString / Polygon / Point）確保能被 Google Earth 等軟體開啟，
+    // 另外用 <ExtendedData> 附加精確資料（圓心+半徑、矩形四界、點位名稱/顯示狀態），
+    // 供本工具「匯入」時完整還原，不受標準幾何近似值影響。
+    // ============================================================
+    function exportDrawnFeaturesKML() {
+        const totalCount = drawnFeatures.lines.length + drawnFeatures.circles.length +
+                            drawnFeatures.rectangles.length + drawnFeatures.points.length;
+        if (totalCount === 0) {
+            alert('目前沒有任何測量線條、圓形、矩形或標記點位可以匯出。');
+            return;
+        }
+
+        let placemarks = '';
+
+        drawnFeatures.lines.forEach((f, i) => {
+            const coords = f.latlngs.map(p => `${p.lon},${p.lat},0`).join('\n            ');
+            placemarks += `
+    <Placemark>
+      <name>測量線 #${i + 1}（${f.nm.toFixed(2)} 浬 / ${f.km.toFixed(2)} km）</name>
+      <ExtendedData>
+        <Data name="featureType"><value>line</value></Data>
+        <Data name="distanceKm"><value>${f.km.toFixed(3)}</value></Data>
+        <Data name="distanceNm"><value>${f.nm.toFixed(3)}</value></Data>
+      </ExtendedData>
+      <LineString>
+        <coordinates>
+            ${coords}
+        </coordinates>
+      </LineString>
+    </Placemark>`;
+        });
+
+        drawnFeatures.circles.forEach((f, i) => {
+            const coords = generateCircleKMLCoords(f.center.lat, f.center.lon, f.radiusNm);
+            placemarks += `
+    <Placemark>
+      <name>圓形 #${i + 1}（半徑 ${f.radiusNm.toFixed(2)} 浬）</name>
+      <ExtendedData>
+        <Data name="featureType"><value>circle</value></Data>
+        <Data name="centerLat"><value>${f.center.lat}</value></Data>
+        <Data name="centerLon"><value>${f.center.lon}</value></Data>
+        <Data name="radiusNm"><value>${f.radiusNm}</value></Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+${coords}
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>`;
+        });
+
+        drawnFeatures.rectangles.forEach((f, i) => {
+            const b = f.bounds;
+            const coords = [
+                `${b.west},${b.north},0`, `${b.east},${b.north},0`,
+                `${b.east},${b.south},0`, `${b.west},${b.south},0`, `${b.west},${b.north},0`
+            ].join('\n            ');
+            placemarks += `
+    <Placemark>
+      <name>矩形 #${i + 1}</name>
+      <ExtendedData>
+        <Data name="featureType"><value>rectangle</value></Data>
+        <Data name="north"><value>${b.north}</value></Data>
+        <Data name="south"><value>${b.south}</value></Data>
+        <Data name="east"><value>${b.east}</value></Data>
+        <Data name="west"><value>${b.west}</value></Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+            ${coords}
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>`;
+        });
+
+        drawnFeatures.points.forEach((f) => {
+            placemarks += `
+    <Placemark>
+      <name>${escapeXml(f.name)}</name>
+      <ExtendedData>
+        <Data name="featureType"><value>point</value></Data>
+        <Data name="labelVisible"><value>${f.visible ? '1' : '0'}</value></Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>${f.lon},${f.lat},0</coordinates>
+      </Point>
+    </Placemark>`;
+        });
+
+        const kmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>測量與標記圖資</name>
+    <Style id="drawnLineStyle">
+      <LineStyle><color>ff2067dd</color><width>3</width></LineStyle>
+      <PolyStyle><color>1a2067dd</color></PolyStyle>
+    </Style>
+    <Folder>
+      <name>測量與標記圖資</name>
+      ${placemarks}
+    </Folder>
+  </Document>
+</kml>`;
+
+        const blob = new Blob([kmlContent], { type: 'application/vnd.google-earth.kml+xml' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = '測量標記圖資.kml';
+        link.click();
+    }
+
+    function escapeXml(str) {
+        return String(str).replace(/[<>&'"]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;' }[c]));
+    }
+
+    // ============================================================
+    // 測量與標記圖資 —— KML 匯入
+    // 優先讀取 <ExtendedData> 內的 featureType 還原精確圖形；
+    // 若匯入的是本工具以外產生、沒有 ExtendedData 的一般 KML，
+    // 則退回以幾何型態（Point/LineString/Polygon）做通用判斷匯入。
+    // ============================================================
+    function handleKmlImport(evt) {
+        const file = evt.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            try {
+                parseAndImportKML(e.target.result);
+            } catch (err) {
+                alert('KML 檔案解析失敗，請確認檔案格式是否正確。\n' + err.message);
+            }
+            evt.target.value = '';
+        };
+        reader.readAsText(file, 'UTF-8');
+    }
+
+    function getExtendedData(placemarkEl) {
+        const data = {};
+        placemarkEl.querySelectorAll('ExtendedData Data').forEach(dataEl => {
+            const name = dataEl.getAttribute('name');
+            const valueEl = dataEl.querySelector('value');
+            if (name && valueEl) data[name] = valueEl.textContent;
+        });
+        return data;
+    }
+
+    function parseAndImportKML(kmlText) {
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(kmlText, 'text/xml');
+        if (xml.querySelector('parsererror')) {
+            throw new Error('XML 格式錯誤');
+        }
+        const placemarks = xml.querySelectorAll('Placemark');
+        if (placemarks.length === 0) {
+            alert('這個 KML 檔案裡沒有找到任何可匯入的圖徵。');
+            return;
+        }
+
+        let imported = 0;
+
+        placemarks.forEach(pm => {
+            const ext = getExtendedData(pm);
+            const nameEl = pm.querySelector('name');
+            const placemarkName = nameEl ? nameEl.textContent : '';
+
+            if (ext.featureType === 'circle' && ext.centerLat && ext.centerLon && ext.radiusNm) {
+                const center = L.latLng(parseFloat(ext.centerLat), parseFloat(ext.centerLon));
+                const radiusM = parseFloat(ext.radiusNm) * 1852;
+                const layer = L.circle(center, { radius: radiusM });
+                registerCircle(layer);
+                imported++;
+                return;
+            }
+
+            if (ext.featureType === 'rectangle' && ext.north && ext.south && ext.east && ext.west) {
+                const bounds = L.latLngBounds(
+                    [parseFloat(ext.south), parseFloat(ext.west)],
+                    [parseFloat(ext.north), parseFloat(ext.east)]
+                );
+                const layer = L.rectangle(bounds);
+                registerRectangle(layer);
+                imported++;
+                return;
+            }
+
+            if (ext.featureType === 'line') {
+                const lineEl = pm.querySelector('LineString coordinates');
+                if (lineEl) {
+                    const latlngs = parseKmlCoordText(lineEl.textContent);
+                    const layer = L.polyline(latlngs);
+                    registerLine(layer);
+                    imported++;
+                    return;
+                }
+            }
+
+            if (ext.featureType === 'point') {
+                const pointEl = pm.querySelector('Point coordinates');
+                if (pointEl) {
+                    const latlngs = parseKmlCoordText(pointEl.textContent);
+                    if (latlngs[0]) {
+                        promptAndRegisterPoint(latlngs[0], placemarkName || '未命名點位', ext.labelVisible !== '0');
+                        imported++;
+                    }
+                    return;
+                }
+            }
+
+            // --- 沒有 ExtendedData（非本工具產生）的通用退回解析 ---
+            const genPoint = pm.querySelector('Point coordinates');
+            if (genPoint) {
+                const latlngs = parseKmlCoordText(genPoint.textContent);
+                if (latlngs[0]) {
+                    promptAndRegisterPoint(latlngs[0], placemarkName || '未命名點位', true);
+                    imported++;
+                }
+                return;
+            }
+            const genLine = pm.querySelector('LineString coordinates');
+            if (genLine) {
+                const latlngs = parseKmlCoordText(genLine.textContent);
+                if (latlngs.length >= 2) {
+                    const layer = L.polyline(latlngs);
+                    registerLine(layer);
+                    imported++;
+                }
+                return;
+            }
+            const genPoly = pm.querySelector('Polygon coordinates');
+            if (genPoly) {
+                const latlngs = parseKmlCoordText(genPoly.textContent);
+                if (latlngs.length >= 3) {
+                    const layer = L.rectangle(L.latLngBounds(latlngs));
+                    registerRectangle(layer);
+                    imported++;
+                }
+                return;
+            }
+        });
+
+        if (imported > 0) {
+            alert(`✅ 已成功匯入 ${imported} 筆測量／標記圖徵。`);
+        } else {
+            alert('沒有可辨識的圖徵可以匯入。');
+        }
+    }
+
+    function parseKmlCoordText(text) {
+        return text.trim().split(/\s+/).filter(Boolean).map(tuple => {
+            const parts = tuple.split(',');
+            const lon = parseFloat(parts[0]);
+            const lat = parseFloat(parts[1]);
+            return L.latLng(lat, lon);
+        });
     }
 </script>
 
