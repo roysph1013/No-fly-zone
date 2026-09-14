@@ -556,6 +556,14 @@
                 e.latlng.lat, e.latlng.lng
             );
             showMeasureCursorTooltip(`半徑 ${nm.toFixed(2)} 浬 ／ ${km.toFixed(2)} 公里`, cx, cy);
+        } else if (activeToolType === 'rectangle' && activeDrawHandler && activeDrawHandler._startLatLng) {
+            const start = activeDrawHandler._startLatLng;
+            const widthDist = calcDistanceKmNm(start.lat, start.lng, start.lat, e.latlng.lng);
+            const heightDist = calcDistanceKmNm(start.lat, start.lng, e.latlng.lat, start.lng);
+            showMeasureCursorTooltip(
+                `寬 ${widthDist.nm.toFixed(2)}浬／${widthDist.km.toFixed(2)}km ｜ 高 ${heightDist.nm.toFixed(2)}浬／${heightDist.km.toFixed(2)}km`,
+                cx, cy
+            );
         } else {
             hideMeasureCursorTooltip();
         }
@@ -579,7 +587,7 @@
         } else if (type === 'circle') {
             activeDrawHandler = new L.Draw.Circle(map, { shapeOptions: shapeStyle, showRadius: false });
         } else if (type === 'rectangle') {
-            activeDrawHandler = new L.Draw.Rectangle(map, { shapeOptions: shapeStyle });
+            activeDrawHandler = new L.Draw.Rectangle(map, { shapeOptions: shapeStyle, showArea: false });
         } else if (type === 'marker') {
             activeDrawHandler = new L.Draw.Marker(map, {});
         }
@@ -1339,7 +1347,10 @@
     }
 
     function parseCoordinates(text) {
-        let cleanText = normalizeChineseCoordText(text);
+        // 先移除 ICAO NOTAM 的 Q) 行：這行內含壓縮座標格式（例如 3112N12342E011，省略秒、精度較低），
+        // 如果不排除，可能會被座標擷取規則誤抓成主要座標，蓋掉 E) 行裡真正精確的座標。
+        const textWithoutQLine = text.replace(/^\s*Q\)[^\r\n]*(\r?\n)?/im, '');
+        let cleanText = normalizeChineseCoordText(textWithoutQLine);
         cleanText = cleanText.replace(/、/g, ' ').replace(/，/g, ' ').replace(/\\/g, ' ').replace(/\//g, ' ');
 
         const isSectorText = text.includes("扇形") || text.includes("圓心角") || text.includes("扇形區域");
@@ -1400,15 +1411,22 @@
             }
         }
 
-        const circleRadiusMatch = text.match(/RADIUS\s+OF\s+([\d,]+(?:\.\d+)?)\s*(M|MTRS|METERS|NM)\b/i) ||
+        const circleRadiusMatch = text.match(/RADIUS\s+OF\s+([\d,]+(?:\.\d+)?)\s*(KM|KILOMETERS?|M|MTRS|METERS|NM)\b/i) ||
                                   text.match(/([\d,]+(?:\.\d+)?)\s*(?:海里|海浬|nm|NM)\s*(?:為|为)?\s*半(?:徑|径)/i) || 
                                   text.match(/半(?:徑|径)\s*(?:為|为)?\s*([\d,]+(?:\.\d+)?)\s*(?:海里|海浬|nm|NM)/i);
 
         if (circleRadiusMatch) {
             let val = parseFloat(circleRadiusMatch[1].replace(/,/g, ''));
             let unit = circleRadiusMatch[2] ? circleRadiusMatch[2].toUpperCase() : 'NM';
-            
-            let radiusNM = (unit === 'M' || unit === 'MTRS' || unit === 'METERS') ? parseFloat((val / 1852).toFixed(2)) : val;
+
+            let radiusNM;
+            if (unit === 'KM' || unit.startsWith('KILOMETER')) {
+                radiusNM = parseFloat(((val * 1000) / 1852).toFixed(2));
+            } else if (unit === 'M' || unit === 'MTRS' || unit === 'METERS') {
+                radiusNM = parseFloat((val / 1852).toFixed(2));
+            } else {
+                radiusNM = val;
+            }
 
             const coords = parsePointsFromText(cleanText);
             if (coords.points.length >= 1) {
