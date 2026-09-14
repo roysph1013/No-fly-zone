@@ -1246,11 +1246,14 @@
             str = str.replace(/\./g, ' ');
         }
 
-        const parts = str.split(/\s+/).map(Number).filter(n => !isNaN(n));
+        // 保留原始字串 token（含前導零），避免先轉成 Number 再轉回字串時遺失前導零
+        // （例如 "091600" 轉成數字 91600 再轉回字串會變成 "91600"，少一碼，導致度分秒切法整個跑掉）
+        const rawTokens = str.split(/\s+/).filter(s => s.length > 0);
+        const numTokens = rawTokens.map(Number).filter(n => !isNaN(n));
 
         let val = 0;
-        if (parts.length === 1) {
-            let numStr = parts[0].toString();
+        if (rawTokens.length === 1 && numTokens.length === 1) {
+            let numStr = rawTokens[0];
             if (numStr.includes('.')) {
                 let degLen = isLongitude ? (numStr.indexOf('.') === 5 ? 3 : 2) : (numStr.indexOf('.') === 4 ? 2 : 2);
                 if (numStr.indexOf('.') > 3) {
@@ -1258,7 +1261,7 @@
                     let m = parseFloat(numStr.substring(degLen));
                     val = d + m / 60.0;
                 } else {
-                    val = parts[0];
+                    val = numTokens[0];
                 }
             } else {
                 if (numStr.length >= 6) {
@@ -1271,13 +1274,13 @@
                     let m = parseFloat(numStr.substring(numStr.length - 2));
                     val = d + m / 60.0;
                 } else {
-                    val = parts[0];
+                    val = numTokens[0];
                 }
             }
-        } else if (parts.length === 2) {
-            val = parts[0] + parts[1] / 60.0;
-        } else if (parts.length >= 3) {
-            val = parts[0] + parts[1] / 60.0 + parts[2] / 3600.0;
+        } else if (numTokens.length === 2) {
+            val = numTokens[0] + numTokens[1] / 60.0;
+        } else if (numTokens.length >= 3) {
+            val = numTokens[0] + numTokens[1] / 60.0 + numTokens[2] / 3600.0;
         }
 
         if (dir === 'S' || dir === 'W') val = -val;
