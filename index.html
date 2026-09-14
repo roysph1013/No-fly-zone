@@ -103,6 +103,29 @@
         .btn-parse { background: #3182ce; width: 100%; padding: 12px; font-size: 14px; box-shadow: 0 2px 4px rgba(49, 130, 206, 0.3); }
         .btn-parse:hover { background: #2b6cb0; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(49, 130, 206, 0.4); }
 
+        .btn-flight-path { background: #d69e2e; width: 100%; padding: 10px; font-size: 13px; box-shadow: 0 2px 4px rgba(214, 158, 46, 0.3); }
+        .btn-flight-path:hover { background: #b7791f; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(214, 158, 46, 0.4); }
+
+        .launch-site-marker {
+            font-size: 18px;
+            text-align: center;
+            line-height: 22px;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.7));
+        }
+        .leaflet-tooltip.launch-site-label {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid #d69e2e;
+            color: #7c4a03;
+            font-weight: bold;
+            font-size: 11px;
+            padding: 2px 7px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .leaflet-tooltip.launch-site-label::before {
+            border-top-color: #d69e2e;
+        }
+
         .btn-kml { background: #38a169; flex: 1.4; padding: 10px 6px; font-size: 12px; }
         .btn-kml:hover { background: #2f855a; }
 
@@ -210,6 +233,22 @@
             color: #fff;
         }
         .measure-submenu.hidden { display: none; }
+
+        /* 繪製途中跟著游標移動的即時測距/半徑提示框 */
+        .measure-cursor-tooltip {
+            position: fixed;
+            display: none;
+            background: rgba(26, 32, 44, 0.92);
+            color: #ffd166;
+            font-weight: bold;
+            font-size: 12px;
+            padding: 4px 9px;
+            border-radius: 4px;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 3000;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
         .measure-submenu a.tool-clear-all { border-top: 1px solid #ccc; }
 
         /* 點位名稱標籤（區別於黃底的距離/半徑標籤） */
@@ -259,6 +298,13 @@
         .point-edit-popup .popup-btn-row button {
             font-size: 11px; padding: 4px 8px;
         }
+        .point-edit-popup .popup-coord-field { margin-bottom: 6px; }
+        .point-edit-popup .popup-coord-label {
+            font-size: 11px; color: #718096; margin-bottom: 3px;
+        }
+        .point-edit-popup .popup-coord-field input[type="text"] {
+            width: 190px; margin-bottom: 0;
+        }
 
         /* KML 匯出選擇選單 */
         .kml-export-menu {
@@ -300,6 +346,9 @@
         <label class="switch-label">
             <input type="checkbox" id="toggleADIZ" onchange="toggleADIZVisibility()"> 顯示防空識別區 (ADIZ)
         </label>
+        <label class="switch-label">
+            <input type="checkbox" id="toggleLaunchSites" checked onchange="toggleLaunchSitesVisibility()"> 顯示發射場位置
+        </label>
     </div>
 
     <div id="areaContainer"></div>
@@ -309,6 +358,9 @@
     <div class="btn-group">
         <button class="btn-parse" onclick="processAllData()">
             <span>一鍵繪製</span>
+        </button>
+        <button class="btn-flight-path" onclick="generateFlightPath()">
+            <span>🚀 生成飛行路徑</span>
         </button>
         <div class="btn-row" style="position: relative;">
             <button class="btn-kml" onclick="toggleKmlExportMenu(event)">匯出 KML ▾</button>
@@ -464,7 +516,50 @@
         }
         activeToolType = null;
         setActiveToolIcon(null);
+        hideMeasureCursorTooltip();
     }
+
+    // --- 繪製途中即時顯示長度／半徑的游標提示框 ---
+    let measureTooltipEl = null;
+    function ensureMeasureCursorTooltip() {
+        if (!measureTooltipEl) {
+            measureTooltipEl = document.createElement('div');
+            measureTooltipEl.className = 'measure-cursor-tooltip';
+            document.body.appendChild(measureTooltipEl);
+        }
+        return measureTooltipEl;
+    }
+    function showMeasureCursorTooltip(text, clientX, clientY) {
+        const el = ensureMeasureCursorTooltip();
+        el.textContent = text;
+        el.style.display = 'block';
+        el.style.left = (clientX + 16) + 'px';
+        el.style.top = (clientY + 16) + 'px';
+    }
+    function hideMeasureCursorTooltip() {
+        if (measureTooltipEl) measureTooltipEl.style.display = 'none';
+    }
+
+    map.on('mousemove', function (e) {
+        if (!e.originalEvent) return;
+        const cx = e.originalEvent.clientX;
+        const cy = e.originalEvent.clientY;
+
+        if (activeToolType === 'polyline' && activeDrawHandler && activeDrawHandler._markers && activeDrawHandler._markers.length > 0) {
+            const pts = activeDrawHandler._markers.map(m => m.getLatLng());
+            pts.push(e.latlng);
+            const { km, nm } = polylineTotalDistance(pts);
+            showMeasureCursorTooltip(`${nm.toFixed(2)} 浬 ／ ${km.toFixed(2)} 公里`, cx, cy);
+        } else if (activeToolType === 'circle' && activeDrawHandler && activeDrawHandler._startLatLng) {
+            const { km, nm } = calcDistanceKmNm(
+                activeDrawHandler._startLatLng.lat, activeDrawHandler._startLatLng.lng,
+                e.latlng.lat, e.latlng.lng
+            );
+            showMeasureCursorTooltip(`半徑 ${nm.toFixed(2)} 浬 ／ ${km.toFixed(2)} 公里`, cx, cy);
+        } else {
+            hideMeasureCursorTooltip();
+        }
+    });
 
     function activateDrawTool(type) {
         // 再次點擊同一個工具 = 取消該工具
@@ -480,7 +575,7 @@
         const shapeStyle = { color: '#dd6b20', weight: 3, opacity: 0.9, fillOpacity: 0.08 };
 
         if (type === 'polyline') {
-            activeDrawHandler = new L.Draw.Polyline(map, { shapeOptions: shapeStyle, metric: false });
+            activeDrawHandler = new L.Draw.Polyline(map, { shapeOptions: shapeStyle, metric: false, showLength: false });
         } else if (type === 'circle') {
             activeDrawHandler = new L.Draw.Circle(map, { shapeOptions: shapeStyle, showRadius: false });
         } else if (type === 'rectangle') {
@@ -513,6 +608,7 @@
         activeDrawHandler = null;
         activeToolType = null;
         setActiveToolIcon(null);
+        hideMeasureCursorTooltip();
     });
 
     // --- 距離／面積計算輔助 ---
@@ -543,6 +639,37 @@
             marker.bindPopup(popupHtml, { offset: [0, -10], closeButton: false });
         }
         return marker;
+    }
+
+    // 像素偏移 ⇄ 經緯度 換算（讓標籤跟著錨點縮放時保持固定畫面距離，不會跑位）
+    function offsetLatLngByPixels(baseLatLng, offsetPoint) {
+        const basePx = map.latLngToLayerPoint(baseLatLng);
+        const targetPx = basePx.add(offsetPoint);
+        return map.layerPointToLatLng(targetPx);
+    }
+    function computePixelOffset(baseLatLng, targetLatLng) {
+        const basePx = map.latLngToLayerPoint(baseLatLng);
+        const targetPx = map.latLngToLayerPoint(targetLatLng);
+        return targetPx.subtract(basePx);
+    }
+    // 點位名稱標籤預設往上偏移的像素距離（覺得還是壓到點或想拉遠一點，改這個數字即可）
+    const POINT_LABEL_DEFAULT_OFFSET = L.point(0, -26);
+
+    // 點位經緯度輸入解析：同時支援十進位與度分秒（含中文北緯/東經），格式為「緯度, 經度」
+    // 重複使用檔案既有的 parseSingleCoordinate / normalizeChineseCoordText（禁航區座標解析已驗證過的邏輯）
+    function parseLatLonInput(text) {
+        if (!text || !text.trim()) return null;
+        let cleaned = normalizeChineseCoordText(text.trim());
+        cleaned = cleaned.replace(/、/g, ',').replace(/，/g, ',');
+        const parts = cleaned.split(',').map(s => s.trim()).filter(Boolean);
+        if (parts.length !== 2) return null;
+        if (!/\d/.test(parts[0]) || !/\d/.test(parts[1])) return null;
+
+        const lat = parseSingleCoordinate(parts[0], false);
+        const lon = parseSingleCoordinate(parts[1], true);
+        if (lat === null || lon === null || isNaN(lat) || isNaN(lon)) return null;
+        if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
+        return { lat, lon };
     }
 
     function deselectFeature() {
@@ -675,14 +802,22 @@
         marker.addTo(map);
 
         const featureObj = { id: ++drawnFeatureCounter, marker, lat: latlng.lat, lon: latlng.lng, name, visible };
+        featureObj.labelOffset = POINT_LABEL_DEFAULT_OFFSET; // 記住目前相對點位的像素偏移量
 
+        const initialLabelLatLng = offsetLatLngByPixels(latlng, featureObj.labelOffset);
         const label = createDraggableLabel(
-            latlng.lat, latlng.lng,
+            initialLabelLatLng.lat, initialLabelLatLng.lng,
             escapeHtml(name),
             'point-label' + (visible ? '' : ' label-hidden')
         );
         label.addTo(map);
         featureObj.label = label;
+
+        // 使用者手動拖曳結束後，重新計算並記住新的像素偏移量，
+        // 這樣之後縮放地圖時，會維持「使用者調整過」的相對位置，而不是彈回預設值
+        label.on('dragend', function () {
+            featureObj.labelOffset = computePixelOffset(L.latLng(featureObj.lat, featureObj.lon), label.getLatLng());
+        });
 
         // 綁定一次空白彈窗，每次「開啟」時才重新產生內容（含最新名稱/顯示狀態）。
         // 不額外加 click 監聽，避免跟 Leaflet bindPopup 內建的點擊開關機制互相打架
@@ -698,10 +833,15 @@
 
     function buildPointPopupHtml(featureObj) {
         const popupId = 'point-edit-' + featureObj.id;
+        const currentCoordText = `${featureObj.lat.toFixed(6)}, ${featureObj.lon.toFixed(6)}`;
         return `
             <div class="point-edit-popup">
                 <input type="text" id="${popupId}-name" value="${escapeAttr(featureObj.name)}">
                 <label><input type="checkbox" id="${popupId}-vis" ${featureObj.visible ? 'checked' : ''}> 顯示名稱標籤</label>
+                <div class="popup-coord-field">
+                    <div class="popup-coord-label">經緯度（十進位或度分秒皆可）</div>
+                    <input type="text" id="${popupId}-coord" value="${escapeAttr(currentCoordText)}" placeholder="例如: 21.5, 121.5 或 21°30'00&quot;N,121°30'00&quot;E">
+                </div>
                 <div class="popup-btn-row">
                     <button class="btn-vis" onclick="applyPointEdit(${featureObj.id})">✔ 套用</button>
                     <button class="btn-del" onclick="deletePointFeature(${featureObj.id})">🗑️ 刪除</button>
@@ -718,8 +858,27 @@
         if (!f) return;
         const nameInput = document.getElementById(`point-edit-${id}-name`);
         const visInput = document.getElementById(`point-edit-${id}-vis`);
+        const coordInput = document.getElementById(`point-edit-${id}-coord`);
+
+        // 先驗證經緯度欄位，格式錯誤就中止並提示，不套用任何變更，避免部分套用造成混淆
+        const parsed = parseLatLonInput(coordInput.value);
+        if (coordInput.value.trim() && !parsed) {
+            alert('經緯度格式無法辨識，請確認格式（例如: 21.5, 121.5 或 21°30\'00"N,121°30\'00"E）');
+            return;
+        }
+
         f.name = nameInput.value || '未命名點位';
         f.visible = visInput.checked;
+
+        if (parsed) {
+            const newLatLng = L.latLng(parsed.lat, parsed.lon);
+            f.lat = parsed.lat;
+            f.lon = parsed.lon;
+            f.marker.setLatLng(newLatLng);
+            // 移動點位後，標籤仍維持原本記錄的像素偏移量，一起跟著移動過去
+            const newLabelLatLng = offsetLatLngByPixels(newLatLng, f.labelOffset || POINT_LABEL_DEFAULT_OFFSET);
+            f.label.setLatLng(newLabelLatLng);
+        }
 
         const labelEl = f.label.getElement();
         const inner = labelEl ? labelEl.querySelector('.point-label') || labelEl : null;
@@ -741,6 +900,15 @@
         return String(str).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
     }
     // 註：escapeAttr 共用檔案後方既有的同名函式（用於後製文字欄位跳脫），避免重複定義
+
+    // 縮放結束後，重新計算所有點位名稱標籤的位置，維持跟點位固定的像素距離，避免縮放時標籤跑位
+    map.on('zoomend', function () {
+        drawnFeatures.points.forEach(f => {
+            if (!f.labelOffset) return;
+            const newLatLng = offsetLatLngByPixels(L.latLng(f.lat, f.lon), f.labelOffset);
+            f.label.setLatLng(newLatLng);
+        });
+    });
 
     // --- 點擊地圖空白處，取消工具/選取狀態（沿用既有的空白點擊監聽）---
     map.on('click', function () {
@@ -775,6 +943,43 @@
             adizLayer.addTo(map);
         } else {
             if (map.hasLayer(adizLayer)) map.removeLayer(adizLayer);
+        }
+    }
+
+    // --- 發射場位置（預設標示，度分秒座標已換算為十進位）---
+    const launchSites = [
+        { name: '山西太原衛星發射中心', lat: 38.849086, lon: 111.608497 },
+        { name: '甘肅酒泉衛星發射中心', lat: 40.957778, lon: 100.291667 },
+        { name: '四川西昌衛星發射中心', lat: 28.246017, lon: 102.026556 },
+        { name: '海南商業航天發射場', lat: 19.596875, lon: 110.930703 },
+        { name: '海南文昌航天發射場', lat: 19.614472, lon: 110.951097 }
+    ];
+
+    const launchSiteLayerGroup = L.layerGroup();
+    launchSites.forEach(site => {
+        const icon = L.divIcon({
+            className: '',
+            html: '<div class="launch-site-marker">🚀</div>',
+            iconSize: [22, 22],
+            iconAnchor: [11, 11]
+        });
+        const marker = L.marker([site.lat, site.lon], { icon });
+        marker.bindTooltip(site.name, {
+            permanent: true,
+            direction: 'top',
+            offset: [0, -10],
+            className: 'launch-site-label'
+        });
+        launchSiteLayerGroup.addLayer(marker);
+    });
+    launchSiteLayerGroup.addTo(map); // 預設顯示
+
+    function toggleLaunchSitesVisibility() {
+        const show = document.getElementById('toggleLaunchSites').checked;
+        if (show) {
+            launchSiteLayerGroup.addTo(map);
+        } else {
+            if (map.hasLayer(launchSiteLayerGroup)) map.removeLayer(launchSiteLayerGroup);
         }
     }
 
@@ -1437,6 +1642,142 @@
         };
     }
 
+    // ============================================================
+    // 飛行路徑生成：依禁航區資料自動擬合一條代表彈道方向的直線
+    // - 2 個以上禁航區：取各禁航區中心點，做最小平方法（PCA）擬合出最佳直線
+    // - 單一禁航區：改用該禁航區自己的頂點分佈，算出長軸方向（同一套算法，只是輸入點不同）
+    // - 圓形禁航區沒有方向性，若只有單一圓形則無法判斷方向
+    // ============================================================
+    let flightPathLayer = null;
+
+    function getAreaCenterPoint(area) {
+        if (area.type === 'circle') return { lat: area.points[0].lat, lon: area.points[0].lon };
+        if (area.type === 'sector') return { lat: area.center.lat, lon: area.center.lon };
+        return computePolygonCentroid(area.points);
+    }
+
+    // 多邊形面積質心公式（shoelace-based centroid）：不受旋轉角度影響，
+    // 傾斜的矩形／不規則多邊形也能算出精確幾何中心，跟原本用外框最大最小值算出的
+    // computeBoundingBoxCenter 不同 —— 外框中心只適用於正南北/正東西方向的矩形，
+    // 旋轉過的矩形用外框中心會偏移，導致飛行路徑線沒有準確穿過禁航區中心。
+    function computePolygonCentroid(points) {
+        const n = points.length;
+        if (n < 3) return computeBoundingBoxCenter(points);
+
+        let A = 0, cx = 0, cy = 0;
+        for (let i = 0; i < n; i++) {
+            const p1 = points[i];
+            const p2 = points[(i + 1) % n];
+            const cross = p1.lon * p2.lat - p2.lon * p1.lat;
+            A += cross;
+            cx += (p1.lon + p2.lon) * cross;
+            cy += (p1.lat + p2.lat) * cross;
+        }
+        A = A / 2;
+
+        if (Math.abs(A) < 1e-12) {
+            // 退化多邊形（面積趨近於0，例如點幾乎共線），改回算術平均避免除以零
+            return computeBoundingBoxCenter(points);
+        }
+
+        return { lat: cy / (6 * A), lon: cx / (6 * A) };
+    }
+
+    // 對一組經緯度點做主軸方向擬合（PCA／總體最小平方法），可處理任意角度（含接近垂直的情況）
+    // 有先用該點集平均緯度的 cos 值修正經度比例尺，避免高緯度地區經度被拉伸而算錯方向
+    function fitPrincipalAxis(points) {
+        const n = points.length;
+        const meanLat = points.reduce((s, p) => s + p.lat, 0) / n;
+        const meanLon = points.reduce((s, p) => s + p.lon, 0) / n;
+        const cosLat = Math.cos(meanLat * Math.PI / 180) || 1e-9;
+
+        let sxx = 0, syy = 0, sxy = 0;
+        points.forEach(p => {
+            const dx = (p.lon - meanLon) * cosLat;
+            const dy = (p.lat - meanLat);
+            sxx += dx * dx;
+            syy += dy * dy;
+            sxy += dx * dy;
+        });
+
+        const theta = 0.5 * Math.atan2(2 * sxy, sxx - syy);
+        let dLonProj = Math.cos(theta);
+        let dLat = Math.sin(theta);
+        let dLon = dLonProj / cosLat; // 換算回真實經度比例
+
+        const norm = Math.sqrt(dLon * dLon + dLat * dLat) || 1;
+        return { meanLat, meanLon, dLat: dLat / norm, dLon: dLon / norm };
+    }
+
+    // 飛行路徑延伸長度固定不變（不依賴 map.getBounds()，徹底跟目前縮放/視角脫鉤）。
+    // 延伸方式沿用跟 fitPrincipalAxis 同一套經緯度平面座標系做線性外插，
+    // 只有 2 個端點、單純一條直線，不會有轉折，也不會因為球面公式在長距離下失真。
+    const FLIGHT_PATH_HALF_LENGTH_KM = 2500;
+
+    function generateFlightPath() {
+        if (flightPathLayer && map.hasLayer(flightPathLayer)) {
+            map.removeLayer(flightPathLayer);
+            flightPathLayer = null;
+        }
+
+        if (allParsedAreas.length === 0) {
+            alert('請先貼上禁航區座標並點擊「一鍵繪製」，再產生飛行路徑。');
+            return;
+        }
+
+        let axisPoints;
+        let insurancePoints; // 一定要確實通過的點（多個禁航區=各自中心點；單一禁航區=自己的中心點）
+        if (allParsedAreas.length === 1) {
+            const area = allParsedAreas[0];
+            if (area.type === 'circle') {
+                alert('單一圓形禁航區沒有方向性，無法判斷飛行路徑方向。\n請改用矩形／多邊形禁航區，或至少提供兩個禁航區。');
+                return;
+            }
+            axisPoints = area.points; // 用該禁航區自己的頂點分佈算長軸方向
+            insurancePoints = [getAreaCenterPoint(area)]; // 保險：一定要通過這個禁航區自己的中心點
+        } else {
+            axisPoints = allParsedAreas.map(getAreaCenterPoint); // 用各禁航區中心點做最佳擬合直線
+            insurancePoints = axisPoints; // 這裡本身就是各中心點
+        }
+
+        if (allParsedAreas.length > 2) {
+            const proceed = confirm(`目前偵測到 ${allParsedAreas.length} 個禁航區資料一起參與計算方向（不是畫面上看到的數量而已）。\n如果你只想用畫面上看到的幾個禁航區來畫路徑，建議先按「全部清空」再重新貼上，避免舊資料一起被算進去。\n\n要繼續用目前全部 ${allParsedAreas.length} 個資料生成嗎？`);
+            if (!proceed) return;
+        }
+
+        const { meanLat, meanLon, dLat, dLon } = fitPrincipalAxis(axisPoints);
+
+        // 把「每單位 t 對應的實際公里數」換算出來，才能用固定公里數控制延伸長度
+        const cosLat = Math.cos(meanLat * Math.PI / 180) || 1e-9;
+        const kmPerUnitT = 111.32 * Math.sqrt(dLat * dLat + (dLon * cosLat) * (dLon * cosLat));
+        const tMax = FLIGHT_PATH_HALF_LENGTH_KM / kmPerUnitT;
+
+        const endA = { lat: meanLat + tMax * dLat, lon: meanLon + tMax * dLon };
+        const endB = { lat: meanLat - tMax * dLat, lon: meanLon - tMax * dLon };
+
+        // 保險做法：不只依賴「擬合直線方程式」在畫的時候會自動通過中心點，
+        // 而是直接把 insurancePoints（不管單一或多個禁航區）明確插進線段頂點，
+        // 依照沿著擬合方向的投影位置排序，這樣畫出來的線一定會確實經過每個禁航區的中心點。
+        const projectT = (p) => (p.lat - meanLat) * dLat + (p.lon - meanLon) * dLon;
+        const sortedInsurancePoints = [...insurancePoints].sort((a, b) => projectT(a) - projectT(b));
+
+        const linePoints = [endB, ...sortedInsurancePoints, endA].map(p => [p.lat, p.lon]);
+
+        flightPathLayer = L.polyline(
+            linePoints,
+            { color: '#ffe100', weight: 3, opacity: 0.9, dashArray: null }
+        ).addTo(map);
+
+        flightPathLayer.bindPopup('<button class="btn-label-del" onclick="deleteFlightPath()">🗑️ 刪除飛行路徑</button>', { closeButton: false });
+    }
+
+    function deleteFlightPath() {
+        if (flightPathLayer && map.hasLayer(flightPathLayer)) {
+            map.removeLayer(flightPathLayer);
+        }
+        flightPathLayer = null;
+    }
+
     function computeEdgeLabelPosition(p1, p2, center) {
         const midLat = (p1.lat + p2.lat) / 2;
         const midLon = (p1.lon + p2.lon) / 2;
@@ -1535,6 +1876,10 @@
         Object.keys(areaMapObjects).forEach(cardId => removeAreaFromMap(cardId));
         areaMapObjects = {};
         allParsedAreas = [];
+        if (flightPathLayer && map.hasLayer(flightPathLayer)) {
+            map.removeLayer(flightPathLayer);
+            flightPathLayer = null;
+        }
 
         const cards = document.querySelectorAll('.area-card');
         let featureGroup = L.featureGroup();
@@ -1665,6 +2010,10 @@
         areaMapObjects = {};
         allParsedAreas = [];
         cardParsedResults = {};
+        if (flightPathLayer && map.hasLayer(flightPathLayer)) {
+            map.removeLayer(flightPathLayer);
+            flightPathLayer = null;
+        }
 
         const inputs = document.querySelectorAll('.area-input');
         inputs.forEach(input => input.value = '');
