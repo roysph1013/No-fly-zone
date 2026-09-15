@@ -60,6 +60,85 @@
         #map { flex: 1; height: 100%; position: relative; background: #262626; }
         h2 { font-size: 18px; color: #1a365d; border-bottom: 2px solid #3182ce; padding-bottom: 6px; }
 
+        /* 手機版底部抽屜的拖曳把手（桌面版預設隱藏） */
+        #sheetHandle { display: none; }
+        .sheet-grip {
+            width: 40px; height: 5px; background: #cbd5e0; border-radius: 3px;
+            margin: 0 auto 6px auto;
+        }
+        .sheet-title-peek {
+            display: none;
+            font-size: 15px; font-weight: bold; color: #1a365d; text-align: center;
+        }
+
+        /* ===================== 手機版（螢幕寬度 ≤ 768px）===================== */
+        @media (max-width: 768px) {
+            body { display: block; height: 100dvh; overflow: hidden; }
+
+            /* 地圖改為全螢幕鋪滿，控制面板改用底部抽屜浮在上面 */
+            #map {
+                position: fixed; inset: 0; width: 100%; height: 100dvh; flex: none;
+            }
+
+            /* 桌面版的收折箭頭按鈕在手機上用不到，改用底部抽屜的拖曳把手 */
+            #toggle-sidebar-btn { display: none; }
+
+            #sidebar {
+                position: fixed;
+                left: 0; right: 0; bottom: 0;
+                width: 100%;
+                max-height: 82dvh;
+                min-height: 76px;
+                border-radius: 18px 18px 0 0;
+                box-shadow: 0 -6px 24px rgba(0,0,0,0.3);
+                margin-left: 0 !important;
+                transform: translateY(calc(100% - 76px));
+                transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+                padding: 10px 16px 20px 16px;
+                z-index: 1200;
+                touch-action: none;
+            }
+            #sidebar.sheet-expanded {
+                transform: translateY(0);
+                touch-action: auto;
+            }
+            #sidebar.sheet-dragging { transition: none; }
+
+            #sheetHandle {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 6px 0 10px 0;
+                cursor: grab;
+                touch-action: none;
+                flex-shrink: 0;
+            }
+            #sidebar:not(.sheet-expanded) .sheet-title-peek { display: block; }
+            #sidebar:not(.sheet-expanded) h2 { display: none; }
+
+            #sidebar h2 { font-size: 17px; margin-bottom: 4px; }
+
+            /* 觸控目標放大，避免誤觸 */
+            .switch-label { font-size: 15px; padding: 6px 2px; min-height: 40px; }
+            .switch-label input[type="checkbox"] { width: 20px; height: 20px; }
+
+            .btn-parse, .btn-flight-path, .btn-kml, .btn-import, .btn-clear {
+                min-height: 46px; font-size: 14px;
+            }
+
+            .btn-row { flex-wrap: wrap; }
+            .btn-row > button { flex: 1 1 30%; }
+
+            .basemap-tabs { gap: 6px; }
+            .basemap-tab { min-height: 40px; font-size: 13px; }
+
+            .area-card textarea, .area-input {
+                font-size: 15px;
+            }
+
+            .kml-export-menu { left: 0; right: 0; width: auto; }
+        }
+
         .area-card { background: #f8fafc; border: 1px solid #cbd5e0; border-radius: 8px; padding: 12px; margin-bottom: 8px; position: relative; }
         .area-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .area-title { font-weight: bold; color: #2d3748; font-size: 14px; }
@@ -97,8 +176,8 @@
             gap: 6px;
         }
 
-        .btn-add { background: #edf2f7; color: #2d3748; border: 1px dashed #cbd5e0; width: 100%; }
-        .btn-add:hover { background: #e2e8f0; border-color: #a0aec0; }
+        .btn-add { background: #edf2f7; color: #2d3748; border: 1.5px dashed #90a4c0; width: 100%; }
+        .btn-add:hover { background: #e2e8f0; border-color: #3182ce; color: #1a365d; }
 
         .btn-parse { background: #3182ce; width: 100%; padding: 12px; font-size: 14px; box-shadow: 0 2px 4px rgba(49, 130, 206, 0.3); }
         .btn-parse:hover { background: #2b6cb0; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(49, 130, 206, 0.4); }
@@ -129,11 +208,11 @@
         .btn-kml { background: #38a169; flex: 1.4; padding: 10px 6px; font-size: 12px; }
         .btn-kml:hover { background: #2f855a; }
 
-        .btn-import { background: #2b6cb0; flex: 1.4; padding: 10px 6px; font-size: 12px; }
-        .btn-import:hover { background: #2c5282; }
+        .btn-import { background: #0d9488; flex: 1.4; padding: 10px 6px; font-size: 12px; }
+        .btn-import:hover { background: #0f766e; }
 
-        .btn-clear { background: #e2e8f0; color: #4a5568; flex: 1; padding: 10px 6px; font-size: 12px; }
-        .btn-clear:hover { background: #cbd5e0; color: #2d3748; }
+        .btn-clear { background: #fff5f5; color: #c53030; border: 1px solid #feb2b2; flex: 1; padding: 10px 6px; font-size: 12px; }
+        .btn-clear:hover { background: #fed7d7; border-color: #fc8181; color: #9b2c2c; }
 
         .btn-resort { background: #dd6b20; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 6px; }
         .btn-resort:hover { background: #c05621; }
@@ -337,11 +416,15 @@
 <button id="toggle-sidebar-btn" onclick="toggleSidebar()" title="隱藏/展開控制面板">◀</button>
 
 <div id="sidebar">
+    <div id="sheetHandle" onclick="toggleMobileSheet()">
+        <div class="sheet-grip"></div>
+        <span class="sheet-title-peek">禁航區繪製小工具</span>
+    </div>
     <h2>禁航區繪製小工具</h2>
 
     <div class="control-panel">
         <label class="switch-label">
-            <input type="checkbox" id="toggleLabels" checked onchange="toggleLabelVisibility()"> 顯示海浬標籤
+            <input type="checkbox" id="toggleLabels" checked onchange="toggleLabelVisibility()"> 顯示禁航區尺寸
         </label>
         <label class="switch-label">
             <input type="checkbox" id="toggleADIZ" onchange="toggleADIZVisibility()"> 顯示防空識別區 (ADIZ)
@@ -357,17 +440,17 @@
 
     <div class="btn-group">
         <button class="btn-parse" onclick="processAllData()">
-            <span>一鍵繪製</span>
+            <span>🪄 繪製禁航區</span>
         </button>
         <button class="btn-flight-path" onclick="generateFlightPath()">
-            <span>🚀 生成飛行路徑</span>
+            <span>🚀 繪製飛行路徑</span>
         </button>
         <div class="btn-row" style="position: relative;">
-            <button class="btn-kml" onclick="toggleKmlExportMenu(event)">匯出 KML ▾</button>
+            <button class="btn-kml" onclick="toggleKmlExportMenu(event)">📤 匯出 KML ▾</button>
             <button class="btn-import" onclick="document.getElementById('kmlImportInput').click()">📥 匯入 KML</button>
-            <button class="btn-clear" onclick="clearAllData()">全部清空</button>
+            <button class="btn-clear" onclick="clearAllData()">🗑️ 全部清空</button>
             <div class="kml-export-menu" id="kmlExportMenu">
-                <button onclick="downloadKML(); closeKmlExportMenu();">📦 匯出禁航區資料</button>
+                <button onclick="downloadKML(); closeKmlExportMenu();">♦️ 匯出禁航區資料</button>
                 <button onclick="exportDrawnFeaturesKML(); closeKmlExportMenu();">📍 匯出測量與標記圖資</button>
             </div>
         </div>
@@ -457,9 +540,9 @@
         onAdd: function () {
             const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control measure-submenu hidden');
             const tools = [
-                { type: 'polyline', icon: '📏', title: '測量距離 / 畫線（海浬＋公里）' },
-                { type: 'circle', icon: '⭕', title: '繪製圓形（顯示半徑）' },
-                { type: 'rectangle', icon: '▭', title: '繪製矩形' },
+                { type: 'polyline', icon: '📏', title: '測量距離 / 畫線' },
+                { type: 'circle', icon: '⭕', title: '繪製圓形' },
+                { type: 'rectangle', icon: '♦️', title: '繪製矩形' },
                 { type: 'marker', icon: '📍', title: '標示點位' }
             ];
             this._links = {};
@@ -1098,6 +1181,92 @@
         
         setTimeout(() => { map.invalidateSize(); }, 300);
     }
+
+    // ============================================================
+    // 手機版底部抽屜（Bottom Sheet）互動
+    // ============================================================
+    const MOBILE_BREAKPOINT = 768;
+    function isMobileLayout() {
+        return window.innerWidth <= MOBILE_BREAKPOINT;
+    }
+
+    function toggleMobileSheet(forceExpand) {
+        if (!isMobileLayout()) return;
+        const sidebar = document.getElementById('sidebar');
+        const shouldExpand = (forceExpand !== undefined) ? forceExpand : !sidebar.classList.contains('sheet-expanded');
+        sidebar.classList.toggle('sheet-expanded', shouldExpand);
+        sidebar.style.transform = ''; // 清掉拖曳過程中設定的行內樣式，交回CSS class控制
+        setTimeout(() => { map.invalidateSize(); }, 350);
+    }
+
+    // 拖曳手勢：讓底部抽屜可以像 Google 地圖一樣用手指拖上拖下
+    (function setupSheetDrag() {
+        const sidebar = document.getElementById('sidebar');
+        const handle = document.getElementById('sheetHandle');
+        let dragStartY = 0;
+        let dragStartTranslateY = 0;
+        let dragging = false;
+        let sheetHeight = 0;
+
+        function getCurrentTranslateY() {
+            const rect = sidebar.getBoundingClientRect();
+            return rect.top - (window.innerHeight - sheetHeight);
+        }
+
+        function onDragStart(clientY) {
+            if (!isMobileLayout()) return;
+            dragging = true;
+            sheetHeight = sidebar.offsetHeight;
+            dragStartY = clientY;
+            dragStartTranslateY = sidebar.classList.contains('sheet-expanded') ? 0 : (sheetHeight - 76);
+            sidebar.classList.add('sheet-dragging');
+        }
+
+        function onDragMove(clientY) {
+            if (!dragging) return;
+            const delta = clientY - dragStartY;
+            let newTranslateY = dragStartTranslateY + delta;
+            newTranslateY = Math.max(0, Math.min(sheetHeight - 76, newTranslateY));
+            sidebar.style.transform = `translateY(${newTranslateY}px)`;
+        }
+
+        function onDragEnd(clientY) {
+            if (!dragging) return;
+            dragging = false;
+            sidebar.classList.remove('sheet-dragging');
+            const delta = clientY - dragStartY;
+
+            // 幾乎沒有位移＝單純點擊，交給把手上的 onclick（toggleMobileSheet()）處理，
+            // 這裡只還原行內樣式，避免跟點擊的切換邏輯打架
+            if (Math.abs(delta) < 6) {
+                sidebar.style.transform = '';
+                return;
+            }
+
+            const totalTravel = sheetHeight - 76;
+            const finalTranslateY = Math.max(0, Math.min(totalTravel, dragStartTranslateY + delta));
+            // 拖過一半就吸附到展開，否則收合
+            const shouldExpand = finalTranslateY < totalTravel / 2;
+            toggleMobileSheet(shouldExpand);
+        }
+
+        handle.addEventListener('touchstart', (e) => onDragStart(e.touches[0].clientY), { passive: true });
+        handle.addEventListener('touchmove', (e) => { onDragMove(e.touches[0].clientY); }, { passive: true });
+        handle.addEventListener('touchend', (e) => onDragEnd(e.changedTouches[0].clientY));
+
+        // 也支援滑鼠拖曳（方便用瀏覽器手機模擬模式測試）
+        handle.addEventListener('mousedown', (e) => { onDragStart(e.clientY); });
+        document.addEventListener('mousemove', (e) => { if (dragging) onDragMove(e.clientY); });
+        document.addEventListener('mouseup', (e) => { if (dragging) onDragEnd(e.clientY); });
+    })();
+
+    window.addEventListener('resize', () => {
+        const sidebar = document.getElementById('sidebar');
+        if (!isMobileLayout()) {
+            sidebar.classList.remove('sheet-expanded', 'sheet-dragging');
+            sidebar.style.transform = '';
+        }
+    });
 
     function addAreaCard() {
         cardCount++;
