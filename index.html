@@ -205,6 +205,20 @@
             border-top-color: #d69e2e;
         }
 
+        .leaflet-tooltip.area-hover-tooltip {
+            background: rgba(26, 32, 44, 0.9);
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 13px;
+            padding: 4px 10px;
+            border: none;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
+        .leaflet-tooltip.area-hover-tooltip::before {
+            border-top-color: rgba(26, 32, 44, 0.9);
+        }
+
         .btn-kml { background: #38a169; flex: 1.4; padding: 10px 6px; font-size: 12px; }
         .btn-kml:hover { background: #2f855a; }
 
@@ -2168,6 +2182,13 @@
                     }
                 }
             }
+
+            // 滑鼠移到禁航區框框上時顯示「禁航區 #N」，移開自動消失（Leaflet tooltip 內建行為）
+            shapeLayer.bindTooltip(`禁航區 #${num}`, {
+                sticky: true,
+                direction: 'top',
+                className: 'area-hover-tooltip'
+            });
 
             areaMapObjects[cardId] = { shape: shapeLayer, labels: currentLabels, visible: true };
 
