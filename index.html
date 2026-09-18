@@ -144,6 +144,12 @@
         .area-title { font-weight: bold; color: #2d3748; font-size: 14px; }
         
         .header-actions { display: flex; gap: 6px; align-items: center; }
+        .area-color-picker {
+            width: 23px; height: 23px; padding: 0; border: 1px solid #cbd5e0;
+            border-radius: 4px; cursor: pointer; background: none;
+        }
+        .area-color-picker::-webkit-color-swatch-wrapper { padding: 2px; }
+        .area-color-picker::-webkit-color-swatch { border: none; border-radius: 3px; }
         
         .btn-vis { background: #4a5568; color: white; border: none; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
         .btn-vis:hover { background: #2d3748; }
@@ -1292,6 +1298,7 @@
                 <div class="area-header">
                     <span class="area-title">禁航區 #${cardCount}</span>
                     <div class="header-actions">
+                        <input type="color" class="area-color-picker" id="color-${cardId}" value="#ff0000" title="選擇這個禁航區的顏色" onchange="processAllData()">
                         <button class="btn-vis" id="btn-vis-${cardId}" onclick="toggleAreaVisibility('${cardId}')">👁 顯示</button>
                         ${cardCount > 1 ? `<button class="btn-del" onclick="removeAreaCard('${cardId}')">刪除</button>` : ''}
                     </div>
@@ -2259,6 +2266,9 @@
             const areaData = { cardId, num, text, type: result.type, points: result.points, center: result.center, radiusNM: result.radiusNM, meta };
             allParsedAreas.push(areaData);
 
+            const colorInput = document.getElementById(`color-${cardId}`);
+            const areaColor = colorInput ? colorInput.value : '#ff0000';
+
             let shapeLayer = null;
             let currentLabels = [];
 
@@ -2266,9 +2276,9 @@
                 const radiusMeters = result.radiusNM * 1852;
                 shapeLayer = L.circle([result.points[0].lat, result.points[0].lon], {
                     radius: radiusMeters,
-                    color: 'red',
+                    color: areaColor,
                     weight: 3,
-                    fillColor: 'red',
+                    fillColor: areaColor,
                     fillOpacity: 0.4
                 }).addTo(map);
 
@@ -2288,7 +2298,7 @@
             } else if (result.type === 'line') {
                 const latLngs = result.points.map(p => [p.lat, p.lon]);
                 shapeLayer = L.polyline(latLngs, {
-                    color: 'red',
+                    color: areaColor,
                     weight: 3
                 }).addTo(map);
 
@@ -2315,9 +2325,9 @@
             } else {
                 const latLngs = result.points.map(p => [p.lat, p.lon]);
                 shapeLayer = L.polygon(latLngs, {
-                    color: 'red',
+                    color: areaColor,
                     weight: 3,
-                    fillColor: 'red',
+                    fillColor: areaColor,
                     fillOpacity: 0.4
                 }).addTo(map);
 
