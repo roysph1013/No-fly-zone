@@ -1627,7 +1627,41 @@
         }
 
         const polygonResult = parsePointsFromText(cleanText);
-        const originalPoints = polygonResult.points;
+        let originalPoints = polygonResult.points;
+
+        // 線性禁航區判斷：文字含「航段管制/兩點連線」等中英文關鍵字，或剛好只有 2 個座標點，
+        // 代表這是「兩點連成一條線」的航段管制，不是封閉面積的空域管制
+        const isLineText = /航段管制|兩點連線|两点连线|LINE\s*SEGMENT|SEGMENT\s+OF\s+ATS|ATS\s*(?:RTE|ROUTE)|(?:RTE|ROUTE|AWY|AIRWAY)\s*(?:CLSD|CLOSED)|FLW\s+SEGMENT|SEGMENT.*CLSD/i.test(text);
+
+        // 後備解析：FAA 原文常只給航路點代號（如 SADAN-MAGOD）而沒有經緯度，
+        // 此時改用航路點對照表把代號換算成座標。
+        let waypointInfo = null;
+        if (originalPoints.length < 2) {
+            waypointInfo = parseWaypointsFromText(textWithoutQLine);
+            if (waypointInfo.points.length >= 2) {
+                return {
+                    type: 'line',
+                    points: waypointInfo.points.map(p => ({ lat: p.lat, lon: p.lon })),
+                    radiusNM: 0,
+                    invalidCount: polygonResult.invalidCount,
+                    hasSelfIntersection: false,
+                    fromWaypoints: true,
+                    resolvedIdents: waypointInfo.points.map(p => p.ident),
+                    unresolvedIdents: waypointInfo.unresolved
+                };
+            }
+        }
+
+        if ((isLineText || originalPoints.length === 2) && originalPoints.length >= 2) {
+            return {
+                type: 'line',
+                points: originalPoints,
+                radiusNM: 0,
+                invalidCount: polygonResult.invalidCount,
+                hasSelfIntersection: false
+            };
+        }
+
         const hasSelfIntersection = checkSelfIntersection(originalPoints);
 
         return {
@@ -1635,12 +1669,88 @@
             points: originalPoints,
             radiusNM: 0,
             invalidCount: polygonResult.invalidCount,
-            hasSelfIntersection: hasSelfIntersection
+            hasSelfIntersection: hasSelfIntersection,
+            unresolvedIdents: waypointInfo ? waypointInfo.unresolved : []
         };
     }
 
     function isSamePoint(pt1, pt2) {
         return Math.abs(pt1.lat - pt2.lat) < 0.00001 && Math.abs(pt1.lon - pt2.lon) < 0.00001;
+    }
+
+    // ============================================================
+    // 中國航路點 (waypoint) / 助航設施 (navaid) 代號 → 經緯度對照表
+    // 對照表放在外部 waypoints-cn.json，與本檔案放在同一層目錄即可自動載入。
+    // 資料來源為公開航行資料庫，僅供圖資標繪參考，非官方航行資料。
+    // ============================================================
+    let waypointDB = { waypoints: {}, navaids: {} };
+    let waypointDBLoaded = false;
+
+    fetch('waypoints-cn.json')
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(data => {
+            waypointDB = { waypoints: data.waypoints || {}, navaids: data.navaids || {} };
+            waypointDBLoaded = true;
+            console.log(`[航路點對照表] 已載入 ${Object.keys(waypointDB.waypoints).length} 個航路點、${Object.keys(waypointDB.navaids).length} 個助航設施`);
+        })
+        .catch(err => {
+            console.warn('[航路點對照表] 載入失敗，航路代號將無法自動換算成經緯度：', err);
+        });
+
+    function lookupWaypoint(ident) {
+        const key = String(ident).toUpperCase().trim();
+        const hit = waypointDB.waypoints[key] || waypointDB.navaids[key];
+        return hit ? { lat: hit[0], lon: hit[1], ident: key } : null;
+    }
+
+    // 從 FAA 原文中抽出航路點代號並換算成座標。
+    // 例如「W112 : HOTAN VOR 'HTN'-ADMUX」「Y1 :SADAN-MAGOD」「L888:SADAN-BEVTA」
+    // 會分別取出 HTN/ADMUX、SADAN/MAGOD、SADAN/BEVTA 這些代號去查表。
+    function parseWaypointsFromText(text) {
+        const resolved = [];
+        const unresolved = [];
+        const seen = new Set();
+
+        // 先抓引號內的助航設施代號（如 VOR 'HTN'），再抓一般的 3-5 碼大寫代號
+        const quotedIdents = [...text.matchAll(/['"]([A-Z]{2,5})['"]/g)].map(m => m[1]);
+        // 航路代號本身（W112、Y1、L888、A470 等）要排除，不能當成航路點
+        const routeCodePattern = /^[A-Z]{1,2}\d{1,4}$/;
+        const stopWords = new Set([
+            'NOTAM','NOTAMN','UTC','FLW','SEGMENT','OF','ATS','RTE','ROUTE','CLSD','CLOSED',
+            'AWY','AIRWAY','AT','AND','ABOVE','BELOW','VOR','DME','NDB','VORDME','SFC','UNL',
+            'GND','FL','WI','WITHIN','AREA','THE','TO','FROM','ACFT','ARE','FORBIDDEN','FLY',
+            'INTO','ALL','EST','FALL','UNBURNED','DEBRIS','WILL','BE','CONDUCTED','BY','CHINA',
+            'SPECIAL','OPS','FLT','ACT','TEMPORARY','DANGER','ESTABLISHED','CIRCLE','CENTERED',
+            'WITH','RADIUS','VERTICAL','LIMITS','AIRCRAFT','START','BACK','ISSUE','DATE','END',
+            'INTL','AP','NM','KM','SOUTHEAST','NORTHEAST','SOUTHWEST','NORTHWEST','NORTH',
+            'SOUTH','EAST','WEST','MTRS','METERS','IV','BO','NBO','LIMIT',
+            // 助航設施常見全名（真正要查的是引號內的代號，不是這個全名）
+            'HOTAN','DUNHUANG','URUMQI','KASHGAR','LANZHOU','BEIJING','SHANGHAI','GUANGZHOU',
+            // NOTAM 欄位／FIR／Q 碼等雜訊
+            'ZWUQ','ZLHW','ZSHA','ZGZU','ZUGU','ZBAA','ZPPP','ZYSH','ZJSY','RPHI','QARLT',
+            'QARLC','QRDCA','QRTCA','QWMLW','NOTAMR','NOTAMC','ZLDH','ZWTN'
+        ]);
+
+        const candidates = [
+            ...quotedIdents,
+            ...[...text.matchAll(/\b([A-Z]{3,5})\b/g)].map(m => m[1])
+        ];
+
+        candidates.forEach(ident => {
+            if (seen.has(ident)) return;
+            if (stopWords.has(ident)) return;
+            if (routeCodePattern.test(ident)) return;
+            seen.add(ident);
+
+            const hit = lookupWaypoint(ident);
+            if (hit) {
+                resolved.push(hit);
+            } else {
+                unresolved.push(ident);
+            }
+        });
+
+        return { points: resolved, unresolved };
     }
 
     function parsePointsFromText(cleanText) {
@@ -1822,6 +1932,14 @@
         } else if (area.type === 'sector') {
             const formatted = formatCoordString(area.center.lat, area.center.lon);
             return `${meta.title}，${meta.location}，${timePrefix}${meta.timeRange}，在以${formatted.latStr} ${formatted.lonStr}為圓心，半徑${area.radiusNM}海里的扇形區域內進行${meta.purpose}，禁止駛入。\n(初判：${meta.purpose} )`;
+        } else if (area.type === 'line') {
+            let coordLines = "";
+            area.points.forEach((p, idx) => {
+                const formatted = formatCoordString(p.lat, p.lon);
+                coordLines += `(${idx + 1}) ${formatted.latStr} ${formatted.lonStr}\n`;
+            });
+            const lineDesc = area.points.length === 2 ? '兩點連線' : '諸點連線';
+            return `${meta.title}，${meta.location}，${timePrefix}${meta.timeRange}，在\n${coordLines}${lineDesc}範圍進行航段管制，禁止駛入。\n(初判：${meta.purpose} )`;
         } else {
             let coordLines = "";
             area.points.forEach((p, idx) => {
@@ -2043,6 +2161,33 @@
             return;
         }
 
+        if (result.type === 'line') {
+            if (result.points.length < 2) {
+                statusEl.className = 'parse-status fail';
+                let msg = `⚠️ 解析失敗：線性禁航區至少需要 2 個座標點，目前只找到 ${result.points.length} 個。`;
+                if (result.invalidCount > 0) msg += ` 另有 ${result.invalidCount} 個座標數值超出合理範圍，已被忽略。`;
+                statusEl.innerHTML = msg;
+                return;
+            }
+            const linePreview = result.points.map((p, i) => {
+                const f = formatCoordString(p.lat, p.lon);
+                const ident = (result.resolvedIdents && result.resolvedIdents[i]) ? `${result.resolvedIdents[i]}　` : '';
+                return `(${i + 1}) ${ident}${f.latStr} ${f.lonStr}`;
+            }).join('\n');
+
+            let extraNote = '';
+            if (result.fromWaypoints) {
+                extraNote += `<div style="color:#2c5282; margin-top:4px;">🔎 由航路點代號查表換算（非官方航行資料，僅供參考）</div>`;
+            }
+            if (result.unresolvedIdents && result.unresolvedIdents.length > 0) {
+                extraNote += `<div style="color:#b7791f; margin-top:4px;">⚠️ 對照表查無此代號，已略過：${result.unresolvedIdents.join('、')}</div>`;
+            }
+
+            statusEl.className = 'parse-status ok';
+            statusEl.innerHTML = `✅ 成功解析【線性禁航區】（航段管制）：<div class="coord-preview">${linePreview}</div>${extraNote}`;
+            return;
+        }
+
         if (result.points.length < 3) {
             statusEl.className = 'parse-status fail';
             let msg = `⚠️ 解析失敗：只找到 ${result.points.length} 個有效座標點（至少需要 3 點才能構成多邊形）。`;
@@ -2108,6 +2253,7 @@
             if (result.type === 'polygon' && result.points.length < 3) return;
             if (result.type === 'circle' && result.points.length < 1) return;
             if (result.type === 'sector' && result.points.length < 3) return;
+            if (result.type === 'line' && result.points.length < 2) return;
 
             const meta = extractMetadata(text);
             const areaData = { cardId, num, text, type: result.type, points: result.points, center: result.center, radiusNM: result.radiusNM, meta };
@@ -2138,6 +2284,33 @@
                 );
                 currentLabels.push(marker);
                 if (showLabels) marker.addTo(map);
+
+            } else if (result.type === 'line') {
+                const latLngs = result.points.map(p => [p.lat, p.lon]);
+                shapeLayer = L.polyline(latLngs, {
+                    color: 'red',
+                    weight: 3
+                }).addTo(map);
+
+                featureGroup.addLayer(shapeLayer);
+
+                for (let i = 0; i < result.points.length - 1; i++) {
+                    const p1 = result.points[i];
+                    const p2 = result.points[i + 1];
+                    const dist = calculateDistanceNM(p1.lat, p1.lon, p2.lat, p2.lon);
+                    const midLat = (p1.lat + p2.lat) / 2;
+                    const midLon = (p1.lon + p2.lon) / 2;
+
+                    const marker = createLabelMarker(
+                        midLat,
+                        midLon,
+                        `${dist}浬`,
+                        [42, 20],
+                        [21, 10]
+                    );
+                    currentLabels.push(marker);
+                    if (showLabels) marker.addTo(map);
+                }
 
             } else {
                 const latLngs = result.points.map(p => [p.lat, p.lon]);
@@ -2248,6 +2421,7 @@
             let titleDesc = `多邊形 (${area.points.length} 點)`;
             if (area.type === 'circle') titleDesc = `圓形 (半徑 ${area.radiusNM} 浬)`;
             if (area.type === 'sector') titleDesc = `扇形 (半徑 ${area.radiusNM} 浬)`;
+            if (area.type === 'line') titleDesc = `線段 (航段管制，${area.points.length} 點)`;
 
             const html = `
                 <div class="area-output" id="${blockId}" data-card-id="${area.cardId}">
@@ -2339,16 +2513,19 @@
 
             if (area.type === 'circle') {
                 kmlCoords = generateCircleKMLCoords(area.points[0].lat, area.points[0].lon, area.radiusNM);
+            } else if (area.type === 'line') {
+                kmlCoords = area.points.map(p => `${p.lon},${p.lat},0`).join('\n');
             } else {
                 kmlCoords = area.points.map(p => `${p.lon},${p.lat},0`).join('\n');
                 kmlCoords += `\n${area.points[0].lon},${area.points[0].lat},0`;
             }
 
-            let placemarks = `
-    <Placemark>
-      <name>禁航區 #${area.num} (${area.type})</name>
-      <description><![CDATA[${buildFormattedText(area).replace(/\n/g, '<br>')}]]></description>
-      <styleUrl>#redAreaStyle</styleUrl>
+            const geometryXml = area.type === 'line' ? `
+      <LineString>
+        <coordinates>
+${kmlCoords}
+        </coordinates>
+      </LineString>` : `
       <Polygon>
         <outerBoundaryIs>
           <LinearRing>
@@ -2357,7 +2534,13 @@ ${kmlCoords}
             </coordinates>
           </LinearRing>
         </outerBoundaryIs>
-      </Polygon>
+      </Polygon>`;
+
+            let placemarks = `
+    <Placemark>
+      <name>禁航區 #${area.num} (${area.type})</name>
+      <description><![CDATA[${buildFormattedText(area).replace(/\n/g, '<br>')}]]></description>
+      <styleUrl>#redAreaStyle</styleUrl>${geometryXml}
     </Placemark>`;
 
             kmlFolders += `
