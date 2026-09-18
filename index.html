@@ -1351,14 +1351,7 @@
     }
 
     function calculateDistanceNM(lat1, lon1, lat2, lon2) {
-        const R = 6371;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return (R * c * 0.539957).toFixed(0);
+        return calcDistanceKmNm(lat1, lon1, lat2, lon2).nm.toFixed(0);
     }
 
     function destinationPoint(lat, lon, distanceNM, bearingDeg) {
@@ -1445,7 +1438,7 @@
         if (rawTokens.length === 1 && numTokens.length === 1) {
             let numStr = rawTokens[0];
             if (numStr.includes('.')) {
-                let degLen = isLongitude ? (numStr.indexOf('.') === 5 ? 3 : 2) : (numStr.indexOf('.') === 4 ? 2 : 2);
+                let degLen = isLongitude ? (numStr.indexOf('.') === 5 ? 3 : 2) : 2;
                 if (numStr.indexOf('.') > 3) {
                     let d = parseFloat(numStr.substring(0, degLen));
                     let m = parseFloat(numStr.substring(degLen));
@@ -1515,7 +1508,7 @@
             return (c.lat - a.lat) * (b.lon - a.lon) > (b.lat - a.lat) * (c.lon - a.lon);
         }
         if ((p1.lat === p3.lat && p1.lon === p3.lon) || (p1.lat === p4.lat && p1.lon === p4.lon) ||
-            (p2.lat === p3.lat && p2.lon === p3.lon) || (p2.lat === p4.lat && p4.lon === p4.lon)) {
+            (p2.lat === p3.lat && p2.lon === p3.lon) || (p2.lat === p4.lat && p2.lon === p4.lon)) {
             return false;
         }
         return (ccw(p1, p3, p4) !== ccw(p2, p3, p4)) && (ccw(p1, p2, p3) !== ccw(p1, p2, p4));
