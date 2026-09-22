@@ -1662,6 +1662,24 @@
             };
         }
 
+        // 最後備援：內文（無論多邊形、線段、航路點查表）都不足以畫出正式形狀時，
+        // 改用 ICAO NOTAM 規定必填的 Q) 欄位概略中心點＋半徑畫一個概略圓形，
+        // 至少讓使用者知道大概位置，好過完全畫不出來。
+        if (originalPoints.length < 3) {
+            const qCircle = parseQLineCircle(text);
+            if (qCircle) {
+                return {
+                    type: 'circle',
+                    points: [{ lat: qCircle.lat, lon: qCircle.lon }],
+                    radiusNM: qCircle.radiusNM,
+                    invalidCount: polygonResult.invalidCount,
+                    hasSelfIntersection: false,
+                    fromQLine: true,
+                    unresolvedIdents: waypointInfo ? waypointInfo.unresolved : []
+                };
+            }
+        }
+
         const hasSelfIntersection = checkSelfIntersection(originalPoints);
 
         return {
@@ -1672,6 +1690,28 @@
             hasSelfIntersection: hasSelfIntersection,
             unresolvedIdents: waypointInfo ? waypointInfo.unresolved : []
         };
+    }
+
+    // 解析 ICAO NOTAM Q) 欄位末端的「概略中心點＋半徑」壓縮座標（例如 1213N11522E089，
+    // 即 DDMM[N/S]DDDMM[E/W]RRR：北緯12°13′、東經115°22′、半徑089浬）。
+    // 這是 ICAO NOTAM 格式規定必填欄位，用來讓航情系統粗略篩選受影響範圍，
+    // 精確度遠不如 E) 欄位內文描述，僅在內文解析不出正式形狀時當作備援使用。
+    function parseQLineCircle(rawText) {
+        const qLineMatch = rawText.match(/^[ \t]*Q\)[^\r\n]*/im);
+        if (!qLineMatch) return null;
+        const m = qLineMatch[0].match(/(\d{2})(\d{2})([NS])(\d{3})(\d{2})([EW])(\d{3})/);
+        if (!m) return null;
+
+        let lat = parseInt(m[1], 10) + parseInt(m[2], 10) / 60;
+        let lon = parseInt(m[4], 10) + parseInt(m[5], 10) / 60;
+        if (m[3] === 'S') lat = -lat;
+        if (m[6] === 'W') lon = -lon;
+        if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+
+        const radiusNM = parseInt(m[7], 10);
+        if (!radiusNM || radiusNM <= 0) return null;
+
+        return { lat, lon, radiusNM };
     }
 
     function isSamePoint(pt1, pt2) {
@@ -2149,8 +2189,13 @@
 
         if (result.type === 'circle') {
             const f = formatCoordString(result.points[0].lat, result.points[0].lon);
-            statusEl.className = 'parse-status ok';
-            statusEl.innerHTML = `✅ 成功解析【圓形禁航區】：<br>圓心：${f.latStr} ${f.lonStr}<br>半徑：${result.radiusNM} 海里`;
+            if (result.fromQLine) {
+                statusEl.className = 'parse-status warn';
+                statusEl.innerHTML = `⚠️ 內文座標不足以組成正式區域（可能為航路點代號查無資料，或座標點數不足），已改用 NOTAM Q) 欄位提供之「概略中心點＋半徑」畫出圓形：<br>圓心：${f.latStr} ${f.lonStr}<br>半徑：${result.radiusNM} 海里<br><span style="color:#7b341e;">此為 NOTAM 系統概略篩選範圍，非精確航段／區域範圍，僅供參考。</span>`;
+            } else {
+                statusEl.className = 'parse-status ok';
+                statusEl.innerHTML = `✅ 成功解析【圓形禁航區】：<br>圓心：${f.latStr} ${f.lonStr}<br>半徑：${result.radiusNM} 海里`;
+            }
             return;
         }
 
