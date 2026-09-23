@@ -2193,6 +2193,19 @@
         }
     }
 
+    // 粗略偵測：這段文字疑似包含「不只一個」禁航區（例如同時出現多組座標範圍描述，
+    // 或有多個獨立的時間區段）。目前架構是「一張卡片只能畫一個形狀」，硬解析下去
+    // 很容易把不相干的座標點混成同一個（錯誤的）多邊形，因此這裡只負責示警、
+    // 不自動拆分、不自動畫，讓使用者自己判斷、手動拆成多張卡片，比自動猜測安全。
+    function detectMultipleAreasHint(rawText) {
+        // 「為半徑／點連線／扇形」是每個形狀描述通常只會出現一次的關鍵詞，出現 2 次以上
+        // 代表文字裡疑似描述了不只一個形狀
+        const shapeMarkerCount = (rawText.match(/為半徑|为半径|點連線|点连线|扇形/g) || []).length;
+        // 「X月X日HHHH時至」是每個獨立時間區段開頭的固定寫法，出現 2 次以上代表疑似有多個時間區段
+        const timeClauseStartCount = (rawText.match(/\d{1,2}月\d{1,2}日\s*\d{4}\s*(?:[時时])?\s*(?:至|-|~|—)/g) || []).length;
+        return shapeMarkerCount >= 2 || timeClauseStartCount >= 2;
+    }
+
     function renderParseStatus(cardId, result, rawText) {
         const statusEl = document.getElementById(`status-${cardId}`);
         if (!statusEl) return;
@@ -2204,17 +2217,22 @@
             return;
         }
 
+        const isMultiArea = detectMultipleAreasHint(rawText);
+        const multiAreaWarningHtml = isMultiArea
+            ? `<div style="color:#7b341e; font-weight:bold; margin-bottom:6px; padding:6px 8px; background:#fffaf0; border:1px solid #fbd38d; border-radius:4px;">⚠️ 偵測到這段文字疑似包含不只一個禁航區（出現多組座標範圍描述，或多個獨立時間區段）。這個工具一張卡片只能畫一個形狀，直接解析可能會把不同區域的座標誤連成同一個錯誤圖形，建議按「＋新增禁航區」，把每個區域分別貼到不同卡片再各自繪製。</div>`
+            : '';
+
         if (result.type === 'circle') {
             const f = formatCoordString(result.points[0].lat, result.points[0].lon);
-            statusEl.className = 'parse-status ok';
-            statusEl.innerHTML = `✅ 成功解析【圓形禁航區】：<br>圓心：${f.latStr} ${f.lonStr}<br>半徑：${result.radiusNM} 海里`;
+            statusEl.className = isMultiArea ? 'parse-status warn' : 'parse-status ok';
+            statusEl.innerHTML = multiAreaWarningHtml + `✅ 成功解析【圓形禁航區】：<br>圓心：${f.latStr} ${f.lonStr}<br>半徑：${result.radiusNM} 海里`;
             return;
         }
 
         if (result.type === 'sector') {
             const f = formatCoordString(result.center.lat, result.center.lon);
-            statusEl.className = 'parse-status ok';
-            statusEl.innerHTML = `✅ 成功解析【扇形禁航區】：<br>圓心：${f.latStr} ${f.lonStr}<br>半徑：${result.radiusNM} 海里`;
+            statusEl.className = isMultiArea ? 'parse-status warn' : 'parse-status ok';
+            statusEl.innerHTML = multiAreaWarningHtml + `✅ 成功解析【扇形禁航區】：<br>圓心：${f.latStr} ${f.lonStr}<br>半徑：${result.radiusNM} 海里`;
             return;
         }
 
@@ -2223,7 +2241,7 @@
                 statusEl.className = 'parse-status fail';
                 let msg = `⚠️ 解析失敗：線性禁航區至少需要 2 個座標點，目前只找到 ${result.points.length} 個。`;
                 if (result.invalidCount > 0) msg += ` 另有 ${result.invalidCount} 個座標數值超出合理範圍，已被忽略。`;
-                statusEl.innerHTML = msg;
+                statusEl.innerHTML = multiAreaWarningHtml + msg;
                 return;
             }
             const linePreview = result.points.map((p, i) => {
@@ -2240,19 +2258,19 @@
                 extraNote += `<div style="color:#b7791f; margin-top:4px;">⚠️ 對照表查無此代號，已略過：${result.unresolvedIdents.join('、')}</div>`;
             }
 
-            statusEl.className = 'parse-status ok';
-            statusEl.innerHTML = `✅ 成功解析【線性禁航區】（航段管制）：<div class="coord-preview">${linePreview}</div>${extraNote}`;
+            statusEl.className = isMultiArea ? 'parse-status warn' : 'parse-status ok';
+            statusEl.innerHTML = multiAreaWarningHtml + `✅ 成功解析【線性禁航區】（航段管制）：<div class="coord-preview">${linePreview}</div>${extraNote}`;
             return;
         }
 
         if (result.points.length < 3) {
             statusEl.className = 'parse-status fail';
             if (result.unresolvedIdents && result.unresolvedIdents.length > 0) {
-                statusEl.innerHTML = `⚠️ 目前不支援航路點代號（waypoint identifier）自動換算成座標的禁航區繪製，請直接提供經緯度座標。`;
+                statusEl.innerHTML = multiAreaWarningHtml + `⚠️ 目前不支援航路點代號（waypoint identifier）自動換算成座標的禁航區繪製，請直接提供經緯度座標。`;
             } else {
                 let msg = `⚠️ 解析失敗：只找到 ${result.points.length} 個有效座標點（至少需要 3 點才能構成多邊形）。`;
                 if (result.invalidCount > 0) msg += ` 另有 ${result.invalidCount} 個座標數值超出合理範圍，已被忽略。`;
-                statusEl.innerHTML = msg;
+                statusEl.innerHTML = multiAreaWarningHtml + msg;
             }
             return;
         }
@@ -2272,9 +2290,9 @@
             `;
         }
 
-        if (result.invalidCount > 0 || result.hasSelfIntersection) {
+        if (isMultiArea || result.invalidCount > 0 || result.hasSelfIntersection) {
             statusEl.className = 'parse-status warn';
-            statusEl.innerHTML = `${warningBanner}⚠️ 成功解析 ${result.points.length} 點：<div class="coord-preview">${preview}</div>`;
+            statusEl.innerHTML = `${multiAreaWarningHtml}${warningBanner}⚠️ 成功解析 ${result.points.length} 點：<div class="coord-preview">${preview}</div>`;
         } else {
             statusEl.className = 'parse-status ok';
             statusEl.innerHTML = `${warningBanner}✅ 成功解析 ${result.points.length} 點多邊形：<div class="coord-preview">${preview}</div>`;
