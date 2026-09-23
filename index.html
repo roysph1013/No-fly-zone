@@ -2056,11 +2056,14 @@
     }
 
     // 對一組經緯度點做主軸方向擬合（PCA／總體最小平方法），可處理任意角度（含接近垂直的情況）
-    // 有先用該點集平均緯度的 cos 值修正經度比例尺，避免高緯度地區經度被拉伸而算錯方向
-    function fitPrincipalAxis(points) {
+    // 有先用該點集平均緯度的 cos 值修正經度比例尺，避免高緯度地區經度被拉伸而算錯方向。
+    // centerOverride：強制指定擬合中心點（而非用這組點自己的平均值）。用在單一禁航區時，
+    // 讓擬合中心與後面畫線時「一定要通過」的保險點（多邊形質心）是同一個點，
+    // 否則兩種中心點算法不同，畫出來的線會在保險點那裡折一個角度，不是純直線。
+    function fitPrincipalAxis(points, centerOverride) {
         const n = points.length;
-        const meanLat = points.reduce((s, p) => s + p.lat, 0) / n;
-        const meanLon = points.reduce((s, p) => s + p.lon, 0) / n;
+        const meanLat = centerOverride ? centerOverride.lat : points.reduce((s, p) => s + p.lat, 0) / n;
+        const meanLon = centerOverride ? centerOverride.lon : points.reduce((s, p) => s + p.lon, 0) / n;
         const cosLat = Math.cos(meanLat * Math.PI / 180) || 1e-9;
 
         let sxx = 0, syy = 0, sxy = 0;
@@ -2117,7 +2120,9 @@
             if (!proceed) return;
         }
 
-        const { meanLat, meanLon, dLat, dLon } = fitPrincipalAxis(axisPoints);
+        // 單一禁航區時，用保險點（多邊形質心）當擬合中心，確保跟後面強制通過的點是同一個，畫出來才會是純直線
+        const centerOverride = (allParsedAreas.length === 1) ? insurancePoints[0] : null;
+        const { meanLat, meanLon, dLat, dLon } = fitPrincipalAxis(axisPoints, centerOverride);
 
         // 把「每單位 t 對應的實際公里數」換算出來，才能用固定公里數控制延伸長度
         const cosLat = Math.cos(meanLat * Math.PI / 180) || 1e-9;
