@@ -1929,16 +1929,23 @@
         } else {
             const patternDaily = /(?:自)?\s*(\d{1,2}月\d{1,2}日)\s*(?:至|-|~|—)\s*(\d{1,2}月\d{1,2}日)\s*[,，、\s]*\s*(?:每日|每天)\s*(\d{4})\s*(?:[時时])?\s*(?:至|-|~|—)\s*(\d{4})\s*[時时]?/;
             const patternFull = /(?:自)?\s*(\d{1,2}月\d{1,2}日)\s*(\d{4})\s*(?:[時时])?\s*(?:至|-|~|—)\s*(\d{1,2}月\d{1,2}日)\s*(\d{4})\s*[時时]?/;
+            // 跨日但結束時間只寫「X日」沒有重複月份（例如「9月23日0000時至24日2400時」，
+            // 代表同一個月份內跨到隔天），把月份沿用開始日期的月份補回去。
+            const patternCrossDayBareEnd = /(?:自)?\s*(\d{1,2})月(\d{1,2})日\s*(\d{4})\s*(?:[時时])?\s*(?:至|-|~|—)\s*(\d{1,2})日\s*(\d{4})\s*[時时]?/;
             const patternSingle = /(?:自)?\s*(\d{1,2}月\d{1,2}日)\s*(\d{4})\s*(?:[時时])?\s*(?:至|-|~|—)\s*(\d{4})\s*[時时]?/;
 
             const mDaily = rawText.match(patternDaily);
             const mFull = rawText.match(patternFull);
+            const mCrossDayBareEnd = rawText.match(patternCrossDayBareEnd);
             const mSingle = rawText.match(patternSingle);
 
             if (mDaily) {
                 timeRange = `${mDaily[1]}至${mDaily[2]}，每日${mDaily[3]}時至${mDaily[4]}時`;
             } else if (mFull) {
                 timeRange = `${mFull[1]}${mFull[2]}時至${mFull[3]}${mFull[4]}時`;
+            } else if (mCrossDayBareEnd) {
+                const [, mo, startDay, startTime, endDay, endTime] = mCrossDayBareEnd;
+                timeRange = `${mo}月${startDay}日${startTime}時至${mo}月${endDay}日${endTime}時`;
             } else if (mSingle) {
                 timeRange = `${mSingle[1]}${mSingle[2]}時至${mSingle[3]}時`;
             } else {
