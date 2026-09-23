@@ -1851,7 +1851,7 @@
     // 判斷這份文字描述的是「空域管制」還是「海域管制」：先看文中有沒有直接寫明，
     // 沒有的話再看有沒有飛航/船舶等關鍵字佐證；兩邊都沒有或兩邊都有（無法判斷）就交由使用者自行填寫，
     // 不要沒有根據就預設成某一種，避免誤導。
-    function detectControlType(rawText) {
+    function detectControlType(rawText, hasNamedSeaLocation) {
         if (/海域管制/.test(rawText)) return '海域管制';
         if (/空域管制/.test(rawText)) return '空域管制';
 
@@ -1863,6 +1863,9 @@
 
         if (hasSeaCue && !hasAirCue) return '海域管制';
         if (hasAirCue && !hasSeaCue) return '空域管制';
+        // 兩邊都沒有關鍵字佐證時，如果海域欄位已經抓到具體地名（不是「空域」也不是「XX」），
+        // 通常代表這是海事單位發的航行警告，直接視為海域管制。
+        if (!hasSeaCue && !hasAirCue && hasNamedSeaLocation) return '海域管制';
         return 'XX管制';
     }
 
@@ -1871,7 +1874,6 @@
         let location = "XX";
         let timeRange = "X月X日XXXX時至X月X日XXXX時";
         let purpose = "XX";
-        const controlType = detectControlType(rawText);
 
         const notamMatch = rawText.match(/([A-Z]\d{4}\/\d{2}|\b[A-Z]\d{4}\b|\b\d{4}\/\d{2}\b)/i);
         const facilityMatch = rawText.match(/\b([A-Z]{4})\b/);
@@ -1888,17 +1890,34 @@
             }
         }
 
-        // 海域關鍵字盡量涵蓋中國周邊、東亞、東北亞常見海域／海峽名稱；
-        // 抓不到具體海域名時，若文中有飛航相關佐證才填「空域」，否則交由使用者自行確認，不預設填入。
-        const locMatch = rawText.match(/(南海|東海|黃海|渤海|北部灣|北部湾|台灣海峽|臺灣海峽|珠江口|巴士海峽|呂宋海峽|吕宋海峡|宮古海峽|宫古海峡|對馬海峽|对马海峡|大隅海峽|大隅海峡|朝鮮海峽|朝鲜海峡|日本海|鄂霍次克海|馬六甲海峽|马六甲海峡)/);
-        if (locMatch) {
-            location = locMatch[1].replace('北部湾', '北部灣').replace('臺灣海峽', '台灣海峽')
-                .replace('吕宋海峡', '呂宋海峽').replace('宫古海峡', '宮古海峽')
-                .replace('对马海峡', '對馬海峽').replace('大隅海峡', '大隅海峽')
-                .replace('朝鲜海峡', '朝鮮海峽').replace('马六甲海峡', '馬六甲海峽');
-        } else if (/空域|領空|领空|飛航情報區|飞行情报区|\bFIR\b|AIRSPACE/i.test(rawText)) {
-            location = "空域";
+        // 海域：優先直接擷取「X航警XXX/XX」編號後面緊接著的那一段原文當作海域描述，
+        // 比固定關鍵字表更準確，也能完整涵蓋「渤海海峽黃海北部」這種複合地名寫法，
+        // 不會被切得只剩「渤海」。抓不到這種格式才退回關鍵字比對。
+        let locationFromTitle = false;
+        if (titleMatch) {
+            const afterTitle = rawText.slice(titleMatch.index + titleMatch[0].length);
+            const segMatch = afterTitle.match(/^[，,\s]*([^，,\n]+)/);
+            if (segMatch && segMatch[1].trim()) {
+                location = segMatch[1].trim();
+                locationFromTitle = true;
+            }
         }
+        if (!locationFromTitle) {
+            // 海域關鍵字盡量涵蓋中國周邊、東亞、東北亞常見海域／海峽名稱；
+            // 抓不到具體海域名時，若文中有飛航相關佐證才填「空域」，否則交由使用者自行確認，不預設填入。
+            const locMatch = rawText.match(/(南海|東海|黃海|渤海|北部灣|北部湾|台灣海峽|臺灣海峽|珠江口|巴士海峽|呂宋海峽|吕宋海峡|宮古海峽|宫古海峡|對馬海峽|对马海峡|大隅海峽|大隅海峡|朝鮮海峽|朝鲜海峡|日本海|鄂霍次克海|馬六甲海峽|马六甲海峡)/);
+            if (locMatch) {
+                location = locMatch[1].replace('北部湾', '北部灣').replace('臺灣海峽', '台灣海峽')
+                    .replace('吕宋海峡', '呂宋海峽').replace('宫古海峡', '宮古海峽')
+                    .replace('对马海峡', '對馬海峽').replace('大隅海峡', '大隅海峽')
+                    .replace('朝鲜海峡', '朝鮮海峽').replace('马六甲海峡', '馬六甲海峽');
+            } else if (/空域|領空|领空|飛航情報區|飞行情报区|\bFIR\b|AIRSPACE/i.test(rawText)) {
+                location = "空域";
+            }
+        }
+
+        const hasNamedSeaLocation = location !== 'XX' && location !== '空域';
+        const controlType = detectControlType(rawText, hasNamedSeaLocation);
 
         const icaoB = rawText.match(/B\)\s*(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/);
         const icaoC = rawText.match(/C\)\s*(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/);
