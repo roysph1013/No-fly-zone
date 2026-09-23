@@ -1848,11 +1848,30 @@
         };
     }
 
+    // 判斷這份文字描述的是「空域管制」還是「海域管制」：先看文中有沒有直接寫明，
+    // 沒有的話再看有沒有飛航/船舶等關鍵字佐證；兩邊都沒有或兩邊都有（無法判斷）就交由使用者自行填寫，
+    // 不要沒有根據就預設成某一種，避免誤導。
+    function detectControlType(rawText) {
+        if (/海域管制/.test(rawText)) return '海域管制';
+        if (/空域管制/.test(rawText)) return '空域管制';
+
+        const seaCueRegex = /禁止船舶|禁止船隻|禁止船只|禁止漁船|禁止渔船|禁止軍艦|禁止军舰|禁止艦艇|禁止舰艇|海上交通管制|航行禁區|航行禁区|VESSELS?|SHIPS?|MARITIME/i;
+        const airCueRegex = /禁航區|禁航区|禁止飛航|禁止飞航|禁止飛機|禁止飞机|禁止航空器|軍機|军机|領空|领空|飛航情報區|飞行情报区|\bFIR\b|AIRSPACE|NOTAM|RESTRICTED\s+AREA/i;
+
+        const hasSeaCue = seaCueRegex.test(rawText);
+        const hasAirCue = airCueRegex.test(rawText);
+
+        if (hasSeaCue && !hasAirCue) return '海域管制';
+        if (hasAirCue && !hasSeaCue) return '空域管制';
+        return 'XX管制';
+    }
+
     function extractMetadata(rawText) {
-        let title = "航警";
-        let location = "海域";
+        let title = "XX";
+        let location = "XX";
         let timeRange = "X月X日XXXX時至X月X日XXXX時";
-        let purpose = "軍事演習";
+        let purpose = "XX";
+        const controlType = detectControlType(rawText);
 
         const notamMatch = rawText.match(/([A-Z]\d{4}\/\d{2}|\b[A-Z]\d{4}\b|\b\d{4}\/\d{2}\b)/i);
         const facilityMatch = rawText.match(/\b([A-Z]{4})\b/);
@@ -1869,10 +1888,15 @@
             }
         }
 
-        const locMatch = rawText.match(/(南海|東海|黃海|渤海|北部灣|台灣海峽|臺灣海峽|珠江口|北部湾)/);
+        // 海域關鍵字盡量涵蓋中國周邊、東亞、東北亞常見海域／海峽名稱；
+        // 抓不到具體海域名時，若文中有飛航相關佐證才填「空域」，否則交由使用者自行確認，不預設填入。
+        const locMatch = rawText.match(/(南海|東海|黃海|渤海|北部灣|北部湾|台灣海峽|臺灣海峽|珠江口|巴士海峽|呂宋海峽|吕宋海峡|宮古海峽|宫古海峡|對馬海峽|对马海峡|大隅海峽|大隅海峡|朝鮮海峽|朝鲜海峡|日本海|鄂霍次克海|馬六甲海峽|马六甲海峡)/);
         if (locMatch) {
-            location = locMatch[1].replace('北部湾', '北部灣').replace('臺灣海峽', '台灣海峽');
-        } else {
+            location = locMatch[1].replace('北部湾', '北部灣').replace('臺灣海峽', '台灣海峽')
+                .replace('吕宋海峡', '呂宋海峽').replace('宫古海峡', '宮古海峽')
+                .replace('对马海峡', '對馬海峽').replace('大隅海峡', '大隅海峽')
+                .replace('朝鲜海峡', '朝鮮海峽').replace('马六甲海峡', '馬六甲海峽');
+        } else if (/空域|領空|领空|飛航情報區|飞行情报区|\bFIR\b|AIRSPACE/i.test(rawText)) {
             location = "空域";
         }
 
@@ -1919,7 +1943,7 @@
         else if (rawText.includes("軍事演習") || rawText.includes("军事演习") || rawText.includes("EXERCISE")) purpose = "軍事演習";
         else if (rawText.includes("軍事任務") || rawText.includes("军事任务")) purpose = "軍事任務";
 
-        return { title, location, timeRange, purpose };
+        return { title, location, timeRange, purpose, controlType };
     }
 
     function buildFormattedText(area) {
@@ -1946,7 +1970,7 @@
                 const formatted = formatCoordString(p.lat, p.lon);
                 coordLines += `(${idx + 1}) ${formatted.latStr} ${formatted.lonStr}\n`;
             });
-            return `${meta.title}，${meta.location}，${timePrefix}${meta.timeRange}，在\n${coordLines}諸點連線範圍進行空域管制，禁止駛入。\n(初判：${meta.purpose} )`;
+            return `${meta.title}，${meta.location}，${timePrefix}${meta.timeRange}，在\n${coordLines}諸點連線範圍進行${meta.controlType}，禁止駛入。\n(初判：${meta.purpose} )`;
         }
     }
 
@@ -2449,6 +2473,10 @@
                         <label style="grid-column: span 2;">性質
                             <input type="text" data-field="purpose" value="${escapeAttr(area.meta.purpose)}" oninput="updateAreaMeta('${area.cardId}', this)">
                         </label>
+                        ${area.type === 'polygon' ? `
+                        <label style="grid-column: span 2;">管制類型
+                            <input type="text" data-field="controlType" value="${escapeAttr(area.meta.controlType)}" oninput="updateAreaMeta('${area.cardId}', this)">
+                        </label>` : ''}
                     </div>
                     <div class="formatted-text-single" id="text-${area.cardId}"></div>
                 </div>
