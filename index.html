@@ -2327,6 +2327,10 @@
             renderParseStatus(cardId, result, text);
 
             if (!text) return;
+            // 偵測到疑似多個禁航區混在同一張卡片時，完全不畫、不列入結果，
+            // 逼使用者先手動拆成多張卡片，避免像「只畫出第一個圓形、其餘區域被默默丟掉」
+            // 這種看起來解析成功、實際上漏掉大半內容的誤導情況。
+            if (detectMultipleAreasHint(text)) return;
             if (result.type === 'polygon' && result.points.length < 3) return;
             if (result.type === 'circle' && result.points.length < 1) return;
             if (result.type === 'sector' && result.points.length < 3) return;
