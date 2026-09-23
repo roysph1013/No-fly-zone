@@ -1597,18 +1597,20 @@
             }
         }
 
+        // 半徑單位除了海里/NM，也支援公里/千米/公尺/米/km/m（中式「數字+單位+為半徑」與
+        // 「半徑為+數字+單位」兩種語序都要能抓到單位本身，才能判斷要不要換算成海里）。
         const circleRadiusMatch = text.match(/RADIUS\s+OF\s+([\d,]+(?:\.\d+)?)\s*(KM|KILOMETERS?|M|MTRS|METERS|NM)\b/i) ||
-                                  text.match(/([\d,]+(?:\.\d+)?)\s*(?:海里|海浬|nm|NM)\s*(?:為|为)?\s*半(?:徑|径)/i) || 
-                                  text.match(/半(?:徑|径)\s*(?:為|为)?\s*([\d,]+(?:\.\d+)?)\s*(?:海里|海浬|nm|NM)/i);
+                                  text.match(/([\d,]+(?:\.\d+)?)\s*(海里|海浬|公里|千米|公尺|米|nm|NM|km|m)\s*(?:為|为)?\s*半(?:徑|径)/i) ||
+                                  text.match(/半(?:徑|径)\s*(?:為|为)?\s*([\d,]+(?:\.\d+)?)\s*(海里|海浬|公里|千米|公尺|米|nm|NM|km|m)/i);
 
         if (circleRadiusMatch) {
             let val = parseFloat(circleRadiusMatch[1].replace(/,/g, ''));
             let unit = circleRadiusMatch[2] ? circleRadiusMatch[2].toUpperCase() : 'NM';
 
             let radiusNM;
-            if (unit === 'KM' || unit.startsWith('KILOMETER')) {
+            if (unit === 'KM' || unit.startsWith('KILOMETER') || unit === '公里' || unit === '千米') {
                 radiusNM = parseFloat(((val * 1000) / 1852).toFixed(2));
-            } else if (unit === 'M' || unit === 'MTRS' || unit === 'METERS') {
+            } else if (unit === 'M' || unit === 'MTRS' || unit === 'METERS' || unit === '公尺' || unit === '米') {
                 radiusNM = parseFloat((val / 1852).toFixed(2));
             } else {
                 radiusNM = val;
