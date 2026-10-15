@@ -235,9 +235,6 @@
         .btn-clear:hover { background: #fed7d7; border-color: #fc8181; color: #9b2c2c; }
 
         .btn-resort { background: #dd6b20; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 6px; }
-        .btn-report { background: #4a5568; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 6px; }
-        .btn-report:hover { background: #2d3748; }
-        .btn-report:disabled { background: #a0aec0; cursor: default; }
         .btn-resort:hover { background: #c05621; }
 
         .parse-status { margin-top: 8px; padding: 6px 8px; border-radius: 4px; font-size: 12px; line-height: 1.5; }
@@ -2208,44 +2205,28 @@
     }
 
     // ============================================================
-    // 解析失敗回報：使用者按按鈕並確認後，把原文與失敗原因送到開發者的 Google Apps Script 網頁應用程式
-    // （由它寫入 Google 試算表）。REPORT_ENDPOINT_URL 留空時不顯示回報按鈕。
+    // 解析失敗自動回報：解析失敗或因疑似多個禁航區被擋下時，自動把原文與失敗原因
+    // 送到開發者的 Google Apps Script 網頁應用程式（由它寫入 Google 試算表）。
+    // 同一段原文＋同一個原因在這次開啟頁面期間只送一次，避免重複按「繪製」灌爆試算表。
+    // REPORT_ENDPOINT_URL 留空即停用。
     // ============================================================
     const REPORT_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbyJZdVJYmUtDulpaRRYG9sndn4eiAPh80a1HR8w9QN7KyLHJ6B0LPIY7sSvULLYo2gvWg/exec';
-    const pendingReports = {};
+    const sentReports = new Set();
 
-    function reportButtonFor(cardId, rawText, ...reasons) {
+    function reportParseFailure(rawText, ...reasons) {
         const reason = reasons.filter(Boolean).join('；');
-        if (!REPORT_ENDPOINT_URL || !reason) {
-            delete pendingReports[cardId];
-            return '';
-        }
-        pendingReports[cardId] = { rawText, reason };
-        return `<div><button class="btn-report" id="report-btn-${cardId}" onclick="sendParseFailureReport('${cardId}')">📨 回報此則給開發者</button></div>`;
-    }
+        if (!REPORT_ENDPOINT_URL || !reason) return;
+        const key = reason + '\n' + rawText;
+        if (sentReports.has(key)) return;
+        sentReports.add(key);
 
-    function sendParseFailureReport(cardId) {
-        const info = pendingReports[cardId];
-        if (!info) return;
-        const preview = info.rawText.length > 200 ? info.rawText.slice(0, 200) + '…' : info.rawText;
-        const ok = confirm(`將把以下內容傳送給開發者，協助改善解析功能：\n\n錯誤原因：${info.reason}\n\n原文（此處只顯示前 200 字，會送出完整原文）：\n${preview}\n\n確定要送出嗎？`);
-        if (!ok) return;
-
-        const btn = document.getElementById(`report-btn-${cardId}`);
-        if (btn) { btn.disabled = true; btn.textContent = '傳送中…'; }
-
-        // Apps Script 不處理 CORS 預檢，所以用 no-cors + text/plain 送出；回應內容讀不到，只能確認有送出去
+        // Apps Script 不處理 CORS 預檢，所以用 no-cors + text/plain 送出；回應讀不到，失敗也不打擾使用者
         fetch(REPORT_ENDPOINT_URL, {
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ reason: info.reason, rawText: info.rawText })
-        }).then(() => {
-            if (btn) btn.textContent = '✅ 已送出回報，謝謝';
-        }).catch(() => {
-            if (btn) { btn.disabled = false; btn.textContent = '📨 回報此則給開發者'; }
-            alert('回報送出失敗，請確認網路連線後再試一次。');
-        });
+            body: JSON.stringify({ reason, rawText })
+        }).catch(() => sentReports.delete(key));
     }
 
     function renderParseStatus(cardId, result, rawText) {
@@ -2256,7 +2237,6 @@
         if (!rawText) {
             statusEl.className = 'parse-status';
             statusEl.style.display = 'none';
-            delete pendingReports[cardId];
             return;
         }
 
@@ -2269,16 +2249,16 @@
         if (result.type === 'circle') {
             const f = formatCoordString(result.points[0].lat, result.points[0].lon);
             statusEl.className = isMultiArea ? 'parse-status warn' : 'parse-status ok';
-            statusEl.innerHTML = multiAreaWarningHtml + `✅ 成功解析【圓形禁航區】：<br>圓心：${f.latStr} ${f.lonStr}<br>半徑：${result.radiusNM} 海里`
-                + reportButtonFor(cardId, rawText, multiAreaReason);
+            statusEl.innerHTML = multiAreaWarningHtml + `✅ 成功解析【圓形禁航區】：<br>圓心：${f.latStr} ${f.lonStr}<br>半徑：${result.radiusNM} 海里`;
+            reportParseFailure(rawText, multiAreaReason);
             return;
         }
 
         if (result.type === 'sector') {
             const f = formatCoordString(result.center.lat, result.center.lon);
             statusEl.className = isMultiArea ? 'parse-status warn' : 'parse-status ok';
-            statusEl.innerHTML = multiAreaWarningHtml + `✅ 成功解析【扇形禁航區】：<br>圓心：${f.latStr} ${f.lonStr}<br>半徑：${result.radiusNM} 海里`
-                + reportButtonFor(cardId, rawText, multiAreaReason);
+            statusEl.innerHTML = multiAreaWarningHtml + `✅ 成功解析【扇形禁航區】：<br>圓心：${f.latStr} ${f.lonStr}<br>半徑：${result.radiusNM} 海里`;
+            reportParseFailure(rawText, multiAreaReason);
             return;
         }
 
@@ -2287,8 +2267,8 @@
                 statusEl.className = 'parse-status fail';
                 let msg = `⚠️ 解析失敗：線性禁航區至少需要 2 個座標點，目前只找到 ${result.points.length} 個。`;
                 if (result.invalidCount > 0) msg += ` 另有 ${result.invalidCount} 個座標數值超出合理範圍，已被忽略。`;
-                statusEl.innerHTML = multiAreaWarningHtml + msg
-                    + reportButtonFor(cardId, rawText, `線性禁航區座標點不足（只找到 ${result.points.length} 個，至少需要 2 個）`, multiAreaReason);
+                statusEl.innerHTML = multiAreaWarningHtml + msg;
+                reportParseFailure(rawText, `線性禁航區座標點不足（只找到 ${result.points.length} 個，至少需要 2 個）`, multiAreaReason);
                 return;
             }
             const linePreview = result.points.map((p, i) => {
@@ -2306,22 +2286,22 @@
             }
 
             statusEl.className = isMultiArea ? 'parse-status warn' : 'parse-status ok';
-            statusEl.innerHTML = multiAreaWarningHtml + `✅ 成功解析【線性禁航區】（航段管制）：<div class="coord-preview">${linePreview}</div>${extraNote}`
-                + reportButtonFor(cardId, rawText, multiAreaReason);
+            statusEl.innerHTML = multiAreaWarningHtml + `✅ 成功解析【線性禁航區】（航段管制）：<div class="coord-preview">${linePreview}</div>${extraNote}`;
+            reportParseFailure(rawText, multiAreaReason);
             return;
         }
 
         if (result.points.length < 3) {
             statusEl.className = 'parse-status fail';
             if (result.unresolvedIdents && result.unresolvedIdents.length > 0) {
-                statusEl.innerHTML = multiAreaWarningHtml + `⚠️ 目前不支援航路點代號（waypoint identifier）自動換算成座標的禁航區繪製，請直接提供經緯度座標。`
-                    + reportButtonFor(cardId, rawText, `含航路點代號，無法換算成座標（查無：${result.unresolvedIdents.join('、')}）`, multiAreaReason);
+                statusEl.innerHTML = multiAreaWarningHtml + `⚠️ 目前不支援航路點代號（waypoint identifier）自動換算成座標的禁航區繪製，請直接提供經緯度座標。`;
+                reportParseFailure(rawText, `含航路點代號，無法換算成座標（查無：${result.unresolvedIdents.join('、')}）`, multiAreaReason);
             } else {
                 let msg = `⚠️ 解析失敗：只找到 ${result.points.length} 個有效座標點（至少需要 3 點才能構成多邊形）。`;
                 if (result.invalidCount > 0) msg += ` 另有 ${result.invalidCount} 個座標數值超出合理範圍，已被忽略。`;
                 const invalidNote = result.invalidCount > 0 ? `，另有 ${result.invalidCount} 個座標超出合理範圍` : '';
-                statusEl.innerHTML = multiAreaWarningHtml + msg
-                    + reportButtonFor(cardId, rawText, `座標點不足（只找到 ${result.points.length} 個，至少需要 3 個${invalidNote}）`, multiAreaReason);
+                statusEl.innerHTML = multiAreaWarningHtml + msg;
+                reportParseFailure(rawText, `座標點不足（只找到 ${result.points.length} 個，至少需要 3 個${invalidNote}）`, multiAreaReason);
             }
             return;
         }
@@ -2343,10 +2323,9 @@
 
         if (isMultiArea || result.invalidCount > 0 || result.hasSelfIntersection) {
             statusEl.className = 'parse-status warn';
-            statusEl.innerHTML = `${multiAreaWarningHtml}${warningBanner}⚠️ 成功解析 ${result.points.length} 點：<div class="coord-preview">${preview}</div>`
-                + reportButtonFor(cardId, rawText, multiAreaReason);
+            statusEl.innerHTML = `${multiAreaWarningHtml}${warningBanner}⚠️ 成功解析 ${result.points.length} 點：<div class="coord-preview">${preview}</div>`;
+            reportParseFailure(rawText, multiAreaReason);
         } else {
-            delete pendingReports[cardId];
             statusEl.className = 'parse-status ok';
             statusEl.innerHTML = `${warningBanner}✅ 成功解析 ${result.points.length} 點多邊形：<div class="coord-preview">${preview}</div>`;
         }
