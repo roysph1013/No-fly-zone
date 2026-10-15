@@ -2211,7 +2211,7 @@
     // 解析失敗回報：使用者按按鈕並確認後，把原文與失敗原因送到開發者的 Google Apps Script 網頁應用程式
     // （由它寫入 Google 試算表）。REPORT_ENDPOINT_URL 留空時不顯示回報按鈕。
     // ============================================================
-    const REPORT_ENDPOINT_URL = '';
+    const REPORT_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbyJZdVJYmUtDulpaRRYG9sndn4eiAPh80a1HR8w9QN7KyLHJ6B0LPIY7sSvULLYo2gvWg/exec';
     const pendingReports = {};
 
     function reportButtonFor(cardId, rawText, ...reasons) {
