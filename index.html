@@ -366,6 +366,25 @@
         .measure-submenu.hidden { display: none; }
 
         /* 繪製途中跟著游標移動的即時測距/半徑提示框 */
+        /* 手機版兩點測距的操作提示（固定在地圖上方中央） */
+        .measure-tap-hint {
+            position: fixed;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            background: rgba(26, 32, 44, 0.92);
+            color: #ffd166;
+            font-weight: bold;
+            font-size: 14px;
+            padding: 8px 14px;
+            border-radius: 18px;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 3000;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
+
         .measure-cursor-tooltip {
             position: fixed;
             display: none;
@@ -716,6 +735,58 @@
         }
     });
 
+    // --- 手機版測距：點兩個點就自動完成 ---
+    // 電腦版沿用 Leaflet.draw 的逐點畫線（點最後一點或雙擊結束），手機上這種結束方式很難操作，
+    // 所以手機改成「點第一點、點第二點」就直接產生測距線，再交給跟電腦版同一套 CREATED 流程登記。
+    let measureTapHintEl = null;
+    function setMeasureTapHint(text) {
+        if (!measureTapHintEl) {
+            measureTapHintEl = document.createElement('div');
+            measureTapHintEl.className = 'measure-tap-hint';
+            document.body.appendChild(measureTapHintEl);
+        }
+        measureTapHintEl.textContent = text || '';
+        measureTapHintEl.style.display = text ? 'block' : 'none';
+    }
+
+    function createTwoPointMeasureHandler(lineStyle) {
+        let firstPoint = null;
+        let firstMarker = null;
+
+        function clearFirstPoint() {
+            if (firstMarker) map.removeLayer(firstMarker);
+            firstMarker = null;
+            firstPoint = null;
+        }
+
+        function onMapClick(e) {
+            if (!firstPoint) {
+                firstPoint = e.latlng;
+                firstMarker = L.circleMarker(e.latlng, {
+                    radius: 6, color: '#dd6b20', weight: 2, fillColor: '#ffffff', fillOpacity: 1, interactive: false
+                }).addTo(map);
+                setMeasureTapHint('📏 請點選第二個點');
+                return;
+            }
+            const latlngs = [firstPoint, e.latlng];
+            handler.disable();
+            map.fire(L.Draw.Event.CREATED, { layer: L.polyline(latlngs, lineStyle), layerType: 'polyline' });
+        }
+
+        const handler = {
+            enable() {
+                map.on('click', onMapClick);
+                setMeasureTapHint('📏 請點選第一個點');
+            },
+            disable() {
+                map.off('click', onMapClick);
+                clearFirstPoint();
+                setMeasureTapHint('');
+            }
+        };
+        return handler;
+    }
+
     function activateDrawTool(type) {
         // 再次點擊同一個工具 = 取消該工具
         if (activeToolType === type) {
@@ -730,7 +801,9 @@
         const shapeStyle = { color: '#dd6b20', weight: 3, opacity: 0.9, fillOpacity: 0.08 };
 
         if (type === 'polyline') {
-            activeDrawHandler = new L.Draw.Polyline(map, { shapeOptions: shapeStyle, metric: false, showLength: false });
+            activeDrawHandler = isMobileLayout()
+                ? createTwoPointMeasureHandler(shapeStyle)
+                : new L.Draw.Polyline(map, { shapeOptions: shapeStyle, metric: false, showLength: false });
         } else if (type === 'circle') {
             activeDrawHandler = new L.Draw.Circle(map, { shapeOptions: shapeStyle, showRadius: false });
         } else if (type === 'rectangle') {
