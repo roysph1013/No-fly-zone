@@ -139,6 +139,12 @@
             .kml-export-menu { left: 0; right: 0; width: auto; }
 
             .btn-proj, .project-item button { min-height: 38px; }
+            /* 手機上名稱獨佔一行，按鈕移到下一行平均分配，避免長專案名稱被截斷 */
+            /* 加上 #projectList 提高優先權，因為專案面板的基本樣式寫在這段 media query 後面 */
+            #projectList .project-item { flex-wrap: wrap; }
+            #projectList .project-item-info { flex: 1 1 100%; }
+            #projectList .project-item-name { white-space: normal; word-break: break-all; }
+            #projectList .project-item button { flex: 1; font-size: 13px; }
         }
 
         .area-card { background: #f8fafc; border: 1px solid #cbd5e0; border-radius: 8px; padding: 12px; margin-bottom: 8px; position: relative; }
