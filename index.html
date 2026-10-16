@@ -2195,10 +2195,10 @@
 
         const linePoints = [endB, ...sortedInsurancePoints, endA].map(p => [p.lat, p.lon]);
 
-        flightPathLayer = L.polyline(
-            linePoints,
-            { color: '#ffe100', weight: 3, opacity: 0.9, dashArray: null }
-        ).addTo(map);
+        const visibleLine = L.polyline(linePoints, { color: '#ffe100', weight: 3, opacity: 0.9, dashArray: null });
+        // 線只有 3px，手機上手指很難剛好點中；疊一條看不見的粗線當點擊範圍
+        const hitLine = L.polyline(linePoints, { color: '#000000', weight: 24, opacity: 0 });
+        flightPathLayer = L.featureGroup([visibleLine, hitLine]).addTo(map);
 
         flightPathLayer.bindPopup('<button class="btn-label-del" onclick="deleteFlightPath()">🗑️ 刪除飛行路徑</button>', { closeButton: false });
     }
