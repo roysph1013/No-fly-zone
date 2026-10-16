@@ -137,6 +137,8 @@
             }
 
             .kml-export-menu { left: 0; right: 0; width: auto; }
+
+            .btn-proj, .project-item button { min-height: 38px; }
         }
 
         .area-card { background: #f8fafc; border: 1px solid #cbd5e0; border-radius: 8px; padding: 12px; margin-bottom: 8px; position: relative; }
@@ -236,6 +238,30 @@
 
         .btn-resort { background: #dd6b20; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 6px; }
         .btn-resort:hover { background: #c05621; }
+
+        /* 專案管理面板 */
+        .project-panel { background: #edf2f7; border-radius: 6px; font-size: 13px; flex-shrink: 0; }
+        .project-panel > summary { cursor: pointer; padding: 10px 12px; font-weight: bold; color: #2d3748; list-style: none; display: flex; align-items: center; gap: 4px; min-width: 0; }
+        .project-panel > summary::-webkit-details-marker { display: none; }
+        .project-panel > summary::after { content: '▾'; margin-left: auto; padding-left: 6px; color: #718096; }
+        .project-panel[open] > summary::after { content: '▴'; }
+        #currentProjectName { color: #2b6cb0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+        .project-save-status { font-weight: normal; font-size: 11px; color: #718096; margin-left: 6px; white-space: nowrap; }
+        .project-panel-body { padding: 0 12px 10px; display: flex; flex-direction: column; gap: 8px; }
+        .project-actions { display: flex; gap: 8px; }
+        .btn-proj { flex: 1; background: #4a5568; font-size: 12px; padding: 8px 6px; }
+        .btn-proj:hover { background: #2d3748; }
+        .project-list { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
+        .project-item { background: #ffffff; border: 1px solid #cbd5e0; border-radius: 6px; padding: 8px 10px; display: flex; align-items: center; gap: 6px; }
+        .project-item.current { border-color: #3182ce; box-shadow: 0 0 0 1px #3182ce; }
+        .project-item-info { flex: 1; min-width: 0; }
+        .project-item-name { font-weight: bold; color: #2d3748; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .project-item-meta { font-size: 11px; color: #718096; }
+        .project-item button { font-size: 11px; padding: 4px 8px; }
+        .btn-proj-open { background: #3182ce; }
+        .btn-proj-rename { background: #718096; }
+        .btn-proj-del { background: #e53e3e; }
+        .project-empty, .project-hint { font-size: 11px; color: #718096; line-height: 1.5; }
 
         .parse-status { margin-top: 8px; padding: 6px 8px; border-radius: 4px; font-size: 12px; line-height: 1.5; }
         .parse-status.ok { background: #f0fff4; border: 1px solid #9ae6b4; color: #22543d; }
@@ -441,6 +467,18 @@
         <span class="sheet-title-peek">禁航區繪製小工具</span>
     </div>
     <h2>禁航區繪製小工具</h2>
+
+    <details class="project-panel" id="projectPanel">
+        <summary>📁 專案：<span id="currentProjectName">未命名</span><span class="project-save-status" id="projectSaveStatus"></span></summary>
+        <div class="project-panel-body">
+            <div class="project-actions">
+                <button class="btn-proj" onclick="saveAsNewProject()">💾 另存為新專案</button>
+                <button class="btn-proj" onclick="startNewProject()">📄 開新專案</button>
+            </div>
+            <div class="project-list" id="projectList"></div>
+            <div class="project-hint">開啟中的專案會自動儲存。專案存在這台裝置的瀏覽器裡，換裝置、換瀏覽器或清除瀏覽器資料就看不到。</div>
+        </div>
+    </details>
 
     <div class="control-panel">
         <label class="switch-label">
@@ -805,6 +843,7 @@
         if (featureObj.layer && map.hasLayer(featureObj.layer)) map.removeLayer(featureObj.layer);
         if (featureObj.label && map.hasLayer(featureObj.label)) map.removeLayer(featureObj.label);
         if (selectedFeature === featureObj) selectedFeature = null;
+        scheduleWorkspaceSave();
     }
 
     function clearAllDrawnFeatures() {
@@ -812,7 +851,11 @@
                       drawnFeatures.rectangles.length + drawnFeatures.points.length;
         if (total === 0) return;
         if (!confirm('確定要清除所有測量線條、圓形、矩形與標記點位嗎？（不會影響禁航區資料）')) return;
+        removeAllDrawnFeatures();
+        cancelActiveDrawTool();
+    }
 
+    function removeAllDrawnFeatures() {
         [...drawnFeatures.lines].forEach(f => deleteFeature(drawnFeatures.lines, f));
         [...drawnFeatures.circles].forEach(f => deleteFeature(drawnFeatures.circles, f));
         [...drawnFeatures.rectangles].forEach(f => deleteFeature(drawnFeatures.rectangles, f));
@@ -820,7 +863,6 @@
             if (f.marker && map.hasLayer(f.marker)) map.removeLayer(f.marker);
             deleteFeature(drawnFeatures.points, f);
         });
-        cancelActiveDrawTool();
     }
 
     // 刪除圖形彈窗：改用全域函式＋純數字 ID 呼叫（避免函式轉字串後遺失變數綁定的問題），
@@ -860,6 +902,7 @@
         featureObj.label = label;
 
         drawnFeatures.lines.push(featureObj);
+        scheduleWorkspaceSave();
     }
 
     // --- 圓形（顯示半徑）---
@@ -886,6 +929,7 @@
         featureObj.label = label;
 
         drawnFeatures.circles.push(featureObj);
+        scheduleWorkspaceSave();
     }
 
     // --- 矩形 ---
@@ -901,6 +945,7 @@
         layer.bindPopup(popupHtml, { closeButton: false });
 
         drawnFeatures.rectangles.push(featureObj);
+        scheduleWorkspaceSave();
     }
 
     // --- 點位（標示點位＋可命名／顯示或隱藏／編輯）---
@@ -939,6 +984,7 @@
         });
 
         drawnFeatures.points.push(featureObj);
+        scheduleWorkspaceSave();
         return featureObj;
     }
 
@@ -998,6 +1044,7 @@
             inner.classList.toggle('label-hidden', !f.visible);
         }
         f.marker.closePopup();
+        scheduleWorkspaceSave();
     }
 
     function deletePointFeature(id) {
@@ -1109,7 +1156,7 @@
     let selectedLabelMarker = null;
 
     window.onload = function() {
-        addAreaCard();
+        initProjects();
         setTimeout(() => { map.invalidateSize(); }, 200);
     };
 
@@ -1308,6 +1355,7 @@
             </div>
         `;
         container.insertAdjacentHTML('beforeend', cardHTML);
+        scheduleWorkspaceSave();
     }
 
     function removeAreaCard(cardId) {
@@ -1318,6 +1366,7 @@
             delete areaMapObjects[cardId];
         }
         delete cardParsedResults[cardId];
+        scheduleWorkspaceSave();
     }
 
     function toggleAreaVisibility(cardId) {
@@ -2215,7 +2264,7 @@
 
     function reportParseFailure(rawText, ...reasons) {
         const reason = reasons.filter(Boolean).join('；');
-        if (!REPORT_ENDPOINT_URL || !reason) return;
+        if (!REPORT_ENDPOINT_URL || !reason || isRestoringWorkspace) return;
         const key = reason + '\n' + rawText;
         if (sentReports.has(key)) return;
         sentReports.add(key);
@@ -2332,6 +2381,7 @@
     }
 
     function processAllData() {
+        scheduleWorkspaceSave();
         deselectCurrentLabel();
         Object.keys(areaMapObjects).forEach(cardId => removeAreaFromMap(cardId));
         areaMapObjects = {};
@@ -2528,6 +2578,10 @@
 
         document.getElementById('output-section').style.display = 'none';
         document.getElementById('areaOutputContainer').innerHTML = '';
+
+        // 清空視同從空白重新開始：脫離目前開啟的專案，避免自動儲存把已存的專案也清成空的
+        currentProjectId = null;
+        saveWorkspaceNow();
     }
 
     function renderAreaOutputs() {
@@ -2594,6 +2648,7 @@
         area.meta[field] = inputEl.value;
         const textEl = document.getElementById(`text-${cardId}`);
         if (textEl) textEl.innerText = buildFormattedText(area);
+        scheduleWorkspaceSave();
     }
 
     function toggleLabelVisibility() {
@@ -2978,6 +3033,304 @@ ${coords}
             const lat = parseFloat(parts[1]);
             return L.latLng(lat, lon);
         });
+    }
+    // ============================================================
+    // 專案管理：多個具名專案存在瀏覽器 localStorage（只在這台裝置、這個瀏覽器）。
+    // 開啟中的具名專案會自動儲存；還沒存成專案的內容存在「草稿」，
+    // 下次打開頁面時詢問是否還原上次的內容。
+    // ============================================================
+    const PROJECT_STORE_KEY = 'nofly-projects-v1';
+    let currentProjectId = null;
+    let isRestoringWorkspace = false;
+    let saveTimer = null;
+
+    function loadProjectStore() {
+        try {
+            const store = JSON.parse(localStorage.getItem(PROJECT_STORE_KEY));
+            if (store && store.projects) return store;
+        } catch (e) {}
+        return { projects: {}, draft: null, lastProjectId: null };
+    }
+
+    function writeProjectStore(store) {
+        try {
+            localStorage.setItem(PROJECT_STORE_KEY, JSON.stringify(store));
+            return true;
+        } catch (e) {
+            setProjectSaveStatus('⚠️ 無法儲存（瀏覽器空間不足或停用了儲存功能）');
+            return false;
+        }
+    }
+
+    function collectWorkspace() {
+        const cards = [...document.querySelectorAll('.area-card')].map(card => {
+            const area = allParsedAreas.find(a => a.cardId === card.id);
+            const colorInput = card.querySelector('.area-color-picker');
+            return {
+                text: card.querySelector('.area-input').value,
+                color: colorInput ? colorInput.value : '#ff0000',
+                meta: area ? { ...area.meta } : null
+            };
+        });
+        return {
+            cards,
+            drawn: allParsedAreas.length > 0,
+            features: {
+                lines: drawnFeatures.lines.map(f => f.latlngs),
+                circles: drawnFeatures.circles.map(f => ({ center: f.center, radiusNm: f.radiusNm })),
+                rectangles: drawnFeatures.rectangles.map(f => f.bounds),
+                points: drawnFeatures.points.map(f => ({ lat: f.lat, lon: f.lon, name: f.name, visible: f.visible }))
+            }
+        };
+    }
+
+    function workspaceHasContent(ws) {
+        if (!ws) return false;
+        const f = ws.features || {};
+        return (ws.cards || []).some(c => (c.text || '').trim()) ||
+            ['lines', 'circles', 'rectangles', 'points'].some(k => (f[k] || []).length > 0);
+    }
+
+    function scheduleWorkspaceSave() {
+        if (isRestoringWorkspace) return;
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(saveWorkspaceNow, 600);
+    }
+
+    function saveWorkspaceNow() {
+        clearTimeout(saveTimer);
+        saveTimer = null;
+        if (isRestoringWorkspace) return;
+        const store = loadProjectStore();
+        const ws = collectWorkspace();
+        if (currentProjectId && store.projects[currentProjectId]) {
+            store.projects[currentProjectId].data = ws;
+            store.projects[currentProjectId].updatedAt = Date.now();
+            store.lastProjectId = currentProjectId;
+        } else {
+            currentProjectId = null;
+            store.draft = workspaceHasContent(ws) ? { data: ws, updatedAt: Date.now() } : null;
+            store.lastProjectId = null;
+        }
+        if (writeProjectStore(store)) {
+            setProjectSaveStatus(currentProjectId || store.draft ? `已自動儲存 ${formatClock(Date.now())}` : '');
+            refreshProjectUI(store);
+        }
+    }
+
+    // 手機切到別的 App、或關掉分頁前，把還沒寫入的變更立刻存起來
+    window.addEventListener('pagehide', () => { if (saveTimer) saveWorkspaceNow(); });
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden' && saveTimer) saveWorkspaceNow();
+    });
+    document.getElementById('areaContainer').addEventListener('input', scheduleWorkspaceSave);
+
+    function resetWorkspace() {
+        deselectCurrentLabel();
+        Object.keys(areaMapObjects).forEach(id => removeAreaFromMap(id));
+        areaMapObjects = {};
+        allParsedAreas = [];
+        cardParsedResults = {};
+        deleteFlightPath();
+        removeAllDrawnFeatures();
+        document.getElementById('areaContainer').innerHTML = '';
+        cardCount = 0;
+        document.getElementById('output-section').style.display = 'none';
+        document.getElementById('areaOutputContainer').innerHTML = '';
+    }
+
+    function loadWorkspace(ws) {
+        isRestoringWorkspace = true;
+        try {
+            resetWorkspace();
+            const cards = (ws && ws.cards && ws.cards.length) ? ws.cards : [{ text: '', color: '#ff0000' }];
+            cards.forEach(c => {
+                addAreaCard();
+                const card = document.getElementById(`area-card-${cardCount}`);
+                card.querySelector('.area-input').value = c.text || '';
+                const colorInput = card.querySelector('.area-color-picker');
+                if (colorInput && c.color) colorInput.value = c.color;
+            });
+
+            const f = (ws && ws.features) || {};
+            (f.lines || []).forEach(pts => registerLine(L.polyline(pts.map(p => [p.lat, p.lon]))));
+            (f.circles || []).forEach(c => registerCircle(L.circle([c.center.lat, c.center.lon], { radius: c.radiusNm * 1852 })));
+            (f.rectangles || []).forEach(b => registerRectangle(L.rectangle([[b.south, b.west], [b.north, b.east]])));
+            (f.points || []).forEach(p => promptAndRegisterPoint(L.latLng(p.lat, p.lon), p.name, p.visible));
+
+            if (ws && ws.drawn) {
+                processAllData();
+                // 把使用者在「PPT 後製文字」欄位手動改過的標題/海域/時間等套回去（原文沒變才套）
+                let metaRestored = false;
+                allParsedAreas.forEach(area => {
+                    const saved = cards[parseInt(area.cardId.replace('area-card-', ''), 10) - 1];
+                    if (saved && saved.meta && (saved.text || '').trim() === area.text) {
+                        area.meta = { ...area.meta, ...saved.meta };
+                        metaRestored = true;
+                    }
+                });
+                if (metaRestored) renderAreaOutputs();
+            }
+        } finally {
+            isRestoringWorkspace = false;
+        }
+    }
+
+    function initProjects() {
+        const store = loadProjectStore();
+        const lastProject = store.lastProjectId && store.projects[store.lastProjectId];
+        let restored = false;
+
+        if (lastProject && workspaceHasContent(lastProject.data)) {
+            if (confirm(`是否開啟上次使用的專案「${lastProject.name}」？\n（按「取消」從空白開始，專案仍會保留在專案清單裡）`)) {
+                currentProjectId = store.lastProjectId;
+                loadWorkspace(lastProject.data);
+                restored = true;
+            }
+        } else if (store.draft && workspaceHasContent(store.draft.data)) {
+            if (confirm(`偵測到上次還沒存成專案的內容（${formatDateTime(store.draft.updatedAt)}），是否還原？\n（按「取消」會捨棄這些內容，從空白開始）`)) {
+                loadWorkspace(store.draft.data);
+                restored = true;
+            }
+        }
+
+        if (!restored) {
+            currentProjectId = null;
+            store.draft = null;
+            store.lastProjectId = null;
+            writeProjectStore(store);
+            loadWorkspace(null);
+        }
+        refreshProjectUI(store);
+    }
+
+    // 目前內容還沒存成專案時，切換前先確認，避免內容不見
+    function confirmLeaveUnsavedDraft() {
+        if (currentProjectId) return true;
+        if (!workspaceHasContent(collectWorkspace())) return true;
+        return confirm('目前的內容還沒存成專案，切換後就會消失。確定要繼續嗎？\n（想保留的話，請先按「另存為新專案」）');
+    }
+
+    function suggestProjectName() {
+        const titled = allParsedAreas.find(a => a.meta && a.meta.title && a.meta.title !== 'XX');
+        const d = new Date();
+        const stamp = `${d.getMonth() + 1}/${d.getDate()}`;
+        return titled ? `${stamp} ${titled.meta.title}` : `${stamp} 禁航區`;
+    }
+
+    function saveAsNewProject() {
+        const defaultName = suggestProjectName();
+        const input = prompt('請輸入專案名稱：', defaultName);
+        if (input === null) return;
+        const store = loadProjectStore();
+        const id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        store.projects[id] = { name: input.trim() || defaultName, updatedAt: Date.now(), data: collectWorkspace() };
+        if (!currentProjectId) store.draft = null;
+        currentProjectId = id;
+        store.lastProjectId = id;
+        if (writeProjectStore(store)) {
+            setProjectSaveStatus(`已儲存 ${formatClock(Date.now())}`);
+            refreshProjectUI(store);
+        }
+    }
+
+    function startNewProject() {
+        if (!confirmLeaveUnsavedDraft()) return;
+        if (saveTimer) saveWorkspaceNow();
+        currentProjectId = null;
+        const store = loadProjectStore();
+        store.draft = null;
+        store.lastProjectId = null;
+        writeProjectStore(store);
+        loadWorkspace(null);
+        setProjectSaveStatus('');
+        refreshProjectUI(store);
+    }
+
+    function openProject(id) {
+        if (id === currentProjectId) return;
+        if (!confirmLeaveUnsavedDraft()) return;
+        if (saveTimer) saveWorkspaceNow();
+        const store = loadProjectStore();
+        const project = store.projects[id];
+        if (!project) return;
+        if (!currentProjectId) store.draft = null;
+        currentProjectId = id;
+        store.lastProjectId = id;
+        writeProjectStore(store);
+        loadWorkspace(project.data);
+        setProjectSaveStatus('');
+        refreshProjectUI(store);
+    }
+
+    function renameProject(id) {
+        const store = loadProjectStore();
+        const project = store.projects[id];
+        if (!project) return;
+        const input = prompt('請輸入新的專案名稱：', project.name);
+        if (input === null || !input.trim()) return;
+        project.name = input.trim();
+        if (writeProjectStore(store)) refreshProjectUI(store);
+    }
+
+    function deleteProject(id) {
+        const store = loadProjectStore();
+        const project = store.projects[id];
+        if (!project) return;
+        const isCurrent = id === currentProjectId;
+        const note = isCurrent ? '\n\n這是目前開啟中的專案，刪除後畫面上的內容會保留，但變成未存成專案的狀態。' : '';
+        if (!confirm(`確定要刪除專案「${project.name}」嗎？此動作無法復原。${note}`)) return;
+        delete store.projects[id];
+        if (store.lastProjectId === id) store.lastProjectId = null;
+        if (!writeProjectStore(store)) return;
+        if (isCurrent) {
+            currentProjectId = null;
+            saveWorkspaceNow();
+        } else {
+            refreshProjectUI(store);
+        }
+    }
+
+    function refreshProjectUI(store) {
+        const current = currentProjectId && store.projects[currentProjectId];
+        document.getElementById('currentProjectName').textContent = current ? current.name : '未命名';
+
+        const listEl = document.getElementById('projectList');
+        const items = Object.entries(store.projects)
+            .filter(([id]) => /^[a-z0-9]+$/i.test(id))
+            .sort((a, b) => b[1].updatedAt - a[1].updatedAt);
+        if (items.length === 0) {
+            listEl.innerHTML = '<div class="project-empty">還沒有儲存的專案。按「另存為新專案」就能把目前的禁航區存起來。</div>';
+            return;
+        }
+        listEl.innerHTML = items.map(([id, p]) => {
+            const isCurrent = id === currentProjectId;
+            const count = ((p.data && p.data.cards) || []).filter(c => (c.text || '').trim()).length;
+            return `
+                <div class="project-item${isCurrent ? ' current' : ''}">
+                    <div class="project-item-info">
+                        <div class="project-item-name">${escapeHtml(p.name)}</div>
+                        <div class="project-item-meta">${count} 個禁航區・${formatDateTime(p.updatedAt)}${isCurrent ? '・開啟中' : ''}</div>
+                    </div>
+                    ${isCurrent ? '' : `<button class="btn-proj-open" onclick="openProject('${id}')">開啟</button>`}
+                    <button class="btn-proj-rename" onclick="renameProject('${id}')">改名</button>
+                    <button class="btn-proj-del" onclick="deleteProject('${id}')">刪除</button>
+                </div>`;
+        }).join('');
+    }
+
+    function setProjectSaveStatus(text) {
+        document.getElementById('projectSaveStatus').textContent = text;
+    }
+
+    function formatClock(ts) {
+        const d = new Date(ts);
+        return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
+
+    function formatDateTime(ts) {
+        const d = new Date(ts);
+        return `${d.getMonth() + 1}/${d.getDate()} ${formatClock(ts)}`;
     }
 </script>
 
