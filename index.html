@@ -1532,12 +1532,21 @@
         return 0;
     }
 
+    const COORD_DIRECTION_WORDS = {
+        '北緯': 'N', '北纬': 'N', '南緯': 'S', '南纬': 'S',
+        '東經': 'E', '东经': 'E', '西經': 'W', '西经': 'W'
+    };
+
     function normalizeChineseCoordText(text) {
         return text
             // 從網頁或 Word 複製來的航警常用全形／彎引號當度分秒符號（如 35°58′00”N），統一換成標準符號
             .replace(/[º˚]/g, '°')
             .replace(/[′’‘＇]/g, "'")
             .replace(/[″”“＂]/g, '"')
+            // 「北緯35度58分00秒」這種方向寫在數字前面的寫法，先把方向移到數字後面（35度58分00秒 N），
+            // 否則後面「方向在後」的解析規則會把經緯度錯位配對
+            .replace(/(北緯|北纬|南緯|南纬|東經|东经|西經|西经)\s*(\d[\d.\s°'"度分秒]*)/g,
+                (_, word, num) => ` ${num} ${COORD_DIRECTION_WORDS[word]} `)
             .replace(/北緯|北纬/g, ' N')
             .replace(/南緯|南纬/g, ' S')
             .replace(/東經|东经/g, ' E')
