@@ -59,6 +59,7 @@
 
         #map { flex: 1; height: 100%; position: relative; background: #262626; }
         h2 { font-size: 18px; color: #1a365d; border-bottom: 2px solid #3182ce; padding-bottom: 6px; }
+        .app-version { font-size: 12px; font-weight: normal; color: #718096; margin-left: 6px; }
 
         /* 手機版底部抽屜的拖曳把手（桌面版預設隱藏） */
         #sheetHandle { display: none; }
@@ -489,9 +490,9 @@
 <div id="sidebar">
     <div id="sheetHandle" onclick="toggleMobileSheet()">
         <div class="sheet-grip"></div>
-        <span class="sheet-title-peek">禁航區繪製小工具</span>
+        <span class="sheet-title-peek">禁航區繪製小工具<span class="app-version"></span></span>
     </div>
-    <h2>禁航區繪製小工具</h2>
+    <h2>禁航區繪製小工具<span class="app-version"></span></h2>
 
     <details class="project-panel" id="projectPanel">
         <summary>📁 專案：<span id="currentProjectName">未命名</span><span class="project-save-status" id="projectSaveStatus"></span></summary>
@@ -549,6 +550,12 @@
 <div id="map"></div>
 
 <script>
+    // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
+    // 讓使用者能確認拿到的是最新版
+    const APP_VERSION = 'v1';
+    document.title = `禁航區繪製小工具 ${APP_VERSION}`;
+    document.querySelectorAll('.app-version').forEach(el => { el.textContent = APP_VERSION; });
+
     // 初始化地圖
     const map = L.map('map', { zoomControl: false }).setView([23.5, 121.0], 7);
 
