@@ -1534,6 +1534,10 @@
 
     function normalizeChineseCoordText(text) {
         return text
+            // 從網頁或 Word 複製來的航警常用全形／彎引號當度分秒符號（如 35°58′00”N），統一換成標準符號
+            .replace(/[º˚]/g, '°')
+            .replace(/[′’‘＇]/g, "'")
+            .replace(/[″”“＂]/g, '"')
             .replace(/北緯|北纬/g, ' N')
             .replace(/南緯|南纬/g, ' S')
             .replace(/東經|东经/g, ' E')
@@ -2096,6 +2100,7 @@
         else if (rawText.includes("軍事訓練") || rawText.includes("军事训练")) purpose = "軍事訓練";
         else if (rawText.includes("軍事演習") || rawText.includes("军事演习") || rawText.includes("EXERCISE")) purpose = "軍事演習";
         else if (rawText.includes("軍事任務") || rawText.includes("军事任务")) purpose = "軍事任務";
+        else if (rawText.includes("軍事活動") || rawText.includes("军事活动")) purpose = "軍事活動";
 
         return { title, location, timeRange, purpose, controlType };
     }
