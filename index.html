@@ -565,7 +565,7 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v2';
+    const APP_VERSION = 'v3';
     document.title = `禁航區繪製小工具 ${APP_VERSION}`;
     document.querySelectorAll('.app-version').forEach(el => { el.textContent = APP_VERSION; });
 
@@ -1681,8 +1681,44 @@
             val = numTokens[0] + numTokens[1] / 60.0 + numTokens[2] / 3600.0;
         }
 
+        // 分、秒超過 60 或度數超出範圍，代表度分秒符號缺漏或被誤轉，改用只看數字位數的方式重切
+        const componentOverflow = (numTokens.length === 2 && numTokens[1] >= 60) ||
+            (numTokens.length >= 3 && (numTokens[1] >= 60 || numTokens[2] >= 60));
+        if (componentOverflow || Math.abs(val) > (isLongitude ? 180 : 90)) {
+            const repaired = parseDmsDigitsOnly(str, isLongitude);
+            if (repaired !== null) val = repaired;
+        }
+
         if (dir === 'S' || dir === 'W') val = -val;
         return val;
+    }
+
+    // 度分秒符號缺漏或被誤轉的座標，例如 OCR 把「°」辨識成「0」（109054'09 → 109°54'09）、
+    // 漏掉符號（1821'11、18°2111）：只看數字位數，依「度 2～3 位、分 2 位、秒 2 位」重新切開；
+    // 切不出合理的度分秒（分秒 < 60、度數在範圍內）就回傳 null，維持原本的判斷
+    function parseDmsDigitsOnly(str, isLongitude) {
+        if (/\./.test(str)) return null;
+        const digits = str.replace(/\D/g, '');
+        const degLens = isLongitude ? [3, 2] : [2];
+        const maxDeg = isLongitude ? 180 : 90;
+        const tryCut = (ds, degLen) => {
+            const rest = ds.slice(degLen);
+            if (rest.length !== 2 && rest.length !== 4) return null;
+            const d = +ds.slice(0, degLen), m = +rest.slice(0, 2), sec = rest.length === 4 ? +rest.slice(2) : 0;
+            if (d > maxDeg || m >= 60 || sec >= 60) return null;
+            return d + m / 60 + sec / 3600;
+        };
+        for (const degLen of degLens) {
+            const v = tryCut(digits, degLen);
+            if (v !== null) return v;
+        }
+        // 度與分之間多出一個 0（「°」被辨識成「0」），去掉後再試
+        for (const degLen of degLens) {
+            if (digits[degLen] !== '0') continue;
+            const v = tryCut(digits.slice(0, degLen) + digits.slice(degLen + 1), degLen);
+            if (v !== null) return v;
+        }
+        return null;
     }
 
     function formatCoordString(lat, lon) {
@@ -1879,7 +1915,14 @@
             };
         }
 
-        const hasSelfIntersection = checkSelfIntersection(originalPoints);
+        let hasSelfIntersection = checkSelfIntersection(originalPoints);
+        // 用「西北角／東北角／東南角／西南角」逐角列出的四邊形，常照西北→東北→西南→東南列，
+        // 直接依序連線會交叉成蝴蝶結；這種情況改依順時針排序
+        const cornerLabelCount = (text.match(/西北角|東北角|东北角|東南角|东南角|西南角/g) || []).length;
+        if (hasSelfIntersection && cornerLabelCount >= 3) {
+            originalPoints = sortPolygonPointsClockwise(originalPoints);
+            hasSelfIntersection = checkSelfIntersection(originalPoints);
+        }
 
         return {
             type: 'polygon',
@@ -2114,7 +2157,7 @@
         if (titleMatch) {
             const afterTitle = rawText.slice(titleMatch.index + titleMatch[0].length);
             const segMatch = afterTitle.match(/^[，,\s]*([^，,\n]+)/);
-            if (segMatch && segMatch[1].trim()) {
+            if (segMatch && segMatch[1].trim() && !/\d/.test(segMatch[1])) {
                 location = segMatch[1].trim();
                 locationFromTitle = true;
             }
@@ -2175,6 +2218,12 @@
                 } else if (dates && dates.length >= 1 && times && times.length >= 2) {
                     timeRange = `${dates[0]}${times[0]}時至${times[1]}時`;
                 }
+            }
+
+            // 只寫了「每日管制時間 07:00-09:00」、沒有日期：時段照填，日期留 X 讓使用者補
+            if (timeRange === 'X月X日XXXX時至X月X日XXXX時') {
+                const daily = rawText.match(/(?:每日|每天)[^\d\n]{0,10}(\d{1,2})[:：]?(\d{2})\s*(?:至|-|~|—|－)\s*(\d{1,2})[:：]?(\d{2})/);
+                if (daily) timeRange = `X月X日至X月X日，每日${daily[1].padStart(2, '0')}${daily[2]}時至${daily[3].padStart(2, '0')}${daily[4]}時`;
             }
         }
 
@@ -2430,6 +2479,14 @@
     const declinedSplitTexts = new Set();
 
     function splitMultiAreaText(text) {
+        const timeParts = splitByTimeClauses(text) || [text];
+        const parts = timeParts.flatMap(part => splitByShapeDescriptions(part) || [part]);
+        if (parts.length < 2) return null;
+        if (parts.some(part => parseCoordinates(part).points.length === 0)) return null;
+        return parts;
+    }
+
+    function splitByTimeClauses(text) {
         const starts = [...text.matchAll(TIME_CLAUSE_START_REGEX)].map(m => m.index);
         if (starts.length < 2) return null;
 
@@ -2439,19 +2496,46 @@
         const tailMatch = text.match(/(禁止[^。]*。?)\s*$/);
         const sharedTail = tailMatch ? tailMatch[1] : '';
 
-        const parts = starts.map((start, i) => {
+        return starts.map((start, i) => {
             let segment = text.slice(start, i + 1 < starts.length ? starts[i + 1] : undefined).trim();
             if (sharedTail && !/禁止/.test(segment)) segment += sharedTail;
             return (header + segment).trim();
         });
-        if (parts.some(part => parseCoordinates(part).points.length === 0)) return null;
-        return parts;
+    }
+
+    // 同一時段內列出多個區域（例如「區域一為…圓形區域，區域二為…三點連線圍成的區域。殘骸落區為…四點連線圍成的區域」）：
+    // 以每個形狀描述的結尾當切點，每段補上開頭（編號、海域、時間）與最後一個形狀之後的共同結尾（性質、禁止駛入）
+    const SHAPE_END_REGEX = /半[径徑][^。；，]*?(?:[区區]域|[范範][围圍])|[圆圓]形[区區]域|扇形[区區]域|[点點][连連][线線][^。；，]*?(?:[区區]域|[范範][围圍])/g;
+    const COORD_START_REGEX = /[北南][緯纬]\s*\d|\d{1,3}\s*[-°度]\s*\d{1,2}(?:\.\d+)?\s*['′’分]?[\s\d.'′’″"”秒]*[NSns北南]|\d{4,7}\s*[NS]\s*\d/;
+    const SHAPE_PART_LEADING_REGEX = /^[\s，。、；,;]*(?:[内內](?=[\s，。、；和及与與並并]))?[\s，。、；,;]*(?:以及|和|及|与|與|並|并|另)?[\s，、]*/;
+
+    function splitByShapeDescriptions(text) {
+        const ends = [...text.matchAll(SHAPE_END_REGEX)].map(m => m.index + m[0].length);
+        if (ends.length < 2) return null;
+
+        const firstCoord = text.search(COORD_START_REGEX);
+        if (firstCoord === -1 || firstCoord >= ends[0]) return null;
+        const before = text.slice(0, firstCoord);
+        let headerEnd = Math.max(before.lastIndexOf('。'), before.lastIndexOf('；'));
+        if (headerEnd === -1) headerEnd = before.lastIndexOf('，');
+        const header = text.slice(0, headerEnd + 1);
+        const tail = text.slice(ends[ends.length - 1]);
+
+        return ends.map((end, i) => {
+            const start = i === 0 ? headerEnd + 1 : ends[i - 1];
+            const body = text.slice(start, end).replace(SHAPE_PART_LEADING_REGEX, '');
+            return (header + body + tail).trim();
+        });
     }
 
     function describeSplitPart(text) {
         const timeMatch = text.match(/\d{1,2}月\d{1,2}日\s*\d{4}\s*[時时]?\s*(?:至|-|~|—)\s*(?:\d{1,2}月)?(?:\d{1,2}日)?\s*\d{4}\s*[時时]?/);
-        const pointCount = parseCoordinates(text).points.length;
-        return `${timeMatch ? timeMatch[0].replace(/\s+/g, '') : '時間未知'}，${pointCount} 個座標點`;
+        const r = parseCoordinates(text);
+        let shape = `${r.points.length} 點多邊形`;
+        if (r.type === 'circle') shape = `圓形（半徑 ${r.radiusNM} 浬）`;
+        else if (r.type === 'sector') shape = `扇形（半徑 ${r.radiusNM} 浬）`;
+        else if (r.type === 'line') shape = `${r.points.length} 點線段`;
+        return `${timeMatch ? timeMatch[0].replace(/\s+/g, '') + '，' : ''}${shape}`;
     }
 
     // 回傳 true 代表有拆分（呼叫端需要重新繪製）
@@ -2463,7 +2547,7 @@
         if (!parts) return false;
 
         const preview = parts.map((part, i) => `(${i + 1}) ${describeSplitPart(part)}`).join('\n');
-        const ok = confirm(`這段文字包含 ${parts.length} 個不同時間段的禁航區，要自動拆成 ${parts.length} 張卡片分別繪製嗎？\n\n${preview}\n\n拆分後請逐張確認解析結果是否正確。`);
+        const ok = confirm(`這段文字包含 ${parts.length} 個禁航區，要自動拆成 ${parts.length} 張卡片分別繪製嗎？\n\n${preview}\n\n拆分後請逐張確認解析結果是否正確。`);
         if (!ok) {
             declinedSplitTexts.add(text);
             return false;
