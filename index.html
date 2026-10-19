@@ -60,6 +60,37 @@
         #map { flex: 1; height: 100%; position: relative; background: #262626; }
         h2 { font-size: 18px; color: #1a365d; border-bottom: 2px solid #3182ce; padding-bottom: 6px; }
         .app-version { font-size: 12px; font-weight: normal; color: #718096; margin-left: 6px; }
+        h2 { display: flex; align-items: center; }
+
+        /* 使用說明按鈕與說明／更新重點視窗 */
+        .btn-help { margin-left: auto; background: #ebf8ff; color: #2b6cb0; border: 1px solid #90cdf4; border-radius: 14px; padding: 3px 10px; font-size: 12px; font-weight: bold; }
+        .btn-help:hover { background: #bee3f8; }
+        .sheet-title-peek .btn-help { margin-left: 8px; vertical-align: middle; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); z-index: 4000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+        .modal-overlay[hidden] { display: none; }
+        .modal-panel { background: #ffffff; border-radius: 10px; width: 100%; max-width: 640px; max-height: 88vh; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.35); }
+        .modal-header { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid #e2e8f0; }
+        .modal-header h3 { font-size: 17px; color: #1a365d; }
+        .modal-close { margin-left: auto; background: none; color: #4a5568; font-size: 18px; padding: 4px 8px; }
+        .modal-close:hover { background: #edf2f7; }
+        .modal-body { padding: 14px 16px; overflow-y: auto; font-size: 14px; color: #2d3748; line-height: 1.65; }
+        .modal-footer { padding: 12px 16px; border-top: 1px solid #e2e8f0; display: flex; gap: 8px; justify-content: flex-end; }
+        .modal-btn-primary { background: #3182ce; }
+        .modal-btn-primary:hover { background: #2b6cb0; }
+        .modal-btn-secondary { background: #edf2f7; color: #2d3748; }
+        .modal-btn-secondary:hover { background: #e2e8f0; }
+        .guide-quickstart { background: #ebf8ff; border: 1px solid #90cdf4; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; }
+        .guide-quickstart b { color: #1a365d; }
+        .guide-quickstart ol { padding-left: 20px; margin: 4px 0; }
+        .guide-section { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 8px; }
+        .guide-section > summary { cursor: pointer; padding: 10px 12px; font-weight: bold; color: #1a365d; }
+        .guide-section[open] > summary { border-bottom: 1px solid #edf2f7; }
+        .guide-section ul { padding: 8px 14px 10px 32px; }
+        .guide-section li { margin-bottom: 4px; }
+        .guide-note { font-size: 12px; color: #718096; margin-top: 8px; }
+        .whatsnew-version { font-weight: bold; color: #2b6cb0; margin-top: 10px; }
+        .whatsnew-version:first-child { margin-top: 0; }
+        .whatsnew-list { padding-left: 22px; }
 
         /* 手機版底部抽屜的拖曳把手（桌面版預設隱藏） */
         #sheetHandle { display: none; }
@@ -138,6 +169,14 @@
             }
 
             .kml-export-menu { left: 0; right: 0; width: auto; }
+
+            /* 說明視窗在手機上全螢幕，按鈕放大方便觸控 */
+            .modal-overlay { padding: 0; }
+            .modal-panel { max-width: none; max-height: none; height: 100%; border-radius: 0; }
+            .modal-footer button { flex: 1; min-height: 44px; }
+            .modal-close { min-width: 44px; min-height: 44px; }
+            .btn-help { padding: 6px 12px; font-size: 13px; }
+            .guide-section > summary { padding: 12px; }
 
             .btn-proj, .project-item button, .btn-resort { min-height: 38px; }
             /* 卡片標題列在窄螢幕上允許換行，字體調整按鈕放大方便觸控 */
@@ -503,9 +542,9 @@
 <div id="sidebar">
     <div id="sheetHandle" onclick="toggleMobileSheet()">
         <div class="sheet-grip"></div>
-        <span class="sheet-title-peek">禁航區繪製小工具<span class="app-version"></span></span>
+        <span class="sheet-title-peek">禁航區繪製小工具<span class="app-version"></span><button class="btn-help" onclick="event.stopPropagation(); openModal('guideModal')">❓ 說明</button></span>
     </div>
-    <h2>禁航區繪製小工具<span class="app-version"></span></h2>
+    <h2>禁航區繪製小工具<span class="app-version"></span><button class="btn-help" onclick="openModal('guideModal')">❓ 使用說明</button></h2>
 
     <details class="project-panel" id="projectPanel">
         <summary>📁 專案：<span id="currentProjectName">未命名</span><span class="project-save-status" id="projectSaveStatus"></span></summary>
@@ -562,10 +601,177 @@
 
 <div id="map"></div>
 
+<!-- ===================== 使用說明（新增或修改功能時務必同步更新） ===================== -->
+<div id="guideModal" class="modal-overlay" hidden onclick="if (event.target === this) closeModal('guideModal')">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+        <div class="modal-header">
+            <h3 id="guideTitle">📖 使用說明<span class="app-version"></span></h3>
+            <button class="modal-close" onclick="closeModal('guideModal')" aria-label="關閉">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="guide-quickstart">
+                <b>🚀 3 步驟快速上手</b>
+                <ol>
+                    <li>把航警或 NOTAM 原文貼到「禁航區 #1」的輸入框。</li>
+                    <li>按「🪄 繪製禁航區」，地圖會畫出範圍，卡片下方會顯示解析結果。</li>
+                    <li>到下方「PPT 後製專用文字格式」按「📋 複製本區文字」，貼到簡報即可。</li>
+                </ol>
+                <div class="guide-note">手機版：控制面板在畫面下方，點一下標題列或往上拖就能展開。</div>
+            </div>
+
+            <details class="guide-section">
+                <summary>📝 支援的原文寫法</summary>
+                <ul>
+                    <li>度-分：<code>35-23.50N 119-35.92E</code></li>
+                    <li>度分秒：<code>35°58′00″N 121°34′00″E</code>（全形、半形符號都可以）</li>
+                    <li>中文：<code>北緯35度58分00秒、東經121度34分00秒</code></li>
+                    <li>FAA／ICAO：<code>390000N1200000E</code>、<code>N390000.50E1200000.25</code></li>
+                    <li>十進位：<code>30.5, 125.0</code></li>
+                    <li>形狀：多邊形（幾點連線）、圓形（以…為中心、半徑…海里或公里）、扇形、兩點連線的航段管制。</li>
+                    <li>不支援：只有航路點代號（例如 PANDI、NOBEN）、沒有經緯度的原文，請改貼經緯度。</li>
+                </ul>
+            </details>
+
+            <details class="guide-section">
+                <summary>✅ 看懂解析結果</summary>
+                <ul>
+                    <li>✅ 成功：會列出抓到的座標，請對照原文確認是否正確。</li>
+                    <li>⚠️ 線段交叉：點的順序可能有誤，可按「🔄 嘗試順序重排」。</li>
+                    <li>⚠️ 疑似多個禁航區：一段文字含多個區域時會先擋下不畫，避免畫錯（見下一節）。</li>
+                    <li>⚠️ 解析失敗：座標不足或格式無法辨識，請檢查原文。</li>
+                    <li>解析失敗的原文和原因會自動回報給開發者，用來改善工具。請勿貼上不宜外傳的內容。</li>
+                </ul>
+            </details>
+
+            <details class="guide-section">
+                <summary>🔀 一段文字含多個禁航區</summary>
+                <ul>
+                    <li>按「繪製」時，如果偵測到多個時間段或多個區域，會詢問是否自動拆成多張卡片，並列出每張的時間和形狀。</li>
+                    <li>按「確定」就自動拆開並繪製，請逐張確認結果；按「取消」則不拆，之後可按警告裡的「🔀 自動拆分」。</li>
+                    <li>無法自動拆的，請按「＋ 新增禁航區」，把每個區域分別貼到不同卡片。</li>
+                </ul>
+            </details>
+
+            <details class="guide-section">
+                <summary>🗂️ 禁航區卡片</summary>
+                <ul>
+                    <li>＋ 新增禁航區：多一張卡片，一張卡片放一個區域。第 2 張起有「刪除」按鈕。</li>
+                    <li>A− 12 A+：調整這個禁航區邊長標籤（幾浬）的字體大小，地圖會立即更新。</li>
+                    <li>色塊：更換這個禁航區在地圖上的顏色。</li>
+                    <li>👁 顯示／🙈 隱藏：暫時在地圖上隱藏這個禁航區。</li>
+                </ul>
+            </details>
+
+            <details class="guide-section">
+                <summary>📄 PPT 後製文字</summary>
+                <ul>
+                    <li>每個禁航區會自動產生一段簡報用文字，按「📋 複製本區文字」即可複製。</li>
+                    <li>標題、海域、時間、性質（多邊形另有管制類型）可以直接修改，文字會即時更新。</li>
+                    <li>顯示「XX」代表原文中找不到，請自行補上。</li>
+                    <li>NOTAM 的 B)／C) 時間會自動換算成台灣時間（+8 小時）。</li>
+                </ul>
+            </details>
+
+            <details class="guide-section">
+                <summary>🗺️ 地圖與圖層</summary>
+                <ul>
+                    <li>右上角圖層按鈕：切換 Google 衛星圖或 OpenStreetMap，也可以開啟地名標籤。</li>
+                    <li>上方勾選：顯示禁航區尺寸（邊長標籤）、防空識別區 (ADIZ)、發射場位置。</li>
+                    <li>滑鼠移到禁航區上會顯示「禁航區 #N」。</li>
+                    <li>邊長標籤可以拖曳移位；點一下標籤可以刪除（電腦也可以按 Delete 鍵）。</li>
+                    <li>電腦版可按左上角 ◀ 收合側邊欄，讓地圖更大。</li>
+                </ul>
+            </details>
+
+            <details class="guide-section">
+                <summary>📐 測量與標記工具（地圖右上角 📐）</summary>
+                <ul>
+                    <li>📏 測距：電腦逐點點選，點最後一點或雙擊結束；手機點兩下（起點、終點）就完成。</li>
+                    <li>⭕ 圓形、♦️ 矩形：在地圖上按住拖曳畫出，會標示半徑或寬高。</li>
+                    <li>📍 點位：點地圖並輸入名稱；點標記可以修改名稱、經緯度、是否顯示名稱，或刪除。</li>
+                    <li>點一下畫好的圖形可以刪除；🗑️ 可一次清除所有測量圖形（不影響禁航區）。</li>
+                    <li>再按一次同一個工具可以取消。</li>
+                </ul>
+            </details>
+
+            <details class="guide-section">
+                <summary>🚀 飛行路徑</summary>
+                <ul>
+                    <li>按「🚀 繪製飛行路徑」，會依禁航區位置畫出一條推估方向的直線。</li>
+                    <li>兩個以上禁航區：穿過各區中心；單一禁航區：沿它的長邊方向。單一圓形無法判斷方向。</li>
+                    <li>點一下路徑線可以刪除。</li>
+                </ul>
+            </details>
+
+            <details class="guide-section">
+                <summary>💾 專案（存檔）</summary>
+                <ul>
+                    <li>「📁 專案」可以另存為新專案、開新專案，也可以在清單中開啟、改名、刪除。</li>
+                    <li>開啟中的專案會自動儲存；重新打開網頁時會詢問是否還原上次的內容。</li>
+                    <li>資料只存在這台裝置的這個瀏覽器，換裝置、換瀏覽器或清除瀏覽器資料就看不到。共用電腦請留意。</li>
+                    <li>「🗑️ 全部清空」只清空畫面，不會刪掉已存的專案。</li>
+                </ul>
+            </details>
+
+            <details class="guide-section">
+                <summary>📤 KML 匯出／匯入</summary>
+                <ul>
+                    <li>📤 匯出 KML：可選「禁航區資料」或「測量與標記圖資」，下載後可以用 Google Earth 開啟。</li>
+                    <li>📥 匯入 KML：把測量線、圓形、矩形和點位匯入地圖。</li>
+                </ul>
+            </details>
+
+            <details class="guide-section">
+                <summary>ℹ️ 版本與其他</summary>
+                <ul>
+                    <li>標題旁的版本號（例如 v5）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
+                    <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
+                    <li>圖資與航路點資料僅供參考，不是官方航行資料。</li>
+                </ul>
+            </details>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn-primary" onclick="closeModal('guideModal')">開始使用</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== 更新重點（內容由 CHANGELOG 產生） ===================== -->
+<div id="whatsNewModal" class="modal-overlay" hidden onclick="if (event.target === this) closeModal('whatsNewModal')">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="whatsNewTitle">
+        <div class="modal-header">
+            <h3 id="whatsNewTitle">🎉 已更新到<span class="app-version"></span></h3>
+            <button class="modal-close" onclick="closeModal('whatsNewModal')" aria-label="關閉">✕</button>
+        </div>
+        <div class="modal-body" id="whatsNewBody"></div>
+        <div class="modal-footer">
+            <button class="modal-btn-secondary" onclick="closeModal('whatsNewModal'); openModal('guideModal')">查看使用說明</button>
+            <button class="modal-btn-primary" onclick="closeModal('whatsNewModal')">知道了</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v4';
+    const APP_VERSION = 'v5';
+
+    // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
+    const CHANGELOG = [
+        { version: 'v5', items: [
+            '新增「❓ 使用說明」，介紹所有功能和操作方式，標題旁隨時可以打開。',
+            '之後每次更新，打開網頁時會跳出這個視窗，說明更新了哪些功能。'
+        ] },
+        { version: 'v4', items: ['支援秒數帶小數的 FAA 座標寫法，例如 N390000.50E1200000.25。'] },
+        { version: 'v3', items: [
+            '同一時段列出多個區域的航警（例如圓形加多邊形）也能自動拆成多張卡片。',
+            '座標符號缺漏或轉檔錯亂時，會自動修正度分秒。',
+            '用「西北角、東北角…」列出的四邊形會自動排好順序，不再交叉。',
+            '能抓到「每日管制時間 07:00-09:00」這類時段。'
+        ] },
+        { version: 'v2', items: ['每張禁航區卡片可以用「A− A+」調整邊長標籤的字體大小。'] },
+        { version: 'v1', items: ['標題旁顯示版本號，方便確認是否為最新版。'] }
+    ];
     document.title = `禁航區繪製小工具 ${APP_VERSION}`;
     document.querySelectorAll('.app-version').forEach(el => { el.textContent = APP_VERSION; });
 
@@ -1256,6 +1462,7 @@
 
     window.onload = function() {
         initProjects();
+        showStartupNotes();
         setTimeout(() => { map.invalidateSize(); }, 200);
     };
 
@@ -3668,6 +3875,67 @@ ${coords}
     function formatDateTime(ts) {
         const d = new Date(ts);
         return `${d.getMonth() + 1}/${d.getDate()} ${formatClock(ts)}`;
+    }
+
+    // ============================================================
+    // 使用說明／更新重點視窗
+    // 第一次使用：自動打開使用說明；之後版本更新：打開「更新重點」，只列比上次看到的版本更新的項目
+    // ============================================================
+    const LAST_SEEN_VERSION_KEY = 'nofly-last-seen-version';
+
+    function versionNumber(v) {
+        return parseInt(String(v || '').replace(/\D/g, ''), 10) || 0;
+    }
+
+    function openModal(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.hidden = false;
+        const body = el.querySelector('.modal-body');
+        if (body) body.scrollTop = 0;
+        const closeBtn = el.querySelector('.modal-close');
+        if (closeBtn) closeBtn.focus();
+    }
+
+    function closeModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.hidden = true;
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') ['guideModal', 'whatsNewModal'].forEach(closeModal);
+    });
+
+    function renderWhatsNew(lastSeenVersion) {
+        const since = versionNumber(lastSeenVersion);
+        const body = document.getElementById('whatsNewBody');
+        body.innerHTML = '';
+        CHANGELOG.filter(entry => versionNumber(entry.version) > since).forEach(entry => {
+            const title = document.createElement('div');
+            title.className = 'whatsnew-version';
+            title.textContent = entry.version;
+            const list = document.createElement('ul');
+            list.className = 'whatsnew-list';
+            entry.items.forEach(text => {
+                const li = document.createElement('li');
+                li.textContent = text;
+                list.appendChild(li);
+            });
+            body.appendChild(title);
+            body.appendChild(list);
+        });
+    }
+
+    function showStartupNotes() {
+        let lastSeen = null;
+        try { lastSeen = localStorage.getItem(LAST_SEEN_VERSION_KEY); } catch (e) {}
+        if (!lastSeen) {
+            openModal('guideModal');
+        } else if (versionNumber(lastSeen) < versionNumber(APP_VERSION)) {
+            renderWhatsNew(lastSeen);
+            openModal('whatsNewModal');
+        }
+        try { localStorage.setItem(LAST_SEEN_VERSION_KEY, APP_VERSION); } catch (e) {}
     }
 </script>
 
