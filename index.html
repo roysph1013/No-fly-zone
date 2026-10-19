@@ -138,7 +138,7 @@
 
             .kml-export-menu { left: 0; right: 0; width: auto; }
 
-            .btn-proj, .project-item button { min-height: 38px; }
+            .btn-proj, .project-item button, .btn-resort { min-height: 38px; }
             /* 手機上名稱獨佔一行，按鈕移到下一行平均分配，避免長專案名稱被截斷 */
             /* 加上 #projectList 提高優先權，因為專案面板的基本樣式寫在這段 media query 後面 */
             #projectList .project-item { flex-wrap: wrap; }
@@ -2347,6 +2347,74 @@
     }
 
     // ============================================================
+    // 多禁航區自動拆分：一段文字裡有多個「X月X日HHHH時至」時間段時，以時間段開頭為切點拆成多段，
+    // 每段補上開頭的航警編號／海域，以及結尾共用的「禁止駛入」。
+    // 只在有把握時才提供拆分（標題段沒有座標、每段都有座標），而且一定先讓使用者確認；
+    // 拆完每張卡片會重新解析，某段若仍混有多個區域，照樣會被多區域警告擋下。
+    // ============================================================
+    const TIME_CLAUSE_START_REGEX = /(?:自\s*)?\d{1,2}月\d{1,2}日\s*\d{4}\s*(?:[時时])?\s*(?:至|-|~|—)/g;
+    const declinedSplitTexts = new Set();
+
+    function splitMultiAreaText(text) {
+        const starts = [...text.matchAll(TIME_CLAUSE_START_REGEX)].map(m => m.index);
+        if (starts.length < 2) return null;
+
+        const header = text.slice(0, starts[0]);
+        if (parseCoordinates(header).points.length > 0) return null;
+
+        const tailMatch = text.match(/(禁止[^。]*。?)\s*$/);
+        const sharedTail = tailMatch ? tailMatch[1] : '';
+
+        const parts = starts.map((start, i) => {
+            let segment = text.slice(start, i + 1 < starts.length ? starts[i + 1] : undefined).trim();
+            if (sharedTail && !/禁止/.test(segment)) segment += sharedTail;
+            return (header + segment).trim();
+        });
+        if (parts.some(part => parseCoordinates(part).points.length === 0)) return null;
+        return parts;
+    }
+
+    function describeSplitPart(text) {
+        const timeMatch = text.match(/\d{1,2}月\d{1,2}日\s*\d{4}\s*[時时]?\s*(?:至|-|~|—)\s*(?:\d{1,2}月)?(?:\d{1,2}日)?\s*\d{4}\s*[時时]?/);
+        const pointCount = parseCoordinates(text).points.length;
+        return `${timeMatch ? timeMatch[0].replace(/\s+/g, '') : '時間未知'}，${pointCount} 個座標點`;
+    }
+
+    // 回傳 true 代表有拆分（呼叫端需要重新繪製）
+    function splitCardIntoAreas(cardId) {
+        const card = document.getElementById(cardId);
+        if (!card) return false;
+        const text = card.querySelector('.area-input').value.trim();
+        const parts = splitMultiAreaText(text);
+        if (!parts) return false;
+
+        const preview = parts.map((part, i) => `(${i + 1}) ${describeSplitPart(part)}`).join('\n');
+        const ok = confirm(`這段文字包含 ${parts.length} 個不同時間段的禁航區，要自動拆成 ${parts.length} 張卡片分別繪製嗎？\n\n${preview}\n\n拆分後請逐張確認解析結果是否正確。`);
+        if (!ok) {
+            declinedSplitTexts.add(text);
+            return false;
+        }
+
+        card.querySelector('.area-input').value = parts[0];
+        const color = card.querySelector('.area-color-picker').value;
+        let anchor = card;
+        parts.slice(1).forEach(part => {
+            addAreaCard();
+            const newCard = document.getElementById(`area-card-${cardCount}`);
+            newCard.querySelector('.area-input').value = part;
+            newCard.querySelector('.area-color-picker').value = color;
+            anchor.after(newCard);
+            anchor = newCard;
+        });
+        scheduleWorkspaceSave();
+        return true;
+    }
+
+    function splitCardFromWarning(cardId) {
+        if (splitCardIntoAreas(cardId)) processAllData();
+    }
+
+    // ============================================================
     // 解析失敗自動回報：解析失敗或因疑似多個禁航區被擋下時，自動把原文與失敗原因
     // 送到開發者的 Google Apps Script 網頁應用程式（由它寫入 Google 試算表）。
     // 同一段原文＋同一個原因在這次開啟頁面期間只送一次，避免重複按「繪製」灌爆試算表。
@@ -2384,8 +2452,9 @@
 
         const isMultiArea = detectMultipleAreasHint(rawText);
         const multiAreaReason = isMultiArea ? '疑似包含多個禁航區，已擋下未繪製' : null;
+        const splitParts = isMultiArea ? splitMultiAreaText(rawText) : null;
         const multiAreaWarningHtml = isMultiArea
-            ? `<div style="color:#7b341e; font-weight:bold; margin-bottom:6px; padding:6px 8px; background:#fffaf0; border:1px solid #fbd38d; border-radius:4px;">⚠️ 偵測到這段文字疑似包含不只一個禁航區（出現多組座標範圍描述，或多個獨立時間區段）。這個工具一張卡片只能畫一個形狀，直接解析可能會把不同區域的座標誤連成同一個錯誤圖形，建議按「＋新增禁航區」，把每個區域分別貼到不同卡片再各自繪製。</div>`
+            ? `<div style="color:#7b341e; font-weight:bold; margin-bottom:6px; padding:6px 8px; background:#fffaf0; border:1px solid #fbd38d; border-radius:4px;">⚠️ 偵測到這段文字疑似包含不只一個禁航區（出現多組座標範圍描述，或多個獨立時間區段）。這個工具一張卡片只能畫一個形狀，直接解析可能會把不同區域的座標誤連成同一個錯誤圖形，${splitParts ? '可以按下方按鈕自動拆分，或' : '建議'}按「＋新增禁航區」，把每個區域分別貼到不同卡片再各自繪製。${splitParts ? `<div><button class="btn-resort" onclick="splitCardFromWarning('${cardId}')">🔀 自動拆分成 ${splitParts.length} 張卡片</button></div>` : ''}</div>`
             : '';
 
         if (result.type === 'circle') {
@@ -2454,7 +2523,8 @@
         }).join('\n');
 
         let warningBanner = "";
-        if (result.hasSelfIntersection) {
+        // 多區域混在一起時線段交叉是必然的，重排也排不對，不顯示重排提示以免誤導
+        if (result.hasSelfIntersection && !isMultiArea) {
             warningBanner = `
                 <div style="color: #c53030; font-weight: bold; margin-bottom: 4px;">
                     ⚠️ 警告：偵測到點位連接線段交叉！
@@ -2475,6 +2545,14 @@
 
     function processAllData() {
         scheduleWorkspaceSave();
+        // 繪製前先檢查有沒有「一段文字含多個時間段禁航區」的卡片，有的話詢問是否自動拆分
+        // （還原專案時不詢問；使用者這次拒絕過的同一段文字也不再重複詢問）
+        if (!isRestoringWorkspace) {
+            document.querySelectorAll('.area-card').forEach(card => {
+                const text = card.querySelector('.area-input').value.trim();
+                if (text && !declinedSplitTexts.has(text) && splitMultiAreaText(text)) splitCardIntoAreas(card.id);
+            });
+        }
         deselectCurrentLabel();
         Object.keys(areaMapObjects).forEach(cardId => removeAreaFromMap(cardId));
         areaMapObjects = {};
