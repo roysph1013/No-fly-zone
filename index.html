@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>禁航區繪製小工具</title>
+    <!-- 安裝成 App（PWA）：圖示、名稱與主題色 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0b1f3a">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="禁航區">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <!-- Leaflet 地圖套件 -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -92,6 +101,17 @@
         .whatsnew-version:first-child { margin-top: 0; }
         .whatsnew-list { padding-left: 22px; }
 
+        /* 安裝成 App 的提示視窗 */
+        #installModal .modal-panel { max-width: 460px; }
+        .install-hero { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .install-hero img { width: 64px; height: 64px; border-radius: 14px; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
+        .install-hero p { margin: 0; }
+        .install-steps { padding-left: 22px; margin: 6px 0 10px; }
+        .install-steps li { margin-bottom: 6px; }
+        .install-key { display: inline-block; background: #edf2f7; border: 1px solid #cbd5e0; border-radius: 6px; padding: 0 6px; font-weight: bold; white-space: nowrap; }
+        .install-warn { background: #fffaf0; border: 1px solid #fbd38d; border-radius: 8px; padding: 8px 10px; font-size: 13px; color: #744210; margin-top: 8px; }
+        .install-now-btn { width: 100%; min-height: 44px; font-size: 15px; margin: 4px 0 8px; }
+
         /* 手機版底部抽屜的拖曳把手（桌面版預設隱藏） */
         #sheetHandle { display: none; }
         .sheet-grip {
@@ -177,6 +197,10 @@
             .modal-close { min-width: 44px; min-height: 44px; }
             .btn-help { padding: 6px 12px; font-size: 13px; }
             .guide-section > summary { padding: 12px; }
+            /* 安裝提示在手機上改為底部卡片，不佔滿全螢幕，看得到後面的網頁 */
+            #installModal { align-items: flex-end; }
+            #installModal .modal-panel { height: auto; max-height: 90dvh; border-radius: 14px 14px 0 0; }
+            #installModal .modal-footer { flex-wrap: wrap; padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
 
             .btn-proj, .project-item button, .btn-resort { min-height: 38px; }
             /* 卡片標題列在窄螢幕上允許換行，字體調整按鈕放大方便觸控 */
@@ -722,9 +746,24 @@
             </details>
 
             <details class="guide-section">
+                <summary>📲 安裝成 App</summary>
+                <ul>
+                    <li>可以把網站安裝到手機主畫面或電腦桌面，之後像 App 一樣點圖示打開，畫面更大、沒有網址列。</li>
+                    <li>iPhone／iPad：用 Safari 開啟 → 點下方「分享」⬆️ → 「加入主畫面」。</li>
+                    <li>Android：Chrome 會出現「立即安裝」按鈕；沒有的話點右上角 ⋮ →「安裝應用程式」或「加到主畫面」。</li>
+                    <li>電腦：Chrome／Edge 網址列右側的安裝圖示，或選單裡的「安裝」。</li>
+                    <li>從 LINE、Facebook 點開的網頁不能安裝，要先改用 Safari 或 Chrome 開啟。</li>
+                    <li>手機打開網頁時會跳出安裝提醒，可以選「稍後再說」（3 天內不再提醒）或「不要再提醒」。</li>
+                    <li>iPhone 注意：安裝後的 App 和 Safari 的專案資料是分開存的，不會互通。</li>
+                    <li>安裝後一樣會自動拿到最新版本；沒有網路時也能打開上次用過的畫面（但地圖底圖需要網路）。</li>
+                </ul>
+                <button class="modal-btn-secondary" style="margin: 0 14px 10px;" onclick="closeModal('guideModal'); openInstallModal(true)">📲 查看我這台裝置的安裝方式</button>
+            </details>
+
+            <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v5）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
+                    <li>標題旁的版本號（例如 v6）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。</li>
                 </ul>
@@ -751,13 +790,39 @@
     </div>
 </div>
 
+<!-- ===================== 安裝成 App 提示（內容依裝置與瀏覽器產生） ===================== -->
+<div id="installModal" class="modal-overlay" hidden onclick="if (event.target === this) closeModal('installModal')">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+        <div class="modal-header">
+            <h3 id="installTitle">📲 安裝成 App</h3>
+            <button class="modal-close" onclick="closeModal('installModal')" aria-label="關閉">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="install-hero">
+                <img src="icons/icon-192.png" alt="禁航區繪製小工具圖示">
+                <p>把「禁航區繪製小工具」加到主畫面，之後點圖示就能直接打開，全螢幕使用更方便。</p>
+            </div>
+            <div id="installBody"></div>
+        </div>
+        <div class="modal-footer" id="installFooter">
+            <button class="modal-btn-secondary" onclick="dismissInstallReminder('never')">不要再提醒</button>
+            <button class="modal-btn-primary" onclick="dismissInstallReminder('later')">稍後再說</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v5';
+    const APP_VERSION = 'v6';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v6', items: [
+            '網站可以安裝成 App 了！加到手機主畫面或電腦桌面，點圖示就能直接打開。',
+            '用手機打開網頁時，會跳出提示教你怎麼安裝（iPhone、Android 各有說明）。',
+            '使用說明新增「📲 安裝成 App」，隨時可以再查看安裝方式。'
+        ] },
         { version: 'v5', items: [
             '新增「❓ 使用說明」，介紹所有功能和操作方式，標題旁隨時可以打開。',
             '之後每次更新，打開網頁時會跳出這個視窗，說明更新了哪些功能。'
@@ -1463,6 +1528,7 @@
     window.onload = function() {
         initProjects();
         showStartupNotes();
+        maybeShowInstallReminder();
         setTimeout(() => { map.invalidateSize(); }, 200);
     };
 
@@ -3899,11 +3965,18 @@ ${coords}
 
     function closeModal(id) {
         const el = document.getElementById(id);
-        if (el) el.hidden = true;
+        if (!el || el.hidden) return;
+        el.hidden = true;
+        // 第一次開啟或改版時會先顯示說明／更新重點，關掉之後才跳安裝提醒
+        if (pendingInstallReminder && (id === 'guideModal' || id === 'whatsNewModal')
+            && document.getElementById('guideModal').hidden && document.getElementById('whatsNewModal').hidden) {
+            pendingInstallReminder = false;
+            setTimeout(() => openInstallModal(false), 300);
+        }
     }
 
     document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') ['guideModal', 'whatsNewModal'].forEach(closeModal);
+        if (e.key === 'Escape') ['guideModal', 'whatsNewModal', 'installModal'].forEach(closeModal);
     });
 
     function renderWhatsNew(lastSeenVersion) {
@@ -3936,6 +4009,140 @@ ${coords}
             openModal('whatsNewModal');
         }
         try { localStorage.setItem(LAST_SEEN_VERSION_KEY, APP_VERSION); } catch (e) {}
+    }
+
+    // ===================== 安裝成 App（PWA） =====================
+    const INSTALL_NEVER_KEY = 'nofly-install-never';
+    const INSTALL_SNOOZE_KEY = 'nofly-install-snooze-until';
+    const INSTALL_SNOOZE_DAYS = 3;
+    let deferredInstallPrompt = null;   // Android／電腦 Chrome、Edge 提供的安裝事件
+    let pendingInstallReminder = false;
+
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+
+    window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+        if (!document.getElementById('installModal').hidden) renderInstallInstructions();
+    });
+
+    window.addEventListener('appinstalled', () => {
+        deferredInstallPrompt = null;
+        closeModal('installModal');
+        try { localStorage.setItem(INSTALL_NEVER_KEY, '1'); } catch (e) {}
+    });
+
+    function isRunningAsApp() {
+        return window.matchMedia('(display-mode: standalone)').matches
+            || window.matchMedia('(display-mode: fullscreen)').matches
+            || window.navigator.standalone === true;
+    }
+
+    function getInstallPlatform() {
+        const ua = navigator.userAgent || '';
+        const isIOS = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+        const isAndroid = /Android/i.test(ua);
+        if (/\bLine\/|FBAN|FBAV|FB_IAB|Instagram|MicroMessenger|WhatsApp/i.test(ua)) return { kind: 'inapp', isIOS, isAndroid };
+        if (isIOS) return { kind: /CriOS|FxiOS|EdgiOS/i.test(ua) ? 'ios-other' : 'ios-safari', isIOS, isAndroid };
+        if (isAndroid) return { kind: 'android', isIOS, isAndroid };
+        return { kind: 'desktop', isIOS, isAndroid };
+    }
+
+    function isMobileDevice() {
+        const p = getInstallPlatform();
+        return p.isIOS || p.isAndroid || window.matchMedia('(max-width: 768px)').matches;
+    }
+
+    function renderInstallInstructions() {
+        const body = document.getElementById('installBody');
+        if (isRunningAsApp()) {
+            body.innerHTML = '<p>✅ 你現在就是用 App 開啟的，不需要再安裝。</p>';
+            return;
+        }
+        const p = getInstallPlatform();
+        const key = t => `<span class="install-key">${t}</span>`;
+        let html = '';
+        if (deferredInstallPrompt) {
+            html += `<button class="install-now-btn" onclick="promptInstall()">📲 立即安裝</button>
+                <div class="guide-note">按下後在跳出的視窗選「安裝」即可。</div>`;
+        } else if (p.kind === 'inapp') {
+            html += `<p>⚠️ 你現在是在 LINE／Facebook 等 App 裡面開啟網頁，這裡沒辦法安裝。請先改用${p.isIOS ? ' Safari' : ' Chrome'} 開啟：</p>
+                <ol class="install-steps">
+                    <li>點右上角或右下角的 ${key('⋯')} 或 ${key('分享')} 按鈕。</li>
+                    <li>選 ${key(p.isIOS ? '用 Safari 開啟' : '用瀏覽器開啟')}（或「在預設瀏覽器中開啟」）。</li>
+                    <li>在${p.isIOS ? ' Safari' : ' Chrome'} 打開後，會再顯示安裝步驟。</li>
+                </ol>`;
+        } else if (p.kind === 'ios-safari' || p.kind === 'ios-other') {
+            html += `<ol class="install-steps">
+                    <li>點畫面${p.kind === 'ios-safari' ? '下方（iPad 在右上角）' : '右上角'}的 ${key('分享 ⬆️')} 按鈕。</li>
+                    <li>往下滑，點 ${key('加入主畫面 ➕')}。</li>
+                    <li>右上角點 ${key('新增')}，主畫面就會出現圖示。</li>
+                </ol>`;
+            if (p.kind === 'ios-other') html += '<div class="guide-note">如果找不到「加入主畫面」，請改用 Safari 開啟本網頁再試一次。</div>';
+            html += '<div class="install-warn">iPhone 注意：安裝後的 App 和 Safari 的專案資料是分開存的，之前在 Safari 存的專案不會出現在 App 裡。</div>';
+        } else if (p.kind === 'android') {
+            html += `<ol class="install-steps">
+                    <li>點右上角的 ${key('⋮')} 選單（三星瀏覽器在右下角 ${key('≡')}）。</li>
+                    <li>選 ${key('安裝應用程式')} 或 ${key('加到主畫面')}。</li>
+                    <li>按 ${key('安裝')}，主畫面就會出現圖示。</li>
+                </ol>
+                <div class="guide-note">建議使用 Chrome 開啟，安裝最順利。</div>`;
+        } else {
+            html += `<ol class="install-steps">
+                    <li>用 Chrome 或 Edge 開啟本網頁。</li>
+                    <li>點網址列右側的 ${key('安裝 ⊕')} 圖示，或從右上角選單選 ${key('安裝')}（Chrome 在「投放、儲存及分享」裡）。</li>
+                    <li>安裝後桌面和開始選單會出現圖示。</li>
+                </ol>
+                <div class="guide-note">Mac 的 Safari：上方選單「檔案」→「加入 Dock」。</div>`;
+        }
+        body.innerHTML = html;
+    }
+
+    async function promptInstall() {
+        if (!deferredInstallPrompt) return;
+        const promptEvent = deferredInstallPrompt;
+        deferredInstallPrompt = null;
+        promptEvent.prompt();
+        try {
+            const choice = await promptEvent.userChoice;
+            if (choice && choice.outcome === 'accepted') closeModal('installModal');
+            else renderInstallInstructions();
+        } catch (e) { renderInstallInstructions(); }
+    }
+
+    // manual = true：使用者自己從使用說明打開，只顯示「關閉」，不記錄稍後／不再提醒
+    function openInstallModal(manual) {
+        renderInstallInstructions();
+        const footer = document.getElementById('installFooter');
+        footer.innerHTML = manual || isRunningAsApp()
+            ? '<button class="modal-btn-primary" onclick="closeModal(\'installModal\')">關閉</button>'
+            : `<button class="modal-btn-secondary" onclick="dismissInstallReminder('never')">不要再提醒</button>
+               <button class="modal-btn-primary" onclick="dismissInstallReminder('later')">稍後再說</button>`;
+        openModal('installModal');
+    }
+
+    function dismissInstallReminder(mode) {
+        try {
+            if (mode === 'never') localStorage.setItem(INSTALL_NEVER_KEY, '1');
+            else localStorage.setItem(INSTALL_SNOOZE_KEY, String(Date.now() + INSTALL_SNOOZE_DAYS * 86400000));
+        } catch (e) {}
+        closeModal('installModal');
+    }
+
+    function maybeShowInstallReminder() {
+        if (isRunningAsApp() || !isMobileDevice()) return;
+        try {
+            if (localStorage.getItem(INSTALL_NEVER_KEY)) return;
+            const snoozeUntil = Number(localStorage.getItem(INSTALL_SNOOZE_KEY) || 0);
+            if (snoozeUntil && Date.now() < snoozeUntil) return;
+        } catch (e) {}
+        if (!document.getElementById('guideModal').hidden || !document.getElementById('whatsNewModal').hidden) {
+            pendingInstallReminder = true;
+        } else {
+            openInstallModal(false);
+        }
     }
 </script>
 
