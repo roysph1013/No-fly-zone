@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="禁航區">
+    <meta name="apple-mobile-web-app-title" content="禁區">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <!-- Leaflet 地圖套件 -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -748,7 +748,7 @@
             <details class="guide-section">
                 <summary>📲 安裝成 App</summary>
                 <ul>
-                    <li>可以把網站安裝到手機主畫面或電腦桌面，之後像 App 一樣點圖示打開，畫面更大、沒有網址列。</li>
+                    <li>可以把網站安裝到手機主畫面或電腦桌面，App 名稱是「禁區」，之後點圖示就能打開，畫面更大、沒有網址列。</li>
                     <li>iPhone／iPad：用 Safari 開啟 → 點下方「分享」⬆️ → 「加入主畫面」。</li>
                     <li>Android：Chrome 會出現「立即安裝」按鈕；沒有的話點右上角 ⋮ →「安裝應用程式」或「加到主畫面」。</li>
                     <li>電腦：Chrome／Edge 網址列右側的安裝圖示，或選單裡的「安裝」。</li>
@@ -763,7 +763,7 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v6）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
+                    <li>標題旁的版本號（例如 v7）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。</li>
                 </ul>
@@ -800,7 +800,7 @@
         <div class="modal-body">
             <div class="install-hero">
                 <img src="icons/icon-192.png" alt="禁航區繪製小工具圖示">
-                <p>把「禁航區繪製小工具」加到主畫面，之後點圖示就能直接打開，全螢幕使用更方便。</p>
+                <p>把「禁區」App 加到主畫面，之後點圖示就能直接打開，全螢幕使用更方便。</p>
             </div>
             <div id="installBody"></div>
         </div>
@@ -814,10 +814,11 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v6';
+    const APP_VERSION = 'v7';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v7', items: ['App 取名為「禁區」，安裝後主畫面圖示下方會顯示這個名字。'] },
         { version: 'v6', items: [
             '網站可以安裝成 App 了！加到手機主畫面或電腦桌面，點圖示就能直接打開。',
             '用手機打開網頁時，會跳出提示教你怎麼安裝（iPhone、Android 各有說明）。',

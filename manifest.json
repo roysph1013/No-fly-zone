@@ -1,6 +1,6 @@
 {
-  "name": "禁航區繪製小工具",
-  "short_name": "禁航區",
+  "name": "禁區 - 禁航區繪製小工具",
+  "short_name": "禁區",
   "description": "貼上航警或 NOTAM 原文，自動在地圖上畫出禁航區並產生簡報文字。",
   "lang": "zh-TW",
   "start_url": "./",
