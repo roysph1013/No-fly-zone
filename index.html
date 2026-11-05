@@ -13,12 +13,12 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Zone X">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <!-- Leaflet 地圖套件 -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet 地圖套件：檔案放在網站自己的 vendor 資料夾，不依賴外部網站（外部掛掉或被擋時網站照樣能用） -->
+    <link rel="stylesheet" href="vendor/leaflet-1.9.4/leaflet.css" />
+    <script src="vendor/leaflet-1.9.4/leaflet.js"></script>
     <!-- Leaflet.draw：僅使用其繪製互動引擎，介面完全自訂，不使用其預設工具列外觀 -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
-    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    <link rel="stylesheet" href="vendor/leaflet-draw-1.0.4/leaflet.draw.css" />
+    <script src="vendor/leaflet-draw-1.0.4/leaflet.draw.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: "Microsoft JhengHei", Arial, sans-serif; display: flex; height: 100vh; background: #f0f2f5; overflow: hidden; }
@@ -98,9 +98,19 @@
         .guide-section ul { padding: 8px 14px 10px 32px; }
         .guide-section li { margin-bottom: 4px; }
         .guide-note { font-size: 12px; color: #718096; margin-top: 8px; }
+        .report-note { font-size: 12px; color: #718096; font-weight: normal; margin-top: 6px; }
         .whatsnew-version { font-weight: bold; color: #2b6cb0; margin-top: 10px; }
         .whatsnew-version:first-child { margin-top: 0; }
         .whatsnew-list { padding-left: 22px; }
+
+        /* 網頁內確認視窗與提示列 */
+        #confirmModal .modal-panel { max-width: 420px; }
+        .modal-btn-danger { background: #e53e3e; }
+        .modal-btn-danger:hover { background: #c53030; }
+        .app-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 4500; display: flex; align-items: center; gap: 12px; max-width: calc(100vw - 32px); background: #2d3748; color: #ffffff; padding: 10px 14px 10px 18px; border-radius: 24px; box-shadow: 0 6px 20px rgba(0,0,0,0.35); font-size: 14px; font-weight: bold; }
+        .app-toast[hidden] { display: none; }
+        .app-toast .app-toast-action { background: #ffffff; color: #2b6cb0; padding: 6px 14px; border-radius: 16px; font-size: 13px; }
+        .app-toast .app-toast-action[hidden] { display: none; }
 
         /* 安裝成 App 的提示視窗 */
         #installModal .modal-panel { max-width: 460px; }
@@ -200,9 +210,12 @@
             .modal-close { min-width: 44px; min-height: 44px; }
             .btn-help { padding: 6px 12px; font-size: 13px; }
             .guide-section > summary { padding: 12px; }
-            /* 更新重點在手機上維持置中的小視窗，不佔滿全螢幕 */
-            #whatsNewModal { padding: 20px 16px; }
-            #whatsNewModal .modal-panel { height: auto; max-height: 80dvh; border-radius: 12px; }
+            /* 更新重點、確認視窗在手機上維持置中的小視窗，不佔滿全螢幕 */
+            #whatsNewModal, #confirmModal { padding: 20px 16px; }
+            #whatsNewModal .modal-panel, #confirmModal .modal-panel { height: auto; max-height: 80dvh; border-radius: 12px; }
+            /* 手機的提示列放在上方，避免被底部控制面板蓋住 */
+            .app-toast { top: calc(12px + env(safe-area-inset-top)); bottom: auto; }
+            .app-toast .app-toast-action { min-height: 36px; }
             /* 安裝提示在手機上改為底部卡片，不佔滿全螢幕，看得到後面的網頁 */
             #installModal { align-items: flex-end; }
             #installModal .modal-panel { height: auto; max-height: 90dvh; border-radius: 14px 14px 0 0; }
@@ -583,8 +596,13 @@
                 <button class="btn-proj" onclick="saveAsNewProject()">💾 另存為新專案</button>
                 <button class="btn-proj" onclick="startNewProject()">📄 開新專案</button>
             </div>
+            <div class="project-actions">
+                <button class="btn-proj" onclick="exportProjectBackup()" title="把所有專案下載成一個檔案，可以備份或傳到另一台裝置">⬇️ 匯出備份</button>
+                <button class="btn-proj" onclick="document.getElementById('projectImportInput').click()" title="從備份檔把專案加回清單">⬆️ 匯入備份</button>
+                <input type="file" id="projectImportInput" accept=".json,application/json" style="display:none" onchange="importProjectBackup(event)">
+            </div>
             <div class="project-list" id="projectList"></div>
-            <div class="project-hint">開啟中的專案會自動儲存。專案存在這台裝置的瀏覽器裡，換裝置、換瀏覽器或清除瀏覽器資料就看不到。</div>
+            <div class="project-hint">開啟中的專案會自動儲存。專案存在這台裝置的瀏覽器裡，換裝置、換瀏覽器或清除瀏覽器資料就看不到，建議定期按「匯出備份」存一份檔案。</div>
         </div>
     </details>
 
@@ -669,7 +687,7 @@
                     <li>⚠️ 線段交叉：點的順序可能有誤，可按「🔄 嘗試順序重排」。</li>
                     <li>⚠️ 疑似多個禁航區：一段文字含多個區域時會先擋下不畫，避免畫錯（見下一節）。</li>
                     <li>⚠️ 解析失敗：座標不足或格式無法辨識，請檢查原文。</li>
-                    <li>解析失敗的原文和原因會自動回報給開發者，用來改善工具。請勿貼上不宜外傳的內容。</li>
+                    <li>解析失敗的原文和原因會自動回報給開發者，用來改善工具；回報時結果下方會出現「📮 已自動回報」。請勿貼上不宜外傳的內容。</li>
                 </ul>
             </details>
 
@@ -705,7 +723,7 @@
             <details class="guide-section">
                 <summary>🗺️ 地圖與圖層</summary>
                 <ul>
-                    <li>右上角圖層按鈕：切換 Google 衛星圖或 OpenStreetMap，也可以開啟地名標籤。</li>
+                    <li>右上角圖層按鈕：預設是 Esri 衛星圖；Esri 圖載不出來時可改選「Google 衛星圖（備用）」或 OpenStreetMap。也可以開啟英文地名／國界標籤，或 Google 中文地名標籤。</li>
                     <li>上方勾選：顯示禁航區尺寸（邊長標籤）、防空識別區 (ADIZ)、發射場位置。</li>
                     <li>滑鼠移到禁航區上會顯示「禁航區 #N」。</li>
                     <li>邊長標籤可以拖曳移位；點一下標籤可以刪除（電腦也可以按 Delete 鍵）。</li>
@@ -718,7 +736,7 @@
                 <ul>
                     <li>📏 測距：電腦逐點點選，點最後一點或雙擊結束；手機點兩下（起點、終點）就完成。</li>
                     <li>⭕ 圓形、♦️ 矩形：在地圖上按住拖曳畫出，會標示半徑或寬高。</li>
-                    <li>📍 點位：點地圖並輸入名稱；點標記可以修改名稱、經緯度、是否顯示名稱，或刪除。</li>
+                    <li>📍 點位：點地圖放下點位，旁邊會打開小視窗，直接輸入名稱後按「✔ 套用」；之後點標記也可以修改名稱、經緯度、是否顯示名稱，或刪除。</li>
                     <li>點一下畫好的圖形可以刪除；🗑️ 可一次清除所有測量圖形（不影響禁航區）。</li>
                     <li>再按一次同一個工具可以取消。</li>
                 </ul>
@@ -729,6 +747,7 @@
                 <ul>
                     <li>按「🚀 繪製飛行路徑」，會依禁航區位置畫出一條推估方向的直線。</li>
                     <li>兩個以上禁航區：穿過各區中心；單一禁航區：沿它的長邊方向。單一圓形無法判斷方向。</li>
+                    <li>只用地圖上顯示中的禁航區計算；按「🙈 隱藏」的不會算進去。</li>
                     <li>點一下路徑線可以刪除。</li>
                 </ul>
             </details>
@@ -739,7 +758,8 @@
                     <li>「📁 專案」可以另存為新專案、開新專案，也可以在清單中開啟、改名、刪除。</li>
                     <li>開啟中的專案會自動儲存；重新打開網頁時會詢問是否還原上次的內容。</li>
                     <li>資料只存在這台裝置的這個瀏覽器，換裝置、換瀏覽器或清除瀏覽器資料就看不到。共用電腦請留意。</li>
-                    <li>「🗑️ 全部清空」只清空畫面，不會刪掉已存的專案。</li>
+                    <li>⬇️ 匯出備份：把所有專案下載成一個 .json 檔；⬆️ 匯入備份：把備份檔的專案加回清單（已有的不會重複）。可以用來換手機、或在 iPhone 的 App 和 Safari 之間搬資料。</li>
+                    <li>「🗑️ 全部清空」會先跟你確認，只清空畫面，不會刪掉已存的專案；清空後 10 秒內可以按畫面上的「復原」。</li>
                 </ul>
             </details>
 
@@ -760,7 +780,7 @@
                     <li>電腦：Chrome／Edge 網址列右側的安裝圖示，或選單裡的「安裝」。</li>
                     <li>從 LINE、Facebook 點開的網頁不能安裝，要先改用 Safari 或 Chrome 開啟。</li>
                     <li>手機打開網頁時會跳出安裝提醒，可以選「稍後再說」（3 天內不再提醒）或「不要再提醒」。</li>
-                    <li>iPhone 注意：安裝後的 App 和 Safari 的專案資料是分開存的，不會互通。</li>
+                    <li>iPhone 注意：安裝後的 App 和 Safari 的專案資料是分開存的，不會互通；可以用專案的「匯出備份／匯入備份」搬過去。</li>
                     <li>App 改名或換圖示後，iPhone 要刪掉主畫面圖示再重新加入才會更新；Android 通常會自動更新。</li>
                     <li>安裝後一樣會自動拿到最新版本；沒有網路時也能打開上次用過的畫面（但地圖底圖需要網路）。</li>
                 </ul>
@@ -770,9 +790,9 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v11）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
+                    <li>標題旁的版本號（例如 v12）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
-                    <li>圖資與航路點資料僅供參考，不是官方航行資料。</li>
+                    <li>圖資與航路點資料僅供參考，不是官方航行資料。衛星圖來源：Esri、Maxar、Earthstar Geographics。</li>
                 </ul>
             </details>
         </div>
@@ -795,6 +815,27 @@
             <button class="modal-btn-primary" onclick="closeModal('whatsNewModal')">知道了</button>
         </div>
     </div>
+</div>
+
+<!-- ===================== 網頁內的確認視窗（取代瀏覽器的系統確認框） ===================== -->
+<div id="confirmModal" class="modal-overlay" hidden onclick="if (event.target === this) closeConfirmDialog(false)">
+    <div class="modal-panel" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle">
+        <div class="modal-header">
+            <h3 id="confirmTitle"></h3>
+            <button class="modal-close" onclick="closeConfirmDialog(false)" aria-label="關閉">✕</button>
+        </div>
+        <div class="modal-body" id="confirmMessage"></div>
+        <div class="modal-footer">
+            <button class="modal-btn-secondary" onclick="closeConfirmDialog(false)">取消</button>
+            <button class="modal-btn-primary" id="confirmOkBtn" onclick="closeConfirmDialog(true)">確定</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== 提示列（例如「已清空畫面・復原」） ===================== -->
+<div id="appToast" class="app-toast" role="status" aria-live="polite" hidden>
+    <span id="appToastText"></span>
+    <button id="appToastAction" class="app-toast-action" hidden></button>
 </div>
 
 <!-- ===================== 安裝成 App 提示（內容依裝置與瀏覽器產生） ===================== -->
@@ -821,10 +862,19 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v11';
+    const APP_VERSION = 'v12';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v12', items: [
+            '衛星底圖改用 Esri（官方開放的圖資），比較不會突然變空白；原本的 Google 衛星圖還在圖層選單裡當備用。',
+            '「全部清空」會先問你確定嗎，清空後 10 秒內可以按「復原」。',
+            '專案可以「匯出備份」成檔案，也能「匯入備份」，換手機或清除瀏覽器資料也不怕。',
+            '飛行路徑只用地圖上顯示中的禁航區計算，跟畫面看到的一致。',
+            '標記點位時不再跳出輸入框，直接在點位旁的小視窗改名稱。',
+            '解析失敗自動回報時，會在結果下方告訴你。',
+            '地圖程式改放在網站裡，外部網站掛掉時也能正常使用。'
+        ] },
         { version: 'v11', items: ['App 改名為「Zone X」，並換上新的圖示。', '已經安裝過的人：iPhone 要刪掉主畫面圖示再重新加入一次，才會換成新圖示和名稱；Android 通常會自動更新。'] },
         { version: 'v10', items: ['彈出視窗右上角的 ✕ 不再出現多餘的黑色方框。'] },
         { version: 'v9', items: ['手機上的「更新重點」改成畫面中間的小視窗，不再佔滿整個螢幕。'] },
@@ -855,14 +905,26 @@
     // 初始化地圖
     const map = L.map('map', { zoomControl: false }).setView([23.5, 121.0], 7);
 
-    // 1. Google Maps 衛星圖與透明 Overlay 標籤 (lyrs=h)
+    // 1. 預設衛星圖：Esri World Imagery（官方開放的圖磚服務，需標示來源）
+    const esriSatLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 20,
+        maxNativeZoom: 18,
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+    }).addTo(map);
+
+    // Esri 地名／國界標籤（透明疊加層，預設關閉）
+    const esriOverlayLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 20,
+        maxNativeZoom: 18,
+        attribution: 'Labels &copy; Esri'
+    });
+
+    // 備用：Google 衛星圖與中文地名標籤（非官方圖磚網址，可能隨時被擋，只當備用選項）
     const googleSatLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
         maxZoom: 20,
         subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
         attribution: '&copy; Google Maps'
-    }).addTo(map);
-
-    // 透明 Overlay 圖層（不預設 addTo(map)，預設開啟時為關閉狀態）
+    });
     const googleOverlayLabels = L.tileLayer('https://{s}.google.com/vt/lyrs=h&x={x}&y={y}&z={z}', {
         maxZoom: 20,
         subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
@@ -875,14 +937,16 @@
         attribution: '&copy; OpenStreetMap'
     });
 
-    // 設定底圖與疊加層選單（僅保留 Google 衛星圖與 OpenStreetMap）
+    // 設定底圖與疊加層選單
     const baseMaps = {
-        "Google 衛星圖": googleSatLayer,
+        "衛星圖（Esri，預設）": esriSatLayer,
+        "Google 衛星圖（備用）": googleSatLayer,
         "OpenStreetMap": osmStandard
     };
 
     const overlayMaps = {
-        "顯示地名 / 道路標籤": googleOverlayLabels
+        "地名 / 國界標籤（英文）": esriOverlayLabels,
+        "中文地名 / 道路標籤（Google）": googleOverlayLabels
     };
 
     // Layer Control 放置於右上角
@@ -1132,7 +1196,13 @@
         } else if (type === 'rectangle') {
             registerRectangle(layer);
         } else if (type === 'marker') {
-            promptAndRegisterPoint(layer.getLatLng());
+            // 不用瀏覽器的輸入視窗（LINE 等內建瀏覽器會擋掉），直接打開點位的編輯小視窗讓使用者改名
+            const pointObj = promptAndRegisterPoint(layer.getLatLng(), `點位 ${drawnFeatures.points.length + 1}`);
+            pointObj.marker.openPopup();
+            setTimeout(() => {
+                const nameInput = document.getElementById(`point-edit-${pointObj.id}-name`);
+                if (nameInput) { nameInput.focus(); nameInput.select(); }
+            }, 60);
         }
 
         // 完成一次繪製後自動回到「未選取工具」狀態，避免誤觸連續繪製
@@ -1332,7 +1402,7 @@
 
     // --- 點位（標示點位＋可命名／顯示或隱藏／編輯）---
     function promptAndRegisterPoint(latlng, presetName, presetVisible) {
-        const name = (presetName !== undefined) ? presetName : (prompt('請輸入點位名稱：', '') || '未命名點位');
+        const name = (presetName !== undefined && presetName !== '') ? presetName : '未命名點位';
         const visible = (presetVisible !== undefined) ? presetVisible : true;
 
         const dot = L.divIcon({ className: '', html: '<div class="point-marker-dot"></div>', iconSize: [12, 12], iconAnchor: [6, 6] });
@@ -2654,14 +2724,21 @@
         }
 
         if (allParsedAreas.length === 0) {
-            alert('請先貼上禁航區座標並點擊「一鍵繪製」，再產生飛行路徑。');
+            alert('請先貼上禁航區座標並按「🪄 繪製禁航區」，再產生飛行路徑。');
+            return;
+        }
+
+        // 只用目前顯示在地圖上的禁航區計算（按「隱藏」的不算），畫出來的路徑才會跟畫面一致
+        const areas = allParsedAreas.filter(a => !areaMapObjects[a.cardId] || areaMapObjects[a.cardId].visible !== false);
+        if (areas.length === 0) {
+            alert('地圖上的禁航區都被隱藏了，請至少顯示一個禁航區再產生飛行路徑。');
             return;
         }
 
         let axisPoints;
         let insurancePoints; // 一定要確實通過的點（多個禁航區=各自中心點；單一禁航區=自己的中心點）
-        if (allParsedAreas.length === 1) {
-            const area = allParsedAreas[0];
+        if (areas.length === 1) {
+            const area = areas[0];
             if (area.type === 'circle') {
                 alert('單一圓形禁航區沒有方向性，無法判斷飛行路徑方向。\n請改用矩形／多邊形禁航區，或至少提供兩個禁航區。');
                 return;
@@ -2669,17 +2746,13 @@
             axisPoints = area.points; // 用該禁航區自己的頂點分佈算長軸方向
             insurancePoints = [getAreaCenterPoint(area)]; // 保險：一定要通過這個禁航區自己的中心點
         } else {
-            axisPoints = allParsedAreas.map(getAreaCenterPoint); // 用各禁航區中心點做最佳擬合直線
+            axisPoints = areas.map(getAreaCenterPoint); // 用各禁航區中心點做最佳擬合直線
             insurancePoints = axisPoints; // 這裡本身就是各中心點
         }
 
-        if (allParsedAreas.length > 2) {
-            const proceed = confirm(`目前偵測到 ${allParsedAreas.length} 個禁航區資料一起參與計算方向（不是畫面上看到的數量而已）。\n如果你只想用畫面上看到的幾個禁航區來畫路徑，建議先按「全部清空」再重新貼上，避免舊資料一起被算進去。\n\n要繼續用目前全部 ${allParsedAreas.length} 個資料生成嗎？`);
-            if (!proceed) return;
-        }
 
         // 單一禁航區時，用保險點（多邊形質心）當擬合中心，確保跟後面強制通過的點是同一個，畫出來才會是純直線
-        const centerOverride = (allParsedAreas.length === 1) ? insurancePoints[0] : null;
+        const centerOverride = (areas.length === 1) ? insurancePoints[0] : null;
         const { meanLat, meanLon, dLat, dLon } = fitPrincipalAxis(axisPoints, centerOverride);
 
         // 把「每單位 t 對應的實際公里數」換算出來，才能用固定公里數控制延伸長度
@@ -2874,12 +2947,13 @@
     // ============================================================
     const REPORT_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbyJZdVJYmUtDulpaRRYG9sndn4eiAPh80a1HR8w9QN7KyLHJ6B0LPIY7sSvULLYo2gvWg/exec';
     const sentReports = new Set();
+    const REPORT_MAX_CHARS = 5000;
 
     function reportParseFailure(rawText, ...reasons) {
         const reason = reasons.filter(Boolean).join('；');
-        if (!REPORT_ENDPOINT_URL || !reason || isRestoringWorkspace) return;
+        if (!REPORT_ENDPOINT_URL || !reason || isRestoringWorkspace) return false;
         const key = reason + '\n' + rawText;
-        if (sentReports.has(key)) return;
+        if (sentReports.has(key)) return true;
         sentReports.add(key);
 
         // Apps Script 不處理 CORS 預檢，所以用 no-cors + text/plain 送出；回應讀不到，失敗也不打擾使用者
@@ -2887,13 +2961,21 @@
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ reason, rawText })
+            // 原文最多送 5000 字，避免異常大量內容灌進試算表
+            body: JSON.stringify({ reason: reason.slice(0, 500), rawText: rawText.slice(0, REPORT_MAX_CHARS) })
         }).catch(() => sentReports.delete(key));
+        return true;
     }
 
     function renderParseStatus(cardId, result, rawText) {
         const statusEl = document.getElementById(`status-${cardId}`);
         if (!statusEl) return;
+        // 送出失敗回報時，在解析結果下方告訴使用者（原文會傳給開發者）
+        const report = (...reasons) => {
+            if (reportParseFailure(rawText, ...reasons)) {
+                statusEl.insertAdjacentHTML('beforeend', '<div class="report-note">📮 這段原文已自動回報給開發者，用來改善解析。</div>');
+            }
+        };
         statusEl.style.display = 'block';
 
         if (!rawText) {
@@ -2913,7 +2995,7 @@
             const f = formatCoordString(result.points[0].lat, result.points[0].lon);
             statusEl.className = isMultiArea ? 'parse-status warn' : 'parse-status ok';
             statusEl.innerHTML = multiAreaWarningHtml + `✅ 成功解析【圓形禁航區】：<br>圓心：${f.latStr} ${f.lonStr}<br>半徑：${result.radiusNM} 海里`;
-            reportParseFailure(rawText, multiAreaReason);
+            report(multiAreaReason);
             return;
         }
 
@@ -2921,7 +3003,7 @@
             const f = formatCoordString(result.center.lat, result.center.lon);
             statusEl.className = isMultiArea ? 'parse-status warn' : 'parse-status ok';
             statusEl.innerHTML = multiAreaWarningHtml + `✅ 成功解析【扇形禁航區】：<br>圓心：${f.latStr} ${f.lonStr}<br>半徑：${result.radiusNM} 海里`;
-            reportParseFailure(rawText, multiAreaReason);
+            report(multiAreaReason);
             return;
         }
 
@@ -2931,7 +3013,7 @@
                 let msg = `⚠️ 解析失敗：線性禁航區至少需要 2 個座標點，目前只找到 ${result.points.length} 個。`;
                 if (result.invalidCount > 0) msg += ` 另有 ${result.invalidCount} 個座標數值超出合理範圍，已被忽略。`;
                 statusEl.innerHTML = multiAreaWarningHtml + msg;
-                reportParseFailure(rawText, `線性禁航區座標點不足（只找到 ${result.points.length} 個，至少需要 2 個）`, multiAreaReason);
+                report(`線性禁航區座標點不足（只找到 ${result.points.length} 個，至少需要 2 個）`, multiAreaReason);
                 return;
             }
             const linePreview = result.points.map((p, i) => {
@@ -2950,7 +3032,7 @@
 
             statusEl.className = isMultiArea ? 'parse-status warn' : 'parse-status ok';
             statusEl.innerHTML = multiAreaWarningHtml + `✅ 成功解析【線性禁航區】（航段管制）：<div class="coord-preview">${linePreview}</div>${extraNote}`;
-            reportParseFailure(rawText, multiAreaReason);
+            report(multiAreaReason);
             return;
         }
 
@@ -2958,13 +3040,13 @@
             statusEl.className = 'parse-status fail';
             if (result.unresolvedIdents && result.unresolvedIdents.length > 0) {
                 statusEl.innerHTML = multiAreaWarningHtml + `⚠️ 目前不支援航路點代號（waypoint identifier）自動換算成座標的禁航區繪製，請直接提供經緯度座標。`;
-                reportParseFailure(rawText, `含航路點代號，無法換算成座標（查無：${result.unresolvedIdents.join('、')}）`, multiAreaReason);
+                report(`含航路點代號，無法換算成座標（查無：${result.unresolvedIdents.join('、')}）`, multiAreaReason);
             } else {
                 let msg = `⚠️ 解析失敗：只找到 ${result.points.length} 個有效座標點（至少需要 3 點才能構成多邊形）。`;
                 if (result.invalidCount > 0) msg += ` 另有 ${result.invalidCount} 個座標數值超出合理範圍，已被忽略。`;
                 const invalidNote = result.invalidCount > 0 ? `，另有 ${result.invalidCount} 個座標超出合理範圍` : '';
                 statusEl.innerHTML = multiAreaWarningHtml + msg;
-                reportParseFailure(rawText, `座標點不足（只找到 ${result.points.length} 個，至少需要 3 個${invalidNote}）`, multiAreaReason);
+                report(`座標點不足（只找到 ${result.points.length} 個，至少需要 3 個${invalidNote}）`, multiAreaReason);
             }
             return;
         }
@@ -2988,7 +3070,7 @@
         if (isMultiArea || result.invalidCount > 0 || result.hasSelfIntersection) {
             statusEl.className = 'parse-status warn';
             statusEl.innerHTML = `${multiAreaWarningHtml}${warningBanner}⚠️ 成功解析 ${result.points.length} 點：<div class="coord-preview">${preview}</div>`;
-            reportParseFailure(rawText, multiAreaReason);
+            report(multiAreaReason);
         } else {
             statusEl.className = 'parse-status ok';
             statusEl.innerHTML = `${warningBanner}✅ 成功解析 ${result.points.length} 點多邊形：<div class="coord-preview">${preview}</div>`;
@@ -3176,6 +3258,28 @@
     }
 
     function clearAllData() {
+        const snapshot = collectWorkspace();
+        if (!workspaceHasContent(snapshot)) { doClearAllData(); return; }
+        const count = (snapshot.cards || []).filter(c => (c.text || '').trim()).length;
+        openConfirmDialog({
+            title: '清空畫面？',
+            message: `會清空 ${count} 張禁航區卡片的原文和地圖上的禁航區、飛行路徑（測量與標記不受影響）。已存的專案不會被刪除，清空後 10 秒內可以按「復原」。`,
+            okText: '清空',
+            danger: true,
+            onOk: () => {
+                const prevProjectId = currentProjectId;
+                doClearAllData();
+                showToast('已清空畫面', '復原', () => {
+                    loadWorkspace(snapshot);
+                    currentProjectId = prevProjectId;
+                    saveWorkspaceNow();
+                    showToast('已復原');
+                });
+            }
+        });
+    }
+
+    function doClearAllData() {
         deselectCurrentLabel();
         Object.keys(areaMapObjects).forEach(cardId => removeAreaFromMap(cardId));
         areaMapObjects = {};
@@ -3298,7 +3402,7 @@
 
     function downloadKML() {
         if (allParsedAreas.length === 0) {
-            alert('請先點擊「一鍵繪製」！');
+            alert('請先按「🪄 繪製禁航區」！');
             return;
         }
 
@@ -3986,7 +4090,10 @@ ${coords}
     }
 
     document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') ['guideModal', 'whatsNewModal', 'installModal'].forEach(closeModal);
+        if (e.key === 'Escape') {
+            ['guideModal', 'whatsNewModal', 'installModal'].forEach(closeModal);
+            if (!document.getElementById('confirmModal').hidden) closeConfirmDialog(false);
+        }
     });
 
     function renderWhatsNew(lastSeenVersion) {
@@ -4019,6 +4126,121 @@ ${coords}
             openModal('whatsNewModal');
         }
         try { localStorage.setItem(LAST_SEEN_VERSION_KEY, APP_VERSION); } catch (e) {}
+    }
+
+    // ===================== 網頁內確認視窗 =====================
+    let confirmDialogOnOk = null;
+
+    function openConfirmDialog({ title, message, okText = '確定', danger = false, onOk }) {
+        document.getElementById('confirmTitle').textContent = title;
+        document.getElementById('confirmMessage').textContent = message;
+        const okBtn = document.getElementById('confirmOkBtn');
+        okBtn.textContent = okText;
+        okBtn.className = danger ? 'modal-btn-danger' : 'modal-btn-primary';
+        confirmDialogOnOk = onOk;
+        document.getElementById('confirmModal').hidden = false;
+    }
+
+    function closeConfirmDialog(ok) {
+        document.getElementById('confirmModal').hidden = true;
+        const cb = confirmDialogOnOk;
+        confirmDialogOnOk = null;
+        if (ok && cb) cb();
+    }
+
+    // ===================== 提示列（幾秒後自動消失，可附一個按鈕，例如「復原」） =====================
+    let toastTimer = null;
+
+    function showToast(text, actionText, onAction, durationMs) {
+        const toast = document.getElementById('appToast');
+        const actionBtn = document.getElementById('appToastAction');
+        document.getElementById('appToastText').textContent = text;
+        if (actionText && onAction) {
+            actionBtn.textContent = actionText;
+            actionBtn.hidden = false;
+            actionBtn.onclick = () => { hideToast(); onAction(); };
+        } else {
+            actionBtn.hidden = true;
+            actionBtn.onclick = null;
+        }
+        toast.hidden = false;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(hideToast, durationMs || (onAction ? 10000 : 2500));
+    }
+
+    function hideToast() {
+        clearTimeout(toastTimer);
+        document.getElementById('appToast').hidden = true;
+    }
+
+    // ===================== 專案備份：匯出成檔案／從檔案匯入 =====================
+    const PROJECT_BACKUP_FORMAT = 'zone-x-projects';
+
+    function exportProjectBackup() {
+        if (saveTimer) saveWorkspaceNow();
+        const store = loadProjectStore();
+        const projects = {};
+        Object.entries(store.projects).forEach(([id, p]) => { projects[id] = p; });
+        // 還沒存成專案的內容也一起備份，避免漏掉
+        if (store.draft && workspaceHasContent(store.draft.data)) {
+            projects['draft' + Date.now().toString(36)] = { name: `未存成專案的內容（${formatDateTime(store.draft.updatedAt)}）`, updatedAt: store.draft.updatedAt, data: store.draft.data };
+        }
+        const count = Object.keys(projects).length;
+        if (count === 0) {
+            alert('目前沒有專案可以備份。先按「另存為新專案」把禁航區存起來。');
+            return;
+        }
+        const backup = { format: PROJECT_BACKUP_FORMAT, version: 1, exportedAt: Date.now(), app: APP_VERSION, projects };
+        const d = new Date();
+        const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+        const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `ZoneX-projects-${stamp}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        showToast(`已匯出 ${count} 個專案`);
+    }
+
+    function isValidBackupProject(p) {
+        return p && typeof p === 'object' && typeof p.name === 'string' && p.data && typeof p.data === 'object' &&
+            Array.isArray(p.data.cards) && p.data.cards.every(c => c && typeof c === 'object' && (c.text === undefined || typeof c.text === 'string'));
+    }
+
+    function importProjectBackup(event) {
+        const file = event.target.files && event.target.files[0];
+        event.target.value = '';
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            let backup;
+            try { backup = JSON.parse(reader.result); } catch (e) { backup = null; }
+            if (!backup || backup.format !== PROJECT_BACKUP_FORMAT || !backup.projects || typeof backup.projects !== 'object') {
+                alert('這個檔案不是 Zone X 的專案備份檔，請選擇用「匯出備份」下載的 .json 檔。');
+                return;
+            }
+            const store = loadProjectStore();
+            let added = 0, skipped = 0;
+            Object.values(backup.projects).forEach(p => {
+                if (!isValidBackupProject(p)) { skipped++; return; }
+                const name = p.name.trim().slice(0, 100) || '匯入的專案';
+                const updatedAt = Number(p.updatedAt) || Date.now();
+                // 完全相同的專案（名稱與最後修改時間一樣）已經在清單裡就略過，避免重複匯入
+                const exists = Object.values(store.projects).some(q => q.name === name && q.updatedAt === updatedAt);
+                if (exists) { skipped++; return; }
+                const id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+                store.projects[id] = { name, updatedAt, data: p.data };
+                added++;
+            });
+            if (added > 0 && !writeProjectStore(store)) return;
+            refreshProjectUI(store);
+            const note = skipped ? `，${skipped} 個已存在或無法讀取所以略過` : '';
+            alert(added ? `已匯入 ${added} 個專案${note}。到專案清單按「開啟」就能使用。` : `沒有匯入新的專案${note}。`);
+        };
+        reader.onerror = () => alert('檔案讀取失敗，請再試一次。');
+        reader.readAsText(file);
     }
 
     // ===================== 安裝成 App（PWA） =====================
