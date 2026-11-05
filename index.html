@@ -271,7 +271,7 @@
         .btn-del { background: #e53e3e; color: white; border: none; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
         .btn-del:hover { background: #c53030; }
 
-        textarea { width: 100%; height: 110px; padding: 8px; font-size: 13px; border: 1px solid #cbd5e0; border-radius: 6px; resize: vertical; line-height: 1.4; font-family: monospace; }
+        textarea { width: 100%; height: 110px; min-height: 72px; padding: 8px; font-size: 13px; border: 1px solid #cbd5e0; border-radius: 6px; resize: vertical; line-height: 1.4; font-family: monospace; }
 
         .control-panel { background: #edf2f7; padding: 10px 12px; border-radius: 6px; font-size: 13px; display: flex; flex-direction: column; gap: 8px; }
         .switch-label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: bold; color: #2d3748; }
@@ -758,6 +758,16 @@
         html[data-ui^="zx"] .leaflet-top.leaflet-right .leaflet-control-layers-toggle { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231f3550' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l9 5-9 5-9-5z'/%3E%3Cpath d='M3 12.5l9 5 9-5'/%3E%3Cpath d='M3 17l9 5 9-5'/%3E%3C/svg%3E") !important; background-size: 21px 21px !important; }
         html[data-ui^="zx"] .parse-status .zx-ico, html[data-ui^="zx"] .modal-header h3 .zx-ico, html[data-ui^="zx"] .guide-section > summary .zx-ico { color: inherit; }
 
+        /* ---------- Beta：地圖彈出視窗（點位編輯、刪除標籤）跟著外觀配色 ---------- */
+        html[data-ui^="zx"] .leaflet-popup-content-wrapper, html[data-ui^="zx"] .leaflet-popup-tip { background: var(--zx-panel); color: var(--zx-ink); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); }
+        html[data-ui^="zx"] .leaflet-popup-content-wrapper { border-radius: 10px; border: 1px solid var(--zx-line); }
+        html[data-ui^="zx"] .leaflet-container a.leaflet-popup-close-button { color: var(--zx-ink-3); }
+        html[data-ui^="zx"] .point-edit-popup input[type="text"] { background: var(--zx-input); color: var(--zx-ink); border-color: var(--zx-line-strong); }
+        html[data-ui^="zx"] .point-edit-popup label { color: var(--zx-ink-2); }
+        html[data-ui^="zx"] .point-edit-popup .popup-coord-label { color: var(--zx-ink-3); }
+        html[data-ui^="zx"] .point-edit-popup .btn-vis { color: var(--zx-ink); }
+        html[data-ui^="zx"] .btn-label-del { background: transparent; color: var(--zx-danger); border: 1px solid var(--zx-danger); }
+
         /* ---------- Beta：禁航區顏色選擇 ---------- */
         .zx-color-btn { display: none; }
         html[data-ui^="zx"] .area-color-picker { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
@@ -805,7 +815,13 @@
         .zx-more-menu[hidden] { display: none; }
         .zx-more-menu button { justify-content: flex-start; background: transparent; color: var(--zx-ink); padding: 10px 12px; font-size: 13px; border-radius: 6px; }
         .zx-more-menu button:hover { background: var(--zx-sunken); }
-        .zx-more-menu .zx-more-danger { color: var(--zx-danger); border-top: 1px solid var(--zx-line); border-radius: 0 0 6px 6px; }
+        .zx-actionbar > button { white-space: nowrap; }
+        .zx-actionbar .zx-btn-primary { min-width: 0; }
+        .zx-actionbar .zx-btn-secondary { flex: none; padding: 12px 11px; }
+        .zx-actionbar .zx-clear-btn { color: var(--zx-danger); }
+        .zx-actionbar .zx-clear-btn:hover { background: var(--zx-bad-bg); border-color: var(--zx-danger); }
+        html[data-ui^="zx"] .ab-ico { display: inline-flex; }
+        html[data-ui^="zx"] .ab-ico .zx-ico { margin-right: 0; }
 
         /* ---------- Beta：歡迎卡 ---------- */
         #welcomeModal .modal-panel { max-width: 440px; }
@@ -851,11 +867,19 @@
             html[data-ui^="zx"] #sidebar h2 .zx-logo { width: 28px; height: 28px; }
             .theme-option { min-height: 56px; }
         }
+        @media (max-width: 370px) {
+            html[data-ui^="zx"] .zx-actionbar .zx-btn-primary .ab-ico { display: none; }
+            html[data-ui^="zx"] .zx-actionbar .zx-clear-btn .ab-label { display: none; }
+            html[data-ui^="zx"] .zx-actionbar .zx-clear-btn { min-width: 44px; }
+        }
         /* 很窄的手機（≤ 400px）：按鈕只留圖示與短字，Zone X 標題列隱藏版本號與 BETA 字樣，避免擠在一起 */
         @media (max-width: 400px) {
             .narrow-hide { display: none; }
             html[data-ui^="zx"] #sidebar h2 .app-version, html[data-ui^="zx"] .zx-beta { display: none; }
             html[data-ui^="zx"] #sidebar h2 .zx-wordmark { font-size: 15px; }
+            html[data-ui^="zx"] .zx-actionbar { gap: 6px; }
+            html[data-ui^="zx"] .zx-actionbar .zx-btn-secondary { padding: 10px 9px; }
+            html[data-ui^="zx"] .zx-actionbar .zx-btn-primary { padding: 10px 8px; font-size: 13px; }
             html[data-ui^="zx"] .sheet-title-peek .zx-wordmark { font-size: 13px; }
             #themeModal { padding: 20px 16px; }
             #themeModal .modal-panel { height: auto; max-height: 85dvh; border-radius: 12px; }
@@ -933,17 +957,17 @@
         <div id="areaOutputContainer"></div>
     </div>
 
-    <!-- Beta：固定在面板底部的操作列，KML 與清空收進「⋯ 更多」 -->
+    <!-- Beta：固定在面板底部的操作列（繪製、飛行路徑、清空），KML 收進「⋯ 更多」 -->
     <div class="zx-actionbar">
-        <button class="zx-btn-primary" onclick="processAllData()">🪄 繪製禁航區</button>
-        <button class="zx-btn-secondary" onclick="generateFlightPath()" title="繪製飛行路徑">🚀 路徑</button>
+        <button class="zx-btn-primary" onclick="processAllData()"><span class="ab-ico">🪄</span><span class="ab-label">繪製禁航區</span></button>
+        <button class="zx-btn-secondary" onclick="generateFlightPath()" title="繪製飛行路徑"><span class="ab-ico">🚀</span><span class="ab-label">飛行路徑</span></button>
+        <button class="zx-btn-secondary zx-clear-btn" onclick="clearAllData()" title="全部清空（清空後 10 秒內可以復原）" aria-label="全部清空"><span class="ab-ico">🗑️</span><span class="ab-label">清空</span></button>
         <div class="zx-more-wrap">
-            <button class="zx-btn-secondary zx-more-btn" onclick="toggleMoreMenu(event)" aria-haspopup="true" aria-expanded="false" title="更多：KML 匯出／匯入、全部清空" aria-label="更多">⋯</button>
+            <button class="zx-btn-secondary zx-more-btn" onclick="toggleMoreMenu(event)" aria-haspopup="true" aria-expanded="false" title="更多：KML 匯出／匯入" aria-label="更多">⋯</button>
             <div class="zx-more-menu" id="zxMoreMenu" hidden>
                 <button onclick="closeMoreMenu(); downloadKML();">📤 匯出禁航區 KML</button>
                 <button onclick="closeMoreMenu(); exportDrawnFeaturesKML();">📍 匯出測量與標記 KML</button>
                 <button onclick="closeMoreMenu(); document.getElementById('kmlImportInput').click();">📥 匯入 KML</button>
-                <button class="zx-more-danger" onclick="closeMoreMenu(); clearAllData();">🗑️ 全部清空</button>
             </div>
         </div>
     </div>
@@ -1088,7 +1112,7 @@
                 <ul>
                     <li>標題旁的「🎨 外觀」可以切換：經典版（預設）、Zone X 淺色 Beta、Zone X 深色 Beta。選擇會記在這台裝置上。</li>
                     <li>Beta 版只換外觀，功能都一樣；地圖上的紅色禁航區和黃字黑底標籤不會改變。不習慣隨時可以切回經典版。</li>
-                    <li>Beta 版的面板底部固定一排按鈕：「🪄 繪製禁航區」「🚀 路徑」和「⋯ 更多」；KML 匯出／匯入、全部清空都在「⋯ 更多」裡。</li>
+                    <li>Beta 版的面板底部固定一排按鈕：「🪄 繪製禁航區」「🚀 飛行路徑」「🗑️ 清空」和「⋯ 更多」；KML 匯出／匯入在「⋯ 更多」裡。很窄的手機上「清空」只顯示垃圾桶圖示。</li>
                     <li>Beta 版的「顯示禁航區尺寸／ADIZ／發射場」開關，移到地圖右上角圖層按鈕裡的「地圖顯示」。地圖右上角的按鈕合併成一條同樣大小的工具列。</li>
                     <li>Beta 版每張禁航區卡片的解析結果下方有「📋 複製簡報文字」，按一下就能貼到簡報；Beta 版不顯示可以修改的簡報文字欄位（需要修改請切回經典版）。</li>
                     <li>Beta 版打開網站時只跳一張歡迎卡：選擇要不要繼續上次的專案，也能從卡片看更新重點、使用說明或安裝成 App。</li>
@@ -1117,7 +1141,7 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v17）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
+                    <li>標題旁的版本號（例如 v18）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。使用 Esri 衛星圖時，圖資來源為 Esri、Maxar、Earthstar Geographics。</li>
                 </ul>
@@ -1179,6 +1203,7 @@
     <defs>
         <symbol id="zxi-draw" viewBox="0 0 24 24"><path d="M4 20l1-4.5L15.5 5 19 8.5 8.5 19z"/><path d="M13 7.5l3.5 3.5"/></symbol>
         <symbol id="zxi-route" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h6.5a3 3 0 0 0 0-6h-5a3 3 0 0 1 0-6H16"/></symbol>
+        <symbol id="zxi-rocket" viewBox="0 0 24 24"><path d="M12 2.5c3 2.2 4.5 5.6 4.5 9.5v3.5h-9V12c0-3.9 1.5-7.3 4.5-9.5z"/><circle cx="12" cy="9.5" r="1.8"/><path d="M7.5 12.5L4.5 15.5v3.5l3-1.5M16.5 12.5l3 3v3.5l-3-1.5"/><path d="M10 18.5c.4 1.3 1.1 2.4 2 3 .9-.6 1.6-1.7 2-3"/></symbol>
         <symbol id="zxi-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
         <symbol id="zxi-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
         <symbol id="zxi-eye-off" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6C3.9 8.3 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
@@ -1270,10 +1295,15 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v17';
+    const APP_VERSION = 'v18';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v18', items: [
+            'Zone X Beta：底部按鈕改成「繪製禁航區、飛行路徑、清空、⋯」，清空不用再到「更多」裡找；飛行路徑換成火箭圖示。',
+            'Zone X Beta：地圖點位視窗裡的「套用」「刪除」也換成線條圖示。',
+            '禁航區原文框不會再被拖到太小。'
+        ] },
         { version: 'v17', items: [
             'Zone X Beta：圖示改成簡潔的線條風格，取代彩色 emoji，看起來更專業。',
             'Zone X Beta：禁航區顏色改用跟介面一致的顏色面板，常用顏色一鍵選，也能自訂。'
@@ -4692,7 +4722,7 @@ ${coords}
     // 只在 Beta 外觀時處理：每個 emoji 包成 <span class="emo">，旁邊加一個 SVG 圖示，由 CSS 決定顯示哪一個。
     // 切回經典版時再拆掉，經典版的畫面完全不受影響。地圖本身（標籤、彈出視窗）不處理。
     const EMOJI_ICONS = {
-        '🪄': 'draw', '🚀': 'route', '📋': 'copy', '👁': 'eye', '🙈': 'eye-off', '📁': 'folder', '❓': 'help',
+        '🪄': 'draw', '🚀': 'rocket', '📋': 'copy', '👁': 'eye', '🙈': 'eye-off', '📁': 'folder', '❓': 'help',
         '🎨': 'contrast', '💾': 'save', '📄': 'file-plus', '⬇': 'download', '⬆': 'upload', '📤': 'upload',
         '📥': 'download', '📍': 'pin', '🗑': 'trash', '📐': 'measure', '📏': 'ruler', '⭕': 'circle', '♦': 'rect',
         '⛶': 'fullscreen', '✅': 'check-circle', '⚠': 'alert', '🔄': 'refresh', '🔀': 'split', '📮': 'send',
@@ -4704,7 +4734,7 @@ ${coords}
 
     function iconizeTextNode(node) {
         const parent = node.parentNode;
-        if (!parent || parent.closest('.emo, svg, textarea, script, style, .leaflet-pane, input, [contenteditable]')) return;
+        if (!parent || parent.closest('.emo, svg, textarea, script, style, input, [contenteditable], .leaflet-marker-pane, .leaflet-tooltip-pane, .leaflet-overlay-pane, .leaflet-shadow-pane')) return;
         const text = node.nodeValue;
         EMOJI_RE.lastIndex = 0;
         if (!EMOJI_RE.test(text)) return;
