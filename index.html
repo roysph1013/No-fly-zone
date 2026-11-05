@@ -1156,7 +1156,7 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v19）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
+                    <li>標題旁的版本號（例如 v20）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。使用 Esri 衛星圖時，圖資來源為 Esri、Maxar、Earthstar Geographics。</li>
                 </ul>
@@ -1311,10 +1311,11 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v19';
+    const APP_VERSION = 'v20';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v20', items: ['修正：切換過外觀後，地圖右下角「復原／重做」按鈕的圖示會不見。'] },
         { version: 'v19', items: [
             'Zone X Beta：新增「復原／重做」，在地圖右下角；電腦也能用 Ctrl+Z、Ctrl+Shift+Z。',
             'Zone X Beta：禁航區顏色改成小圓點，不再是大色塊，畫面更乾淨。',
@@ -4780,7 +4781,7 @@ ${coords}
             span.textContent = m[0];
             frag.appendChild(span);
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            svg.setAttribute('class', 'zx-ico');
+            svg.setAttribute('class', 'zx-ico zx-ico-gen');   // zx-ico-gen：由 emoji 轉出來的，切回經典版時才拆掉
             svg.setAttribute('aria-hidden', 'true');
             const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
             use.setAttribute('href', '#zxi-' + EMOJI_ICONS[m[1]]);
@@ -4815,7 +4816,8 @@ ${coords}
 
     function disableLineIcons() {
         if (iconObserver) { iconObserver.disconnect(); iconObserver = null; }
-        document.querySelectorAll('svg.zx-ico').forEach(el => el.remove());
+        // 只拆掉由 emoji 轉出來的圖示；復原／重做這類本來就是 SVG 的按鈕要保留
+        document.querySelectorAll('svg.zx-ico-gen').forEach(el => el.remove());
         document.querySelectorAll('span.emo').forEach(el => {
             const parent = el.parentNode;
             el.replaceWith(document.createTextNode(el.textContent));
