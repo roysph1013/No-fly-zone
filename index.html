@@ -390,7 +390,7 @@
 
         .meta-edit { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
         .meta-edit label { font-size: 11px; color: #4a5568; display: flex; flex-direction: column; gap: 2px; }
-        .meta-edit input { font-size: 12px; padding: 5px 6px; border: 1px solid #cbd5e0; border-radius: 4px; font-family: "Microsoft JhengHei", monospace; }
+        .meta-edit input { min-width: 0; width: 100%; font-size: 12px; padding: 5px 6px; border: 1px solid #cbd5e0; border-radius: 4px; font-family: "Microsoft JhengHei", monospace; }
         .meta-edit input:focus { outline: none; border-color: #3182ce; box-shadow: 0 0 0 1px #3182ce; }
 
         .formatted-text-single { background: #f7fafc; border: 1px solid #e2e8f0; padding: 8px; border-radius: 4px; white-space: pre-wrap; font-family: "Microsoft JhengHei", monospace; color: #1a202c; line-height: 1.5; font-size: 12px; max-height: 200px; overflow-y: auto; }
@@ -740,8 +740,82 @@
         html[data-ui^="zx"] .theme-option.selected { border-color: var(--zx-accent); background: rgba(255, 159, 10, 0.10); }
         html[data-ui^="zx"] .theme-option-text small { color: var(--zx-ink-3); }
 
+        /* ---------- Beta：地圖圖層選單裡的顯示開關 ---------- */
+        .layer-toggle-title { display: none; }
+        #layerTogglePanel.in-map { background: none; border: none; border-top: 1px solid #ddd; border-radius: 0; padding: 6px 0 0; margin-top: 6px; gap: 2px; font-size: 13px; }
+        #layerTogglePanel.in-map .layer-toggle-title { display: block; font-size: 11px; color: #718096; font-weight: bold; }
+        #layerTogglePanel.in-map .switch-label { color: #333; font-weight: normal; gap: 6px; min-height: 0; padding: 2px 0; font-size: 13px; }
+        #layerTogglePanel.in-map .switch-label input[type="checkbox"] { width: auto; height: auto; }
+
+        /* ---------- Beta：固定在面板底部的操作列與「⋯ 更多」 ---------- */
+        .zx-actionbar, .zx-tabs, .zx-tab-empty { display: none; }
+        html[data-ui^="zx"] .btn-group { display: none; }
+        html[data-ui^="zx"] .zx-actionbar { display: flex; gap: 8px; position: sticky; bottom: -20px; margin: auto -20px -20px; padding: 12px 20px 16px; background: var(--zx-panel); border-top: 1px solid var(--zx-line); z-index: 5; }
+        .zx-btn-primary { flex: 1; background: var(--zx-accent); color: var(--zx-accent-ink); border-radius: 10px; padding: 12px; font-size: 14px; box-shadow: 0 3px 10px rgba(255, 159, 10, 0.35); }
+        .zx-btn-primary:hover { background: var(--zx-accent-hover); }
+        .zx-btn-secondary { background: transparent; color: var(--zx-ink); border: 1px solid var(--zx-line-strong); border-radius: 10px; padding: 12px; font-size: 13px; }
+        .zx-btn-secondary:hover { background: var(--zx-sunken); }
+        .zx-more-wrap { position: relative; display: flex; }
+        .zx-more-btn { min-width: 46px; font-size: 18px; line-height: 1; }
+        .zx-more-menu { position: absolute; right: 0; bottom: calc(100% + 6px); min-width: 210px; background: var(--zx-panel); border: 1px solid var(--zx-line-strong); border-radius: 10px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25); padding: 6px; display: flex; flex-direction: column; gap: 2px; z-index: 20; }
+        .zx-more-menu[hidden] { display: none; }
+        .zx-more-menu button { justify-content: flex-start; background: transparent; color: var(--zx-ink); padding: 10px 12px; font-size: 13px; border-radius: 6px; }
+        .zx-more-menu button:hover { background: var(--zx-sunken); }
+        .zx-more-menu .zx-more-danger { color: var(--zx-danger); border-top: 1px solid var(--zx-line); border-radius: 0 0 6px 6px; }
+
+        /* ---------- Beta：歡迎卡 ---------- */
+        #welcomeModal .modal-panel { max-width: 440px; }
+        .welcome-opts { display: flex; flex-direction: column; gap: 8px; }
+        .welcome-opt { width: 100%; justify-content: flex-start; gap: 12px; text-align: left; white-space: normal; background: #f7fafc; color: #2d3748; border: 1px solid #e2e8f0; border-radius: 12px; padding: 11px 12px; font-weight: normal; }
+        .welcome-opt:hover { background: #edf2f7; }
+        .welcome-opt.main { border: 2px solid #ff9f0a; background: rgba(255, 159, 10, 0.10); }
+        .welcome-opt .wo-icon { width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center; font-size: 17px; background: #ffffff; border: 1px solid #e2e8f0; flex-shrink: 0; }
+        .welcome-opt .wo-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+        .welcome-opt .wo-text b { font-size: 14px; overflow-wrap: anywhere; }
+        .welcome-opt .wo-text small { font-size: 12px; color: #718096; }
+        .welcome-news { border-left: 3px solid #ff9f0a; padding: 4px 0 4px 10px; margin: 12px 0 4px; font-size: 13px; color: #4a5568; }
+        .welcome-news b { color: #b85f00; }
+        .welcome-news ul { padding-left: 18px; margin: 4px 0; }
+        .welcome-link { background: none; color: #2b6cb0; padding: 4px 0; font-size: 13px; text-decoration: underline; }
+        html[data-ui^="zx"] .welcome-opt { background: var(--zx-card); color: var(--zx-ink); border-color: var(--zx-line); }
+        html[data-ui^="zx"] .welcome-opt:hover { background: var(--zx-sunken); }
+        html[data-ui^="zx"] .welcome-opt.main { border-color: var(--zx-accent); background: rgba(255, 159, 10, 0.10); }
+        html[data-ui^="zx"] .welcome-opt .wo-icon { background: var(--zx-panel); border-color: var(--zx-line); }
+        html[data-ui^="zx"] .welcome-opt .wo-text small { color: var(--zx-ink-3); }
+        html[data-ui^="zx"] .welcome-news { color: var(--zx-ink-2); }
+        html[data-ui^="zx"] .welcome-news b { color: var(--zx-accent-text); }
+        html[data-ui^="zx"] .welcome-link { color: var(--zx-accent-text); }
+
         @media (max-width: 768px) {
             .btn-theme { padding: 6px 12px; font-size: 13px; }
+            /* Beta 手機版：抽屜分頁 */
+            html[data-ui^="zx"] .zx-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 3px; border-radius: 10px; background: var(--zx-sunken); border: 1px solid var(--zx-line); position: sticky; top: -10px; z-index: 6; flex-shrink: 0; }
+            html[data-ui^="zx"] .zx-tab { background: transparent; color: var(--zx-ink-3); padding: 9px 0; min-height: 40px; border-radius: 8px; font-size: 14px; }
+            html[data-ui^="zx"] .zx-tab.active { background: var(--zx-brand); color: var(--zx-panel); }
+            html[data-ui="zx-dark"] .zx-tab.active { background: #1f4672; color: #ffffff; }
+            html[data-ui^="zx"] #sidebar:not(.sheet-expanded) .zx-tabs { visibility: hidden; }
+            /* 原文：專案、卡片原文、新增；結果：卡片標題＋解析結果；簡報文字：PPT 文字 */
+            html[data-ui^="zx"] #sidebar[data-tab="input"] .parse-status,
+            html[data-ui^="zx"] #sidebar[data-tab="input"] #output-section { display: none !important; }
+            html[data-ui^="zx"] #sidebar[data-tab="result"] .project-panel,
+            html[data-ui^="zx"] #sidebar[data-tab="result"] .area-card textarea,
+            html[data-ui^="zx"] #sidebar[data-tab="result"] .btn-add,
+            html[data-ui^="zx"] #sidebar[data-tab="result"] #output-section { display: none !important; }
+            html[data-ui^="zx"] #sidebar[data-tab="ppt"] .project-panel,
+            html[data-ui^="zx"] #sidebar[data-tab="ppt"] #areaContainer,
+            html[data-ui^="zx"] #sidebar[data-tab="ppt"] .btn-add { display: none !important; }
+            html[data-ui^="zx"] #sidebar[data-tab="result"] #zxResultEmpty.show,
+            html[data-ui^="zx"] #sidebar[data-tab="ppt"] #zxPptEmpty.show { display: block; }
+            html[data-ui^="zx"] .zx-tab-empty { font-size: 14px; color: var(--zx-ink-3); padding: 18px 8px; text-align: center; line-height: 1.6; }
+            html[data-ui^="zx"] .zx-actionbar { margin: auto -16px -20px; padding: 10px 16px calc(14px + env(safe-area-inset-bottom)); }
+            .zx-btn-primary, .zx-btn-secondary { min-height: 48px; }
+            .zx-more-menu button { min-height: 44px; font-size: 14px; }
+            #layerTogglePanel.in-map .switch-label { min-height: 34px; font-size: 14px; }
+            /* 歡迎卡在手機上從下方滑出 */
+            #welcomeModal { align-items: flex-end; padding: 0; }
+            #welcomeModal .modal-panel { height: auto; max-height: 90dvh; border-radius: 16px 16px 0 0; }
+            #welcomeModal .modal-body { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+            .welcome-opt { min-height: 60px; }
             html[data-ui^="zx"] #sidebar { box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.3); }
             /* 手機上隱藏「禁航區繪製小工具」副標，標題列才放得下按鈕 */
             html[data-ui^="zx"] #sidebar h2 .zx-sub { display: none; }
@@ -769,7 +843,7 @@
         <div class="sheet-grip"></div>
         <span class="sheet-title-peek"><span class="classic-title">禁航區繪製小工具</span><span class="zx-brand"><img class="zx-logo zx-logo-dark" src="icons/icon-192.png?v=2" alt=""><img class="zx-logo zx-logo-light" src="icons/logo-globe-light.png" alt=""><span class="zx-text"><span class="zx-wordmark">ZONE <span class="zx-x">X</span></span><span class="zx-sub">禁航區繪製小工具</span></span><span class="zx-beta">BETA</span></span><span class="app-version"></span><button class="btn-help" onclick="event.stopPropagation(); openModal('guideModal')">❓ 說明</button><button class="btn-theme" onclick="event.stopPropagation(); openThemePicker()" title="切換外觀" aria-label="切換外觀">🎨</button></span>
     </div>
-    <h2><span class="classic-title">禁航區繪製小工具</span><span class="zx-brand"><img class="zx-logo zx-logo-dark" src="icons/icon-192.png?v=2" alt=""><img class="zx-logo zx-logo-light" src="icons/logo-globe-light.png" alt=""><span class="zx-text"><span class="zx-wordmark">ZONE <span class="zx-x">X</span></span><span class="zx-sub">禁航區繪製小工具</span></span><span class="zx-beta">BETA</span></span><span class="app-version"></span><button class="btn-help" onclick="openModal('guideModal')">❓ <span class="narrow-hide">使用</span>說明</button><button class="btn-theme" onclick="openThemePicker()" title="切換外觀" aria-label="切換外觀">🎨<span class="narrow-hide"> 外觀</span></button></h2>
+    <h2><span class="classic-title">禁航區繪製小工具</span><span class="zx-brand"><img class="zx-logo zx-logo-dark" src="icons/icon-192.png?v=2" alt=""><img class="zx-logo zx-logo-light" src="icons/logo-globe-light.png" alt=""><span class="zx-text"><span class="zx-wordmark">ZONE <span class="zx-x">X</span></span><span class="zx-sub">禁航區繪製小工具</span></span><span class="zx-beta">BETA</span></span><span class="app-version"></span><button class="btn-help" onclick="openModal('guideModal')"><span>❓ <span class="narrow-hide">使用</span>說明</span></button><button class="btn-theme" onclick="openThemePicker()" title="切換外觀" aria-label="切換外觀"><span>🎨<span class="narrow-hide"> 外觀</span></span></button></h2>
 
     <details class="project-panel" id="projectPanel">
         <summary>📁 專案：<span id="currentProjectName">未命名</span><span class="project-save-status" id="projectSaveStatus"></span></summary>
@@ -788,7 +862,15 @@
         </div>
     </details>
 
-    <div class="control-panel">
+    <!-- 手機版 Beta：抽屜分頁（原文／結果／簡報文字） -->
+    <div class="zx-tabs" role="tablist" aria-label="切換內容">
+        <button class="zx-tab" data-tab="input" role="tab" onclick="setSheetTab('input')">原文</button>
+        <button class="zx-tab" data-tab="result" role="tab" onclick="setSheetTab('result')">結果</button>
+        <button class="zx-tab" data-tab="ppt" role="tab" onclick="setSheetTab('ppt')">簡報文字</button>
+    </div>
+
+    <div class="control-panel" id="layerTogglePanel">
+        <div class="layer-toggle-title">地圖顯示</div>
         <label class="switch-label">
             <input type="checkbox" id="toggleLabels" checked onchange="toggleLabelVisibility()"> 顯示禁航區尺寸
         </label>
@@ -801,6 +883,7 @@
     </div>
 
     <div id="areaContainer"></div>
+    <div class="zx-tab-empty" id="zxResultEmpty">還沒有解析結果。先到「原文」貼上航警，再按「🪄 繪製禁航區」。</div>
 
     <button class="btn-add" onclick="addAreaCard()">＋ 新增禁航區</button>
 
@@ -820,16 +903,42 @@
                 <button onclick="exportDrawnFeaturesKML(); closeKmlExportMenu();">📍 匯出測量與標記圖資</button>
             </div>
         </div>
-        <input type="file" id="kmlImportInput" accept=".kml" style="display:none" onchange="handleKmlImport(event)">
     </div>
+    <input type="file" id="kmlImportInput" accept=".kml" style="display:none" onchange="handleKmlImport(event)">
 
     <div id="output-section">
         <strong>PPT 後製專用文字格式：</strong>
         <div id="areaOutputContainer"></div>
     </div>
+    <div class="zx-tab-empty" id="zxPptEmpty">還沒有簡報文字。按「🪄 繪製禁航區」後，這裡會出現每個禁航區的簡報用文字。</div>
+
+    <!-- Beta：固定在面板底部的操作列，KML 與清空收進「⋯ 更多」 -->
+    <div class="zx-actionbar">
+        <button class="zx-btn-primary" onclick="processAllData()">🪄 繪製禁航區</button>
+        <button class="zx-btn-secondary" onclick="generateFlightPath()" title="繪製飛行路徑">🚀 路徑</button>
+        <div class="zx-more-wrap">
+            <button class="zx-btn-secondary zx-more-btn" onclick="toggleMoreMenu(event)" aria-haspopup="true" aria-expanded="false" title="更多：KML 匯出／匯入、全部清空" aria-label="更多">⋯</button>
+            <div class="zx-more-menu" id="zxMoreMenu" hidden>
+                <button onclick="closeMoreMenu(); downloadKML();">📤 匯出禁航區 KML</button>
+                <button onclick="closeMoreMenu(); exportDrawnFeaturesKML();">📍 匯出測量與標記 KML</button>
+                <button onclick="closeMoreMenu(); document.getElementById('kmlImportInput').click();">📥 匯入 KML</button>
+                <button class="zx-more-danger" onclick="closeMoreMenu(); clearAllData();">🗑️ 全部清空</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div id="map"></div>
+
+<!-- ===================== Beta：開網站時的歡迎卡（取代連續跳出的多個視窗） ===================== -->
+<div id="welcomeModal" class="modal-overlay" hidden onclick="if (event.target === this) dismissWelcome()">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+        <div class="modal-header">
+            <h3 id="welcomeTitle">歡迎回來</h3>
+        </div>
+        <div class="modal-body" id="welcomeBody"></div>
+    </div>
+</div>
 
 <!-- ===================== 使用說明（新增或修改功能時務必同步更新） ===================== -->
 <div id="guideModal" class="modal-overlay" hidden onclick="if (event.target === this) closeModal('guideModal')">
@@ -958,6 +1067,10 @@
                 <ul>
                     <li>標題旁的「🎨 外觀」可以切換：經典版（預設）、Zone X 淺色 Beta、Zone X 深色 Beta。選擇會記在這台裝置上。</li>
                     <li>Beta 版只換外觀，功能都一樣；地圖上的紅色禁航區和黃字黑底標籤不會改變。不習慣隨時可以切回經典版。</li>
+                    <li>Beta 版的面板底部固定一排按鈕：「🪄 繪製禁航區」「🚀 路徑」和「⋯ 更多」；KML 匯出／匯入、全部清空都在「⋯ 更多」裡。</li>
+                    <li>Beta 版的「顯示禁航區尺寸／ADIZ／發射場」開關，移到地圖右上角圖層按鈕（▤）裡的「地圖顯示」。</li>
+                    <li>Beta 手機版的面板分成「原文」「結果」「簡報文字」三個分頁；按「繪製禁航區」後會自動切到「結果」。</li>
+                    <li>Beta 版打開網站時只跳一張歡迎卡：選擇要不要繼續上次的專案，也能從卡片看更新重點、使用說明或安裝成 App。</li>
                     <li>⛶ 截圖模式（只有 Beta 版有）：按地圖右上角的 ⛶，控制面板和地圖上的按鈕全部收起來，只留地圖和禁航區，直接截圖貼到簡報。</li>
                     <li>離開截圖模式：按左上角的「← 返回」，或電腦按 Esc。「返回」幾秒後會自動淡出，碰一下畫面就會再出現。</li>
                 </ul>
@@ -982,7 +1095,7 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v14）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
+                    <li>標題旁的版本號（例如 v15）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。使用 Esri 衛星圖時，圖資來源為 Esri、Maxar、Earthstar Geographics。</li>
                 </ul>
@@ -1087,10 +1200,16 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v14';
+    const APP_VERSION = 'v15';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v15', items: [
+            'Zone X Beta：打開網站只跳一張歡迎卡，繼續上次的專案、看更新、安裝 App 一次選完。',
+            'Zone X Beta：面板底部固定「繪製禁航區」按鈕，KML 和清空收進「⋯ 更多」。',
+            'Zone X Beta：顯示尺寸／ADIZ／發射場的開關移到地圖右上角的圖層選單。',
+            'Zone X Beta 手機版：面板分成「原文、結果、簡報文字」三個分頁，不用一直往下捲。'
+        ] },
         { version: 'v14', items: [
             '新增「🎨 外觀」按鈕，可以試用 Zone X 淺色或深色的新介面（Beta），預設仍是原本的經典版。',
             'Beta 版多了「⛶ 截圖模式」：一鍵收起所有按鈕，畫面只留地圖和禁航區，方便截圖貼到簡報。'
@@ -1181,7 +1300,7 @@
     };
 
     // Layer Control 放置於右上角
-    L.control.layers(baseMaps, overlayMaps, { position: 'topright', collapsed: true }).addTo(map);
+    const layersControl = L.control.layers(baseMaps, overlayMaps, { position: 'topright', collapsed: true }).addTo(map);
 
     // Google 衛星圖連續載入失敗（被擋、限速或網路不通）而且一張都沒成功時，自動改用 Esri 衛星圖。
     // 只在預設底圖剛開始載入時判斷一次；使用者之後自己切換底圖就不再干涉。
@@ -1865,9 +1984,13 @@
     let selectedLabelMarker = null;
 
     window.onload = function() {
-        initProjects();
-        showStartupNotes();
-        maybeShowInstallReminder();
+        if (getUiTheme() !== 'classic') {
+            showWelcomeCard();
+        } else {
+            initProjects();
+            showStartupNotes();
+            maybeShowInstallReminder();
+        }
         setTimeout(() => { map.invalidateSize(); }, 200);
     };
 
@@ -3501,6 +3624,7 @@
         if (allParsedAreas.length === 0) {
             alert('沒有解析到任何有效的禁航區座標！請查看各區塊下方的解析狀態提示。');
             document.getElementById('output-section').style.display = 'none';
+            if (getUiTheme() !== 'classic' && isMobileLayout()) setSheetTab('result');
             return;
         }
 
@@ -3512,6 +3636,8 @@
 
         renderAreaOutputs();
         document.getElementById('output-section').style.display = 'block';
+        if (getUiTheme() !== 'classic' && isMobileLayout() && !isRestoringWorkspace) setSheetTab('result');
+        else updateTabEmptyStates();
     }
 
     function clearAllData() {
@@ -3562,6 +3688,7 @@
         // 清空視同從空白重新開始：脫離目前開啟的專案，避免自動儲存把已存的專案也清成空的
         currentProjectId = null;
         saveWorkspaceNow();
+        if (getUiTheme() !== 'classic') setSheetTab('input');
     }
 
     function renderAreaOutputs() {
@@ -4159,19 +4286,21 @@ ${coords}
         }
     }
 
-    function initProjects() {
+    // restoreChoice：true＝還原、false＝從空白開始、undefined＝用確認框詢問（經典版）
+    function initProjects(restoreChoice) {
         const store = loadProjectStore();
         const lastProject = store.lastProjectId && store.projects[store.lastProjectId];
         let restored = false;
+        const ask = msg => (restoreChoice === undefined ? confirm(msg) : restoreChoice);
 
         if (lastProject && workspaceHasContent(lastProject.data)) {
-            if (confirm(`是否開啟上次使用的專案「${lastProject.name}」？\n（按「取消」從空白開始，專案仍會保留在專案清單裡）`)) {
+            if (ask(`是否開啟上次使用的專案「${lastProject.name}」？\n（按「取消」從空白開始，專案仍會保留在專案清單裡）`)) {
                 currentProjectId = store.lastProjectId;
                 loadWorkspace(lastProject.data);
                 restored = true;
             }
         } else if (store.draft && workspaceHasContent(store.draft.data)) {
-            if (confirm(`偵測到上次還沒存成專案的內容（${formatDateTime(store.draft.updatedAt)}），是否還原？\n（按「取消」會捨棄這些內容，從空白開始）`)) {
+            if (ask(`偵測到上次還沒存成專案的內容（${formatDateTime(store.draft.updatedAt)}），是否還原？\n（按「取消」會捨棄這些內容，從空白開始）`)) {
                 loadWorkspace(store.draft.data);
                 restored = true;
             }
@@ -4348,7 +4477,9 @@ ${coords}
 
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
-            ['guideModal', 'whatsNewModal', 'installModal', 'themeModal'].forEach(closeModal);
+            const topModal = ['guideModal', 'whatsNewModal', 'installModal', 'themeModal'].find(id => !document.getElementById(id).hidden);
+            if (topModal) closeModal(topModal);
+            else if (!document.getElementById('welcomeModal').hidden) dismissWelcome();
             if (document.body.classList.contains('shot-mode')) exitScreenshotMode();
             if (!document.getElementById('confirmModal').hidden) closeConfirmDialog(false);
         }
@@ -4407,6 +4538,62 @@ ${coords}
         });
         // 經典版沒有截圖模式，切回來時順便離開
         if (theme === 'classic' && document.body.classList.contains('shot-mode')) exitScreenshotMode();
+        placeLayerToggles(theme !== 'classic');
+        closeMoreMenu();
+        updateTabEmptyStates();
+    }
+
+    // Beta：把「顯示禁航區尺寸／ADIZ／發射場」三個開關搬進地圖右上角的圖層選單；經典版放回面板
+    function placeLayerToggles(inMap) {
+        const panel = document.getElementById('layerTogglePanel');
+        if (!panel || typeof layersControl === 'undefined') return;
+        if (inMap) {
+            const list = layersControl.getContainer().querySelector('.leaflet-control-layers-list');
+            if (list && panel.parentElement !== list) list.appendChild(panel);
+            panel.classList.add('in-map');
+        } else {
+            const anchor = document.querySelector('#sidebar .zx-tabs');
+            if (anchor && panel.previousElementSibling !== anchor) anchor.after(panel);
+            panel.classList.remove('in-map');
+        }
+    }
+
+    // Beta：「⋯ 更多」選單
+    function toggleMoreMenu(evt) {
+        evt.stopPropagation();
+        const menu = document.getElementById('zxMoreMenu');
+        menu.hidden = !menu.hidden;
+        const btn = document.querySelector('.zx-more-btn');
+        if (btn) btn.setAttribute('aria-expanded', menu.hidden ? 'false' : 'true');
+    }
+    function closeMoreMenu() {
+        const menu = document.getElementById('zxMoreMenu');
+        if (menu) menu.hidden = true;
+        const btn = document.querySelector('.zx-more-btn');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+    }
+    document.addEventListener('click', e => {
+        const menu = document.getElementById('zxMoreMenu');
+        if (menu && !menu.hidden && !e.target.closest('.zx-more-wrap')) closeMoreMenu();
+    });
+
+    // Beta 手機版：抽屜分頁（原文／結果／簡報文字）
+    function setSheetTab(tab) {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.dataset.tab = tab;
+        document.querySelectorAll('.zx-tab').forEach(btn => {
+            const on = btn.dataset.tab === tab;
+            btn.classList.toggle('active', on);
+            btn.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        updateTabEmptyStates();
+        sidebar.scrollTop = 0;
+    }
+    function updateTabEmptyStates() {
+        const hasResult = [...document.querySelectorAll('.parse-status')].some(el => el.style.display === 'block');
+        const hasPpt = document.getElementById('output-section').style.display === 'block';
+        document.getElementById('zxResultEmpty').classList.toggle('show', !hasResult);
+        document.getElementById('zxPptEmpty').classList.toggle('show', !hasPpt);
     }
 
     function setUiTheme(theme) {
@@ -4468,7 +4655,73 @@ ${coords}
         }
     });
     new ScreenshotModeControl().addTo(map);
+    setSheetTab('input');
     applyUiTheme(getUiTheme());
+
+    // ===================== Beta：開網站時的歡迎卡 =====================
+    // 把「開啟上次專案／還原草稿」「更新重點或使用說明」「安裝成 App」合併成一張卡，一次看完、一次選完
+    let welcomeNeedsChoice = false;
+
+    function showWelcomeCard() {
+        const store = loadProjectStore();
+        const lastProject = store.lastProjectId && store.projects[store.lastProjectId];
+        const hasProject = !!(lastProject && workspaceHasContent(lastProject.data));
+        const hasDraft = !hasProject && !!(store.draft && workspaceHasContent(store.draft.data));
+        let lastSeen = null;
+        try { lastSeen = localStorage.getItem(LAST_SEEN_VERSION_KEY); } catch (e) {}
+        const isFirstVisit = !lastSeen;
+        const hasNews = !!lastSeen && versionNumber(lastSeen) < versionNumber(APP_VERSION);
+        const remindInstall = shouldRemindInstall();
+        try { localStorage.setItem(LAST_SEEN_VERSION_KEY, APP_VERSION); } catch (e) {}
+
+        if (!hasProject && !hasDraft) initProjects(false);
+        if (!hasProject && !hasDraft && !isFirstVisit && !hasNews && !remindInstall) return;
+
+        welcomeNeedsChoice = hasProject || hasDraft;
+        const esc = escapeHtml;
+        const opt = (cls, icon, title, sub, action) =>
+            `<button class="welcome-opt${cls ? ' ' + cls : ''}" onclick="${action}"><span class="wo-icon">${icon}</span><span class="wo-text"><b>${esc(title)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span></button>`;
+        let html = '<div class="welcome-opts">';
+        if (hasProject) {
+            const count = (lastProject.data.cards || []).filter(c => (c.text || '').trim()).length;
+            html += opt('main', '📁', `繼續「${lastProject.name}」`, `${count} 個禁航區・${formatDateTime(lastProject.updatedAt)}`, 'chooseWelcome(true)');
+            html += opt('', '＋', '開新的空白專案', '舊專案會留在專案清單裡', 'chooseWelcome(false)');
+        } else if (hasDraft) {
+            html += opt('main', '↩️', '還原上次還沒存的內容', formatDateTime(store.draft.updatedAt), 'chooseWelcome(true)');
+            html += opt('', '＋', '從空白開始', '還沒存成專案的內容會被捨棄', 'chooseWelcome(false)');
+        } else {
+            html += opt('main', '🚀', '開始使用', '把航警或 NOTAM 原文貼進「禁航區 #1」', 'closeWelcome()');
+        }
+        if (isFirstVisit) html += opt('', '📖', '第一次使用？看使用說明', '3 步驟快速上手', "openModal('guideModal')");
+        if (remindInstall) html += opt('', '📲', '安裝成 App', '加到主畫面，像 App 一樣打開', 'openInstallModal(false)');
+        html += '</div>';
+        if (hasNews) {
+            const latest = CHANGELOG.filter(e => versionNumber(e.version) > versionNumber(lastSeen));
+            const items = latest.flatMap(e => e.items).slice(0, 2);
+            html += `<div class="welcome-news"><b>${esc(APP_VERSION)} 更新</b><ul>${items.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+                <button class="welcome-link" onclick="renderWhatsNew('${esc(lastSeen)}'); openModal('whatsNewModal')">看全部更新重點</button></div>`;
+        }
+        document.getElementById('welcomeTitle').textContent = isFirstVisit ? '歡迎使用 Zone X' : '歡迎回來';
+        document.getElementById('welcomeBody').innerHTML = html;
+        document.getElementById('welcomeModal').hidden = false;
+    }
+
+    function chooseWelcome(restore) {
+        welcomeNeedsChoice = false;
+        initProjects(restore);
+        closeWelcome();
+    }
+
+    function closeWelcome() {
+        document.getElementById('welcomeModal').hidden = true;
+        setTimeout(() => map.invalidateSize(), 100);
+    }
+
+    // 點外面或按 Esc：還沒選擇要不要還原時不關（避免誤觸把上次內容丟掉）
+    function dismissWelcome() {
+        if (welcomeNeedsChoice) return;
+        closeWelcome();
+    }
 
     // ===================== 網頁內確認視窗 =====================
     let confirmDialogOnOk = null;
@@ -4712,13 +4965,18 @@ ${coords}
         closeModal('installModal');
     }
 
-    function maybeShowInstallReminder() {
-        if (isRunningAsApp() || !isMobileDevice()) return;
+    function shouldRemindInstall() {
+        if (isRunningAsApp() || !isMobileDevice()) return false;
         try {
-            if (localStorage.getItem(INSTALL_NEVER_KEY)) return;
+            if (localStorage.getItem(INSTALL_NEVER_KEY)) return false;
             const snoozeUntil = Number(localStorage.getItem(INSTALL_SNOOZE_KEY) || 0);
-            if (snoozeUntil && Date.now() < snoozeUntil) return;
+            if (snoozeUntil && Date.now() < snoozeUntil) return false;
         } catch (e) {}
+        return true;
+    }
+
+    function maybeShowInstallReminder() {
+        if (!shouldRemindInstall()) return;
         if (!document.getElementById('guideModal').hidden || !document.getElementById('whatsNewModal').hidden) {
             pendingInstallReminder = true;
         } else {
