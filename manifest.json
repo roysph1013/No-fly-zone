@@ -1,18 +1,18 @@
 {
-  "name": "禁區 - 禁航區繪製小工具",
-  "short_name": "禁區",
+  "name": "Zone X - 禁航區繪製小工具",
+  "short_name": "Zone X",
   "description": "貼上航警或 NOTAM 原文，自動在地圖上畫出禁航區並產生簡報文字。",
   "lang": "zh-TW",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#0b1f3a",
-  "theme_color": "#0b1f3a",
+  "background_color": "#16375a",
+  "theme_color": "#16375a",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "icons/icon-192.png?v=2", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png?v=2", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

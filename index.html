@@ -6,12 +6,12 @@
     <title>禁航區繪製小工具</title>
     <!-- 安裝成 App（PWA）：圖示、名稱與主題色 -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0b1f3a">
-    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
-    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="theme-color" content="#16375a">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=2">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="禁區">
+    <meta name="apple-mobile-web-app-title" content="Zone X">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <!-- Leaflet 地圖套件 -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -754,13 +754,14 @@
             <details class="guide-section">
                 <summary>📲 安裝成 App</summary>
                 <ul>
-                    <li>可以把網站安裝到手機主畫面或電腦桌面，App 名稱是「禁區」，之後點圖示就能打開，畫面更大、沒有網址列。</li>
+                    <li>可以把網站安裝到手機主畫面或電腦桌面，App 名稱是「Zone X」，之後點圖示就能打開，畫面更大、沒有網址列。</li>
                     <li>iPhone／iPad：用 Safari 開啟 → 點下方「分享」⬆️ → 「加入主畫面」。</li>
                     <li>Android：Chrome 會出現「立即安裝」按鈕；沒有的話點右上角 ⋮ →「安裝應用程式」或「加到主畫面」。</li>
                     <li>電腦：Chrome／Edge 網址列右側的安裝圖示，或選單裡的「安裝」。</li>
                     <li>從 LINE、Facebook 點開的網頁不能安裝，要先改用 Safari 或 Chrome 開啟。</li>
                     <li>手機打開網頁時會跳出安裝提醒，可以選「稍後再說」（3 天內不再提醒）或「不要再提醒」。</li>
                     <li>iPhone 注意：安裝後的 App 和 Safari 的專案資料是分開存的，不會互通。</li>
+                    <li>App 改名或換圖示後，iPhone 要刪掉主畫面圖示再重新加入才會更新；Android 通常會自動更新。</li>
                     <li>安裝後一樣會自動拿到最新版本；沒有網路時也能打開上次用過的畫面（但地圖底圖需要網路）。</li>
                 </ul>
                 <button class="modal-btn-secondary" style="margin: 0 14px 10px;" onclick="closeModal('guideModal'); openInstallModal(true)">📲 查看我這台裝置的安裝方式</button>
@@ -769,7 +770,7 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v10）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
+                    <li>標題旁的版本號（例如 v11）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。</li>
                 </ul>
@@ -805,8 +806,8 @@
         </div>
         <div class="modal-body">
             <div class="install-hero">
-                <img src="icons/icon-192.png" alt="禁航區繪製小工具圖示">
-                <p>把「禁區」App 加到主畫面，之後點圖示就能直接打開，全螢幕使用更方便。</p>
+                <img src="icons/icon-192.png?v=2" alt="禁航區繪製小工具圖示">
+                <p>把「Zone X」App 加到主畫面，之後點圖示就能直接打開，全螢幕使用更方便。</p>
             </div>
             <div id="installBody"></div>
         </div>
@@ -820,10 +821,11 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v10';
+    const APP_VERSION = 'v11';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v11', items: ['App 改名為「Zone X」，並換上新的圖示。', '已經安裝過的人：iPhone 要刪掉主畫面圖示再重新加入一次，才會換成新圖示和名稱；Android 通常會自動更新。'] },
         { version: 'v10', items: ['彈出視窗右上角的 ✕ 不再出現多餘的黑色方框。'] },
         { version: 'v9', items: ['手機上的「更新重點」改成畫面中間的小視窗，不再佔滿整個螢幕。'] },
         { version: 'v8', items: ['安裝提示裡的「📲 立即安裝」按鈕改成橘色，更容易看到。'] },
