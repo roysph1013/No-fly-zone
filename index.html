@@ -792,6 +792,27 @@
         .cp-swatch.selected { box-shadow: 0 0 0 2px var(--zx-panel, #fff), 0 0 0 4px var(--zx-accent, #ff9f0a); }
         .cp-custom { width: 100%; margin-top: 10px; background: transparent; color: var(--zx-ink, #2d3748); border: 1px solid var(--zx-line-strong, #cbd5e0); border-radius: 8px; padding: 8px; font-size: 13px; }
         .cp-custom:hover { background: var(--zx-sunken, #edf2f7); }
+        .cp-presets[hidden], .cp-custom-panel[hidden] { display: none; }
+        .cp-custom-panel { display: flex; flex-direction: column; gap: 10px; }
+        .cp-sv { position: relative; height: 140px; border-radius: 8px; cursor: crosshair; touch-action: none;
+            background: linear-gradient(to top, #000, rgba(0, 0, 0, 0)), linear-gradient(to right, #fff, var(--hue, #f00)); border: 1px solid var(--zx-line-strong, #cbd5e0); }
+        .cp-sv-knob { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45), 0 1px 4px rgba(0, 0, 0, 0.4); pointer-events: none; }
+        .cp-hue { -webkit-appearance: none; appearance: none; width: 100%; height: 14px; border-radius: 7px; margin: 4px 0; outline: none;
+            background: linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%); }
+        .cp-hue::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 0 1px 4px rgba(0, 0, 0, 0.35); cursor: pointer; }
+        .cp-hue::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4); cursor: pointer; }
+        .cp-row { display: flex; gap: 8px; align-items: center; }
+        .cp-preview { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(0, 0, 0, 0.2); }
+        .cp-hex { flex: 1; min-width: 0; height: 34px; padding: 0 10px; font-family: monospace; font-size: 15px; letter-spacing: 0.06em; text-transform: uppercase;
+            background: var(--zx-input, #fff); color: var(--zx-ink, #2d3748); border: 1px solid var(--zx-line-strong, #cbd5e0); border-radius: 8px; }
+        .cp-hex:focus { outline: none; border-color: var(--zx-accent, #ff9f0a); }
+        .cp-hex.invalid { border-color: var(--zx-danger, #e53e3e); }
+        .cp-actions { display: flex; gap: 8px; }
+        .cp-back, .cp-apply { flex: 1; padding: 9px; font-size: 13px; border-radius: 8px; }
+        .cp-back { background: transparent; color: var(--zx-ink, #2d3748); border: 1px solid var(--zx-line-strong, #cbd5e0); }
+        .cp-back:hover { background: var(--zx-sunken, #edf2f7); }
+        .cp-apply { background: var(--zx-accent, #ff9f0a); color: var(--zx-accent-ink, #1b1203); }
+        .cp-apply:hover { background: var(--zx-accent-hover, #ffad2e); }
 
         /* ---------- Beta：卡片上的「複製簡報文字」；不顯示可編輯的簡報文字區 ---------- */
         html[data-ui^="zx"] #output-section { display: none !important; }
@@ -872,6 +893,12 @@
             .color-popover { width: 272px; }
             .cp-grid { gap: 10px; }
             .cp-custom { min-height: 44px; font-size: 14px; }
+            .cp-sv { height: 160px; }
+            .cp-hue { height: 18px; }
+            .cp-hue::-webkit-slider-thumb { width: 28px; height: 28px; }
+            .cp-hex, .cp-preview { height: 40px; }
+            .cp-preview { width: 40px; }
+            .cp-back, .cp-apply { min-height: 44px; font-size: 14px; }
             /* 復原／重做放在底部面板上方，拇指好按 */
             html[data-ui^="zx"] .leaflet-bottom.leaflet-right { bottom: calc(76px + env(safe-area-inset-bottom)); }
             html[data-ui^="zx"] .zx-history a { width: 48px; height: 46px; }
@@ -1130,7 +1157,7 @@
                     <li>Beta 版的「顯示禁航區尺寸／ADIZ／發射場」開關，移到地圖右上角圖層按鈕裡的「地圖顯示」。地圖右上角的按鈕合併成一條同樣大小的工具列。</li>
                     <li>Beta 版每張禁航區卡片的解析結果下方有「📋 複製簡報文字」，按一下就能貼到簡報；Beta 版不顯示可以修改的簡報文字欄位（需要修改請切回經典版）。</li>
                     <li>Beta 版打開網站時只跳一張歡迎卡：選擇要不要繼續上次的專案，也能從卡片看更新重點、使用說明或安裝成 App。</li>
-                    <li>Beta 版用簡潔的線條圖示取代彩色 emoji；按卡片上的小圓點會打開顏色面板，可選常用顏色，或按「自訂顏色…」挑任何顏色。</li>
+                    <li>Beta 版用簡潔的線條圖示取代彩色 emoji；按卡片上的小圓點會打開顏色面板，可選常用顏色；按「自訂顏色…」會打開色盤：在方塊上拖曳選深淺與鮮豔度、拉滑桿選色相，或直接輸入色碼（例如 #FF6600），再按「套用」。</li>
                     <li>↩️ 復原／重做（Beta）：地圖右下角的兩顆箭頭，可以回到上一步或重做（例如誤刪卡片、畫錯測量線、換錯顏色）。電腦也可以按 Ctrl+Z 復原、Ctrl+Shift+Z 或 Ctrl+Y 重做；在輸入框裡打字時，Ctrl+Z 只會復原文字。換專案後歷史會清空。</li>
                     <li>⛶ 截圖模式（只有 Beta 版有）：按地圖右上角的 ⛶，控制面板和地圖上的按鈕全部收起來，只留地圖和禁航區，直接截圖貼到簡報。</li>
                     <li>離開截圖模式：按左上角的「← 返回」，或電腦按 Esc。「返回」幾秒後會自動淡出，碰一下畫面就會再出現。</li>
@@ -1156,7 +1183,7 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v20）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
+                    <li>標題旁的版本號（例如 v21）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。使用 Esri 衛星圖時，圖資來源為 Esri、Maxar、Earthstar Geographics。</li>
                 </ul>
@@ -1259,8 +1286,23 @@
 <!-- Beta：禁航區顏色選擇面板 -->
 <div id="colorPopover" class="color-popover" role="dialog" aria-label="選擇禁航區顏色" hidden>
     <div class="cp-title">禁航區顏色</div>
-    <div class="cp-grid"></div>
-    <button class="cp-custom" onclick="pickCustomAreaColor()">自訂顏色…</button>
+    <div class="cp-presets">
+        <div class="cp-grid"></div>
+        <button class="cp-custom" onclick="showCustomColorPanel()">自訂顏色…</button>
+    </div>
+    <!-- 自訂顏色：方塊選明暗與飽和度、滑桿選色相，也可以直接輸入色碼 -->
+    <div class="cp-custom-panel" hidden>
+        <div class="cp-sv" id="cpSv" aria-label="拖曳選擇明暗與鮮豔度"><div class="cp-sv-knob" id="cpSvKnob"></div></div>
+        <input type="range" id="cpHue" class="cp-hue" min="0" max="359" step="1" aria-label="色相" oninput="onCustomHue(this.value)">
+        <div class="cp-row">
+            <span class="cp-preview" id="cpPreview"></span>
+            <input type="text" id="cpHex" class="cp-hex" maxlength="7" spellcheck="false" autocomplete="off" autocapitalize="characters" aria-label="色碼" oninput="onCustomHex(this.value)">
+        </div>
+        <div class="cp-actions">
+            <button class="cp-back" onclick="showColorPresets()">返回</button>
+            <button class="cp-apply" onclick="applyCustomColor()">套用</button>
+        </div>
+    </div>
 </div>
 
 <!-- 截圖模式的「返回」按鈕（幾秒後自動淡出，碰一下畫面會再出現） -->
@@ -1311,10 +1353,11 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v20';
+    const APP_VERSION = 'v21';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v21', items: ['Zone X Beta：「自訂顏色」改成網站自己的色盤，可以拖曳挑任何顏色或輸入色碼，不再跳出手機系統的選色視窗。'] },
         { version: 'v20', items: ['修正：切換過外觀後，地圖右下角「復原／重做」按鈕的圖示會不見。'] },
         { version: 'v19', items: [
             'Zone X Beta：新增「復原／重做」，在地圖右下角；電腦也能用 Ctrl+Z、Ctrl+Shift+Z。',
@@ -2383,6 +2426,7 @@
         ['#2962ff', '藍'], ['#aa00ff', '紫'], ['#ff00ff', '洋紅'], ['#ffffff', '白'], ['#000000', '黑']
     ];
     let colorPopoverCardId = null;
+    let colorPopoverAnchor = null;
 
     function syncColorButtons() {
         document.querySelectorAll('.area-color-picker').forEach(input => {
@@ -2399,20 +2443,135 @@
         const grid = pop.querySelector('.cp-grid');
         grid.innerHTML = AREA_COLOR_PRESETS.map(([hex, name]) =>
             `<button class="cp-swatch${hex === current ? ' selected' : ''}" style="--swatch:${hex}" title="${name}" aria-label="${name}" onclick="pickAreaColor('${hex}')"></button>`).join('');
+        colorPopoverAnchor = anchorBtn;
+        showColorPresets();
         pop.hidden = false;
-        // 貼著按鈕下方，空間不夠就放上方，左右不超出畫面
-        const r = anchorBtn.getBoundingClientRect();
+        positionColorPopover();
+    }
+
+    // 貼著按鈕下方，空間不夠就放上方，左右上下都不超出畫面
+    function positionColorPopover() {
+        const pop = document.getElementById('colorPopover');
+        if (pop.hidden || !colorPopoverAnchor) return;
+        const r = colorPopoverAnchor.getBoundingClientRect();
+        const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
         const pw = pop.offsetWidth, ph = pop.offsetHeight, margin = 8;
-        let left = Math.min(Math.max(margin, r.right - pw), window.innerWidth - pw - margin);
+        const left = Math.min(Math.max(margin, r.right - pw), window.innerWidth - pw - margin);
         let top = r.bottom + 6;
-        if (top + ph > window.innerHeight - margin) top = Math.max(margin, r.top - ph - 6);
+        if (top + ph > vh - margin) top = r.top - ph - 6;
+        top = Math.min(Math.max(margin, top), Math.max(margin, vh - ph - margin));
         pop.style.left = left + 'px';
         pop.style.top = top + 'px';
     }
 
+    // ---------- 自訂顏色（網站自己的色盤，不用系統選色器） ----------
+    let customHsv = { h: 0, s: 1, v: 1 };
+
+    function hexToRgb(hex) {
+        const m = /^#?([0-9a-f]{6})$/i.exec((hex || '').trim());
+        if (!m) return null;
+        const n = parseInt(m[1], 16);
+        return { r: n >> 16 & 255, g: n >> 8 & 255, b: n & 255 };
+    }
+    function rgbToHex({ r, g, b }) {
+        return '#' + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0')).join('');
+    }
+    function rgbToHsv({ r, g, b }) {
+        r /= 255; g /= 255; b /= 255;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+        let h = 0;
+        if (d) {
+            if (max === r) h = ((g - b) / d) % 6;
+            else if (max === g) h = (b - r) / d + 2;
+            else h = (r - g) / d + 4;
+            h = (h * 60 + 360) % 360;
+        }
+        return { h, s: max ? d / max : 0, v: max };
+    }
+    function hsvToRgb({ h, s, v }) {
+        const c = v * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = v - c;
+        const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+        return { r: (r + m) * 255, g: (g + m) * 255, b: (b + m) * 255 };
+    }
+
+    function renderCustomColor(skipHexField) {
+        const hex = rgbToHex(hsvToRgb(customHsv));
+        const sv = document.getElementById('cpSv');
+        sv.style.setProperty('--hue', `hsl(${Math.round(customHsv.h)}, 100%, 50%)`);
+        const knob = document.getElementById('cpSvKnob');
+        knob.style.left = (customHsv.s * 100) + '%';
+        knob.style.top = ((1 - customHsv.v) * 100) + '%';
+        knob.style.background = hex;
+        document.getElementById('cpHue').value = Math.round(customHsv.h);
+        document.getElementById('cpPreview').style.background = hex;
+        const hexInput = document.getElementById('cpHex');
+        if (!skipHexField) hexInput.value = hex.toUpperCase();
+        hexInput.classList.remove('invalid');
+    }
+
+    function showCustomColorPanel() {
+        const pop = document.getElementById('colorPopover');
+        const input = document.getElementById(`color-${colorPopoverCardId}`);
+        customHsv = rgbToHsv(hexToRgb(input ? input.value : '#ff0000') || { r: 255, g: 0, b: 0 });
+        pop.querySelector('.cp-presets').hidden = true;
+        pop.querySelector('.cp-custom-panel').hidden = false;
+        pop.classList.add('custom-open');
+        renderCustomColor();
+        positionColorPopover();
+    }
+
+    function showColorPresets() {
+        const pop = document.getElementById('colorPopover');
+        pop.querySelector('.cp-presets').hidden = false;
+        pop.querySelector('.cp-custom-panel').hidden = true;
+        pop.classList.remove('custom-open');
+        positionColorPopover();
+    }
+
+    function onCustomHue(val) {
+        customHsv.h = Number(val) || 0;
+        renderCustomColor();
+    }
+
+    function onCustomHex(val) {
+        const rgb = hexToRgb(val);
+        const field = document.getElementById('cpHex');
+        if (!rgb) { field.classList.toggle('invalid', val.replace('#', '').length >= 6); return; }
+        customHsv = rgbToHsv(rgb);
+        renderCustomColor(true);
+    }
+
+    function applyCustomColor() {
+        pickAreaColor(rgbToHex(hsvToRgb(customHsv)));
+    }
+
+    // 在方塊上按住拖曳：左右＝鮮豔度、上下＝明暗
+    (function setupSvDrag() {
+        const sv = document.getElementById('cpSv');
+        function update(e) {
+            const r = sv.getBoundingClientRect();
+            customHsv.s = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+            customHsv.v = Math.min(1, Math.max(0, 1 - (e.clientY - r.top) / r.height));
+            renderCustomColor();
+        }
+        sv.addEventListener('pointerdown', e => {
+            e.preventDefault();
+            sv.setPointerCapture(e.pointerId);
+            update(e);
+            sv.addEventListener('pointermove', update);
+        });
+        const end = e => {
+            sv.removeEventListener('pointermove', update);
+            try { sv.releasePointerCapture(e.pointerId); } catch (err) {}
+        };
+        sv.addEventListener('pointerup', end);
+        sv.addEventListener('pointercancel', end);
+    })();
+
     function closeColorPopover() {
         document.getElementById('colorPopover').hidden = true;
         colorPopoverCardId = null;
+        colorPopoverAnchor = null;
     }
 
     function pickAreaColor(hex) {
@@ -2424,20 +2583,15 @@
         input.dispatchEvent(new Event('change'));
     }
 
-    function pickCustomAreaColor() {
-        const input = document.getElementById(`color-${colorPopoverCardId}`);
-        closeColorPopover();
-        if (!input) return;
-        try { if (input.showPicker) { input.showPicker(); return; } } catch (e) {}
-        input.click();
-    }
 
     document.addEventListener('click', e => {
         const pop = document.getElementById('colorPopover');
         if (pop && !pop.hidden && !e.target.closest('#colorPopover') && !e.target.closest('.zx-color-btn')) closeColorPopover();
     });
-    window.addEventListener('resize', () => { if (colorPopoverCardId) closeColorPopover(); });
-    document.getElementById('sidebar').addEventListener('scroll', () => { if (colorPopoverCardId) closeColorPopover(); });
+    const isTypingHex = () => document.activeElement && document.activeElement.id === 'cpHex';
+    window.addEventListener('resize', () => { if (!colorPopoverCardId) return; if (isTypingHex()) positionColorPopover(); else closeColorPopover(); });
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', () => { if (colorPopoverCardId && isTypingHex()) positionColorPopover(); });
+    document.getElementById('sidebar').addEventListener('scroll', () => { if (colorPopoverCardId && !isTypingHex()) closeColorPopover(); });
 
     function removeAreaCard(cardId) {
         const card = document.getElementById(cardId);
