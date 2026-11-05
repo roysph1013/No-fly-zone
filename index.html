@@ -768,16 +768,26 @@
         html[data-ui^="zx"] .point-edit-popup .btn-vis { color: var(--zx-ink); }
         html[data-ui^="zx"] .btn-label-del { background: transparent; color: var(--zx-danger); border: 1px solid var(--zx-danger); }
 
+        /* ---------- Beta：地圖右下角的復原／重做 ---------- */
+        html[data-ui^="zx"] .leaflet-control.zx-history { display: flex; border: none; border-radius: 12px; overflow: hidden; background: rgba(255, 255, 255, 0.95); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28); }
+        html[data-ui^="zx"] .zx-history a { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: none; border-radius: 0; background: transparent; }
+        html[data-ui^="zx"] .zx-history a + a { border-left: 1px solid #e2e8f0; }
+        html[data-ui^="zx"] .zx-history a:hover { background: #edf2f7; }
+        html[data-ui^="zx"] .zx-history a > .zx-ico { width: 21px; height: 21px; color: #1f3550; margin: 0; }
+        html[data-ui^="zx"] .zx-history a.disabled { opacity: 0.35; pointer-events: none; }
+        body.shot-mode .zx-history { display: none !important; }
+
         /* ---------- Beta：禁航區顏色選擇 ---------- */
         .zx-color-btn { display: none; }
         html[data-ui^="zx"] .area-color-picker { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-        html[data-ui^="zx"] .zx-color-btn { display: inline-block; width: 26px; height: 26px; padding: 0; border-radius: 7px; background: var(--swatch, #ff0000); border: 2px solid var(--zx-panel); box-shadow: 0 0 0 1px var(--zx-line-strong); }
-        html[data-ui^="zx"] .zx-color-btn:hover { box-shadow: 0 0 0 2px var(--zx-accent); }
+        html[data-ui^="zx"] .zx-color-btn { display: inline-grid; place-items: center; width: 28px; height: 28px; padding: 0; border-radius: 50%; background: transparent; border: 1px solid var(--zx-line-strong); box-shadow: none; }
+        html[data-ui^="zx"] .zx-color-btn::before { content: ""; width: 14px; height: 14px; border-radius: 50%; background: var(--swatch, #ff0000); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18); }
+        html[data-ui^="zx"] .zx-color-btn:hover { border-color: var(--zx-accent); }
         .color-popover { position: fixed; z-index: 3600; width: 236px; background: var(--zx-panel, #ffffff); color: var(--zx-ink, #2d3748); border: 1px solid var(--zx-line-strong, #cbd5e0); border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28); padding: 12px; }
         .color-popover[hidden] { display: none; }
         .cp-title { font-size: 12px; font-weight: bold; color: var(--zx-ink-3, #718096); margin-bottom: 8px; letter-spacing: 0.04em; }
         .cp-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-        .cp-swatch { width: 100%; aspect-ratio: 1; padding: 0; border-radius: 8px; background: var(--swatch); border: 1px solid rgba(0, 0, 0, 0.18); position: relative; }
+        .cp-swatch { width: 100%; aspect-ratio: 1; padding: 0; border-radius: 50%; background: var(--swatch); border: 1px solid rgba(0, 0, 0, 0.18); position: relative; }
         .cp-swatch:hover { transform: scale(1.06); }
         .cp-swatch.selected { box-shadow: 0 0 0 2px var(--zx-panel, #fff), 0 0 0 4px var(--zx-accent, #ff9f0a); }
         .cp-custom { width: 100%; margin-top: 10px; background: transparent; color: var(--zx-ink, #2d3748); border: 1px solid var(--zx-line-strong, #cbd5e0); border-radius: 8px; padding: 8px; font-size: 13px; }
@@ -857,10 +867,14 @@
             #welcomeModal .modal-panel { height: auto; max-height: 90dvh; border-radius: 16px 16px 0 0; }
             #welcomeModal .modal-body { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
             .welcome-opt { min-height: 60px; }
-            html[data-ui^="zx"] .zx-color-btn { width: 34px; height: 34px; }
+            html[data-ui^="zx"] .zx-color-btn { width: 36px; height: 36px; }
+            html[data-ui^="zx"] .zx-color-btn::before { width: 16px; height: 16px; }
             .color-popover { width: 272px; }
             .cp-grid { gap: 10px; }
             .cp-custom { min-height: 44px; font-size: 14px; }
+            /* 復原／重做放在底部面板上方，拇指好按 */
+            html[data-ui^="zx"] .leaflet-bottom.leaflet-right { bottom: calc(76px + env(safe-area-inset-bottom)); }
+            html[data-ui^="zx"] .zx-history a { width: 48px; height: 46px; }
             html[data-ui^="zx"] #sidebar { box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.3); }
             /* 手機上隱藏「禁航區繪製小工具」副標，標題列才放得下按鈕 */
             html[data-ui^="zx"] #sidebar h2 .zx-sub { display: none; }
@@ -1116,7 +1130,8 @@
                     <li>Beta 版的「顯示禁航區尺寸／ADIZ／發射場」開關，移到地圖右上角圖層按鈕裡的「地圖顯示」。地圖右上角的按鈕合併成一條同樣大小的工具列。</li>
                     <li>Beta 版每張禁航區卡片的解析結果下方有「📋 複製簡報文字」，按一下就能貼到簡報；Beta 版不顯示可以修改的簡報文字欄位（需要修改請切回經典版）。</li>
                     <li>Beta 版打開網站時只跳一張歡迎卡：選擇要不要繼續上次的專案，也能從卡片看更新重點、使用說明或安裝成 App。</li>
-                    <li>Beta 版用簡潔的線條圖示取代彩色 emoji；按卡片上的色塊會打開顏色面板，可選常用顏色，或按「自訂顏色…」挑任何顏色。</li>
+                    <li>Beta 版用簡潔的線條圖示取代彩色 emoji；按卡片上的小圓點會打開顏色面板，可選常用顏色，或按「自訂顏色…」挑任何顏色。</li>
+                    <li>↩️ 復原／重做（Beta）：地圖右下角的兩顆箭頭，可以回到上一步或重做（例如誤刪卡片、畫錯測量線、換錯顏色）。電腦也可以按 Ctrl+Z 復原、Ctrl+Shift+Z 或 Ctrl+Y 重做；在輸入框裡打字時，Ctrl+Z 只會復原文字。換專案後歷史會清空。</li>
                     <li>⛶ 截圖模式（只有 Beta 版有）：按地圖右上角的 ⛶，控制面板和地圖上的按鈕全部收起來，只留地圖和禁航區，直接截圖貼到簡報。</li>
                     <li>離開截圖模式：按左上角的「← 返回」，或電腦按 Esc。「返回」幾秒後會自動淡出，碰一下畫面就會再出現。</li>
                 </ul>
@@ -1141,7 +1156,7 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v18）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
+                    <li>標題旁的版本號（例如 v19）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。使用 Esri 衛星圖時，圖資來源為 Esri、Maxar、Earthstar Geographics。</li>
                 </ul>
@@ -1231,6 +1246,7 @@
         <symbol id="zxi-phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18h2"/></symbol>
         <symbol id="zxi-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
         <symbol id="zxi-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></symbol>
+        <symbol id="zxi-redo" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></symbol>
         <symbol id="zxi-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
         <symbol id="zxi-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
         <symbol id="zxi-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></symbol>
@@ -1295,10 +1311,15 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v18';
+    const APP_VERSION = 'v19';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v19', items: [
+            'Zone X Beta：新增「復原／重做」，在地圖右下角；電腦也能用 Ctrl+Z、Ctrl+Shift+Z。',
+            'Zone X Beta：禁航區顏色改成小圓點，不再是大色塊，畫面更乾淨。',
+            '飛行路徑會跟著專案一起儲存，重新打開專案時會自動畫回來。'
+        ] },
         { version: 'v18', items: [
             'Zone X Beta：底部按鈕改成「繪製禁航區、飛行路徑、清空、⋯」，清空不用再到「更多」裡找；飛行路徑換成火箭圖示。',
             'Zone X Beta：地圖點位視窗裡的「套用」「刪除」也換成線條圖示。',
@@ -3269,21 +3290,23 @@
     // 只有 2 個端點、單純一條直線，不會有轉折，也不會因為球面公式在長距離下失真。
     const FLIGHT_PATH_HALF_LENGTH_KM = 2500;
 
-    function generateFlightPath() {
+    // silent：還原專案或復原時重畫，不跳任何提示
+    function generateFlightPath(silent) {
+        const warn = silent === true ? () => {} : msg => alert(msg);
         if (flightPathLayer && map.hasLayer(flightPathLayer)) {
             map.removeLayer(flightPathLayer);
             flightPathLayer = null;
         }
 
         if (allParsedAreas.length === 0) {
-            alert('請先貼上禁航區座標並按「🪄 繪製禁航區」，再產生飛行路徑。');
+            warn('請先貼上禁航區座標並按「🪄 繪製禁航區」，再產生飛行路徑。');
             return;
         }
 
         // 只用目前顯示在地圖上的禁航區計算（按「隱藏」的不算），畫出來的路徑才會跟畫面一致
         const areas = allParsedAreas.filter(a => !areaMapObjects[a.cardId] || areaMapObjects[a.cardId].visible !== false);
         if (areas.length === 0) {
-            alert('地圖上的禁航區都被隱藏了，請至少顯示一個禁航區再產生飛行路徑。');
+            warn('地圖上的禁航區都被隱藏了，請至少顯示一個禁航區再產生飛行路徑。');
             return;
         }
 
@@ -3292,7 +3315,7 @@
         if (areas.length === 1) {
             const area = areas[0];
             if (area.type === 'circle') {
-                alert('單一圓形禁航區沒有方向性，無法判斷飛行路徑方向。\n請改用矩形／多邊形禁航區，或至少提供兩個禁航區。');
+                warn('單一圓形禁航區沒有方向性，無法判斷飛行路徑方向。\n請改用矩形／多邊形禁航區，或至少提供兩個禁航區。');
                 return;
             }
             axisPoints = area.points; // 用該禁航區自己的頂點分佈算長軸方向
@@ -3329,13 +3352,16 @@
         flightPathLayer = L.featureGroup([visibleLine, hitLine]).addTo(map);
 
         flightPathLayer.bindPopup('<button class="btn-label-del" onclick="deleteFlightPath()">🗑️ 刪除飛行路徑</button>', { closeButton: false });
+        scheduleWorkspaceSave();
     }
 
     function deleteFlightPath() {
+        const had = !!flightPathLayer;
         if (flightPathLayer && map.hasLayer(flightPathLayer)) {
             map.removeLayer(flightPathLayer);
         }
         flightPathLayer = null;
+        if (had) scheduleWorkspaceSave();
     }
 
     function computeEdgeLabelPosition(p1, p2, center) {
@@ -4384,6 +4410,7 @@ ${coords}
         return {
             cards,
             drawn: allParsedAreas.length > 0,
+            flightPath: !!(flightPathLayer && map.hasLayer(flightPathLayer)),
             features: {
                 lines: drawnFeatures.lines.map(f => f.latlngs),
                 circles: drawnFeatures.circles.map(f => ({ center: f.center, radiusNm: f.radiusNm })),
@@ -4412,6 +4439,7 @@ ${coords}
         if (isRestoringWorkspace) return;
         const store = loadProjectStore();
         const ws = collectWorkspace();
+        recordHistory(ws);
         if (currentProjectId && store.projects[currentProjectId]) {
             store.projects[currentProjectId].data = ws;
             store.projects[currentProjectId].updatedAt = Date.now();
@@ -4481,6 +4509,7 @@ ${coords}
                     }
                 });
                 if (metaRestored) renderAreaOutputs();
+                if (ws.flightPath && allParsedAreas.length) generateFlightPath(true);
             }
         } finally {
             isRestoringWorkspace = false;
@@ -4515,6 +4544,7 @@ ${coords}
             loadWorkspace(null);
         }
         refreshProjectUI(store);
+        resetHistory();
     }
 
     // 目前內容還沒存成專案時，切換前先確認，避免內容不見
@@ -4558,6 +4588,7 @@ ${coords}
         loadWorkspace(null);
         setProjectSaveStatus('');
         refreshProjectUI(store);
+        resetHistory();
     }
 
     function openProject(id) {
@@ -4574,6 +4605,7 @@ ${coords}
         loadWorkspace(project.data);
         setProjectSaveStatus('');
         refreshProjectUI(store);
+        resetHistory();
     }
 
     function renameProject(id) {
@@ -4913,6 +4945,94 @@ ${coords}
     });
     new ScreenshotModeControl().addTo(map);
     applyUiTheme(getUiTheme());
+
+    // ===================== 復原／重做（Beta） =====================
+    // 每次自動儲存時記下整個畫面（卡片原文、顏色、禁航區、測量與標記、飛行路徑），按復原就回到上一筆。
+    // 換專案或開新專案時歷史會清空。地圖的位置與縮放不會跟著跳。
+    const HISTORY_LIMIT = 60;
+    let historyCurrent = null;
+    let undoStack = [];
+    let redoStack = [];
+    let isApplyingHistory = false;
+
+    function recordHistory(ws) {
+        const json = JSON.stringify(ws);
+        if (historyCurrent === null || isApplyingHistory) { historyCurrent = json; updateHistoryButtons(); return; }
+        if (json === historyCurrent) return;
+        undoStack.push(historyCurrent);
+        if (undoStack.length > HISTORY_LIMIT) undoStack.shift();
+        historyCurrent = json;
+        redoStack = [];
+        updateHistoryButtons();
+    }
+
+    function resetHistory() {
+        undoStack = [];
+        redoStack = [];
+        historyCurrent = JSON.stringify(collectWorkspace());
+        updateHistoryButtons();
+    }
+
+    function applyHistory(json) {
+        const center = map.getCenter(), zoom = map.getZoom();
+        isApplyingHistory = true;
+        try {
+            loadWorkspace(JSON.parse(json));
+            historyCurrent = json;
+            saveWorkspaceNow();
+        } finally {
+            isApplyingHistory = false;
+        }
+        map.setView(center, zoom, { animate: false });
+        updateHistoryButtons();
+    }
+
+    function undoWorkspace() {
+        if (saveTimer) saveWorkspaceNow();   // 先把還沒存的修改記下來
+        if (!undoStack.length) return;
+        redoStack.push(historyCurrent);
+        applyHistory(undoStack.pop());
+        showToast('已復原上一步', null, null, 1400);
+    }
+
+    function redoWorkspace() {
+        if (saveTimer) saveWorkspaceNow();
+        if (!redoStack.length) return;
+        undoStack.push(historyCurrent);
+        applyHistory(redoStack.pop());
+        showToast('已重做', null, null, 1400);
+    }
+
+    function updateHistoryButtons() {
+        const u = document.getElementById('undoBtn'), r = document.getElementById('redoBtn');
+        if (u) { u.classList.toggle('disabled', !undoStack.length); u.setAttribute('aria-disabled', undoStack.length ? 'false' : 'true'); }
+        if (r) { r.classList.toggle('disabled', !redoStack.length); r.setAttribute('aria-disabled', redoStack.length ? 'false' : 'true'); }
+    }
+
+    // 地圖右下角的復原／重做按鈕（手機在底部面板上方，拇指好按；電腦在地圖右下角，也可以用 Ctrl+Z／Ctrl+Shift+Z）
+    const HistoryControl = L.Control.extend({
+        options: { position: 'bottomright' },
+        onAdd: function () {
+            const c = L.DomUtil.create('div', 'leaflet-bar leaflet-control zx-only zx-history');
+            c.innerHTML = '<a href="#" id="undoBtn" class="disabled" title="復原（Ctrl+Z）" aria-label="復原" role="button"><svg class="zx-ico" aria-hidden="true"><use href="#zxi-undo"/></svg></a>' +
+                '<a href="#" id="redoBtn" class="disabled" title="重做（Ctrl+Shift+Z）" aria-label="重做" role="button"><svg class="zx-ico" aria-hidden="true"><use href="#zxi-redo"/></svg></a>';
+            L.DomEvent.disableClickPropagation(c);
+            L.DomEvent.disableScrollPropagation(c);
+            L.DomEvent.on(c.querySelector('#undoBtn'), 'click', e => { L.DomEvent.stop(e); undoWorkspace(); });
+            L.DomEvent.on(c.querySelector('#redoBtn'), 'click', e => { L.DomEvent.stop(e); redoWorkspace(); });
+            return c;
+        }
+    });
+    new HistoryControl().addTo(map);
+
+    // 鍵盤：在輸入框裡打字時交給瀏覽器自己的復原，其他地方用整個畫面的復原
+    document.addEventListener('keydown', e => {
+        if (getUiTheme() === 'classic' || !(e.ctrlKey || e.metaKey)) return;
+        if (e.target.closest && e.target.closest('input, textarea, [contenteditable]')) return;
+        const k = e.key.toLowerCase();
+        if (k === 'z' && !e.shiftKey) { e.preventDefault(); undoWorkspace(); }
+        else if ((k === 'z' && e.shiftKey) || k === 'y') { e.preventDefault(); redoWorkspace(); }
+    });
 
     // ===================== Beta：開網站時的歡迎卡 =====================
     // 把「開啟上次專案／還原草稿」「更新重點或使用說明」「安裝成 App」合併成一張卡，一次看完、一次選完
