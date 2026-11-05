@@ -747,6 +747,32 @@
         #layerTogglePanel.in-map .switch-label { color: #333; font-weight: normal; gap: 6px; min-height: 0; padding: 2px 0; font-size: 13px; }
         #layerTogglePanel.in-map .switch-label input[type="checkbox"] { width: auto; height: auto; }
 
+        /* ---------- Beta：線條圖示 ---------- */
+        .zx-ico { display: none; }
+        html[data-ui^="zx"] .emo { display: none; }
+        html[data-ui^="zx"] .zx-ico { display: inline-block; width: 1.15em; height: 1.15em; flex-shrink: 0; vertical-align: -0.2em; margin-right: 0.35em; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+        html[data-ui^="zx"] button > .zx-ico, html[data-ui^="zx"] a > .zx-ico { margin-right: 0; }
+        html[data-ui^="zx"] .leaflet-bar a > .zx-ico { width: 21px; height: 21px; vertical-align: middle; color: #1f3550; }
+        html[data-ui^="zx"] .leaflet-bar a.active > .zx-ico { color: #1b1203; }
+        html[data-ui^="zx"] .leaflet-top.leaflet-right .leaflet-bar a { display: flex !important; align-items: center; justify-content: center; }
+        html[data-ui^="zx"] .leaflet-top.leaflet-right .leaflet-control-layers-toggle { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231f3550' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l9 5-9 5-9-5z'/%3E%3Cpath d='M3 12.5l9 5 9-5'/%3E%3Cpath d='M3 17l9 5 9-5'/%3E%3C/svg%3E") !important; background-size: 21px 21px !important; }
+        html[data-ui^="zx"] .parse-status .zx-ico, html[data-ui^="zx"] .modal-header h3 .zx-ico, html[data-ui^="zx"] .guide-section > summary .zx-ico { color: inherit; }
+
+        /* ---------- Beta：禁航區顏色選擇 ---------- */
+        .zx-color-btn { display: none; }
+        html[data-ui^="zx"] .area-color-picker { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+        html[data-ui^="zx"] .zx-color-btn { display: inline-block; width: 26px; height: 26px; padding: 0; border-radius: 7px; background: var(--swatch, #ff0000); border: 2px solid var(--zx-panel); box-shadow: 0 0 0 1px var(--zx-line-strong); }
+        html[data-ui^="zx"] .zx-color-btn:hover { box-shadow: 0 0 0 2px var(--zx-accent); }
+        .color-popover { position: fixed; z-index: 3600; width: 236px; background: var(--zx-panel, #ffffff); color: var(--zx-ink, #2d3748); border: 1px solid var(--zx-line-strong, #cbd5e0); border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28); padding: 12px; }
+        .color-popover[hidden] { display: none; }
+        .cp-title { font-size: 12px; font-weight: bold; color: var(--zx-ink-3, #718096); margin-bottom: 8px; letter-spacing: 0.04em; }
+        .cp-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .cp-swatch { width: 100%; aspect-ratio: 1; padding: 0; border-radius: 8px; background: var(--swatch); border: 1px solid rgba(0, 0, 0, 0.18); position: relative; }
+        .cp-swatch:hover { transform: scale(1.06); }
+        .cp-swatch.selected { box-shadow: 0 0 0 2px var(--zx-panel, #fff), 0 0 0 4px var(--zx-accent, #ff9f0a); }
+        .cp-custom { width: 100%; margin-top: 10px; background: transparent; color: var(--zx-ink, #2d3748); border: 1px solid var(--zx-line-strong, #cbd5e0); border-radius: 8px; padding: 8px; font-size: 13px; }
+        .cp-custom:hover { background: var(--zx-sunken, #edf2f7); }
+
         /* ---------- Beta：卡片上的「複製簡報文字」；不顯示可編輯的簡報文字區 ---------- */
         html[data-ui^="zx"] #output-section { display: none !important; }
         html[data-ui^="zx"] .zx-card-copy { display: flex; width: 100%; margin-top: 8px; background: transparent; color: var(--zx-ink); border: 1px solid var(--zx-line-strong); border-radius: 8px; padding: 9px; font-size: 13px; }
@@ -815,6 +841,10 @@
             #welcomeModal .modal-panel { height: auto; max-height: 90dvh; border-radius: 16px 16px 0 0; }
             #welcomeModal .modal-body { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
             .welcome-opt { min-height: 60px; }
+            html[data-ui^="zx"] .zx-color-btn { width: 34px; height: 34px; }
+            .color-popover { width: 272px; }
+            .cp-grid { gap: 10px; }
+            .cp-custom { min-height: 44px; font-size: 14px; }
             html[data-ui^="zx"] #sidebar { box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.3); }
             /* 手機上隱藏「禁航區繪製小工具」副標，標題列才放得下按鈕 */
             html[data-ui^="zx"] #sidebar h2 .zx-sub { display: none; }
@@ -1062,6 +1092,7 @@
                     <li>Beta 版的「顯示禁航區尺寸／ADIZ／發射場」開關，移到地圖右上角圖層按鈕裡的「地圖顯示」。地圖右上角的按鈕合併成一條同樣大小的工具列。</li>
                     <li>Beta 版每張禁航區卡片的解析結果下方有「📋 複製簡報文字」，按一下就能貼到簡報；Beta 版不顯示可以修改的簡報文字欄位（需要修改請切回經典版）。</li>
                     <li>Beta 版打開網站時只跳一張歡迎卡：選擇要不要繼續上次的專案，也能從卡片看更新重點、使用說明或安裝成 App。</li>
+                    <li>Beta 版用簡潔的線條圖示取代彩色 emoji；按卡片上的色塊會打開顏色面板，可選常用顏色，或按「自訂顏色…」挑任何顏色。</li>
                     <li>⛶ 截圖模式（只有 Beta 版有）：按地圖右上角的 ⛶，控制面板和地圖上的按鈕全部收起來，只留地圖和禁航區，直接截圖貼到簡報。</li>
                     <li>離開截圖模式：按左上角的「← 返回」，或電腦按 Esc。「返回」幾秒後會自動淡出，碰一下畫面就會再出現。</li>
                 </ul>
@@ -1086,7 +1117,7 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v16）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
+                    <li>標題旁的版本號（例如 v17）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。使用 Esri 衛星圖時，圖資來源為 Esri、Maxar、Earthstar Geographics。</li>
                 </ul>
@@ -1143,6 +1174,54 @@
     </div>
 </div>
 
+<!-- Beta：線條圖示（取代 emoji）。每個 symbol 都是 24×24 的線條圖 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+        <symbol id="zxi-draw" viewBox="0 0 24 24"><path d="M4 20l1-4.5L15.5 5 19 8.5 8.5 19z"/><path d="M13 7.5l3.5 3.5"/></symbol>
+        <symbol id="zxi-route" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h6.5a3 3 0 0 0 0-6h-5a3 3 0 0 1 0-6H16"/></symbol>
+        <symbol id="zxi-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
+        <symbol id="zxi-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+        <symbol id="zxi-eye-off" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6C3.9 8.3 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
+        <symbol id="zxi-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+        <symbol id="zxi-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6"/><path d="M12 17h.01"/></symbol>
+        <symbol id="zxi-contrast" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></symbol>
+        <symbol id="zxi-save" viewBox="0 0 24 24"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8V3"/><rect x="7" y="13" width="10" height="6" rx="1"/></symbol>
+        <symbol id="zxi-file-plus" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M12 12v6M9 15h6"/></symbol>
+        <symbol id="zxi-download" viewBox="0 0 24 24"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></symbol>
+        <symbol id="zxi-upload" viewBox="0 0 24 24"><path d="M12 20V9"/><path d="M7 14l5-5 5 5"/><path d="M5 4h14"/></symbol>
+        <symbol id="zxi-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+        <symbol id="zxi-trash" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/></symbol>
+        <symbol id="zxi-measure" viewBox="0 0 24 24"><path d="M4 20V4l16 16z"/><path d="M8 16v-4l4 4z"/><path d="M4 8h2M4 12h2"/></symbol>
+        <symbol id="zxi-ruler" viewBox="0 0 24 24"><path d="M3 17L17 3l4 4L7 21z"/><path d="M7.5 12.5l2 2M10.5 9.5l2 2M13.5 6.5l2 2"/></symbol>
+        <symbol id="zxi-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 12h8"/></symbol>
+        <symbol id="zxi-rect" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="1"/></symbol>
+        <symbol id="zxi-fullscreen" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+        <symbol id="zxi-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></symbol>
+        <symbol id="zxi-alert" viewBox="0 0 24 24"><path d="M12 3.5l9.5 17h-19z"/><path d="M12 10v5"/><path d="M12 17.8h.01"/></symbol>
+        <symbol id="zxi-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.7-4.3L4 8"/><path d="M4 3v5h5"/><path d="M4 13a8 8 0 0 0 14.7 4.3L20 16"/><path d="M20 21v-5h-5"/></symbol>
+        <symbol id="zxi-split" viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></symbol>
+        <symbol id="zxi-send" viewBox="0 0 24 24"><path d="M21 3L10 14"/><path d="M21 3l-7 18-4-7-7-4z"/></symbol>
+        <symbol id="zxi-book" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2z"/><path d="M4 20a2 2 0 0 0 2 1h13v-3"/></symbol>
+        <symbol id="zxi-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></symbol>
+        <symbol id="zxi-phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18h2"/></symbol>
+        <symbol id="zxi-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+        <symbol id="zxi-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></symbol>
+        <symbol id="zxi-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+        <symbol id="zxi-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+        <symbol id="zxi-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></symbol>
+        <symbol id="zxi-cards" viewBox="0 0 24 24"><rect x="3" y="7" width="14" height="13" rx="2"/><path d="M7 4h12a2 2 0 0 1 2 2v11"/></symbol>
+        <symbol id="zxi-map" viewBox="0 0 24 24"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></symbol>
+        <symbol id="zxi-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7.5h.01"/></symbol>
+    </defs>
+</svg>
+
+<!-- Beta：禁航區顏色選擇面板 -->
+<div id="colorPopover" class="color-popover" role="dialog" aria-label="選擇禁航區顏色" hidden>
+    <div class="cp-title">禁航區顏色</div>
+    <div class="cp-grid"></div>
+    <button class="cp-custom" onclick="pickCustomAreaColor()">自訂顏色…</button>
+</div>
+
 <!-- 截圖模式的「返回」按鈕（幾秒後自動淡出，碰一下畫面會再出現） -->
 <button id="shotExitBtn" class="shot-exit-btn" onclick="exitScreenshotMode()" hidden>← 返回</button>
 
@@ -1191,10 +1270,14 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v16';
+    const APP_VERSION = 'v17';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v17', items: [
+            'Zone X Beta：圖示改成簡潔的線條風格，取代彩色 emoji，看起來更專業。',
+            'Zone X Beta：禁航區顏色改用跟介面一致的顏色面板，常用顏色一鍵選，也能自訂。'
+        ] },
         { version: 'v16', items: [
             'Zone X Beta：地圖右上角的按鈕改成同樣大小，合併成一條工具列，不佔空間。',
             'Zone X Beta：拿掉手機的分頁，卡片維持原文＋下方結果；每張卡片多一顆「📋 複製簡報文字」。',
@@ -2228,7 +2311,8 @@
                             <span class="lbl-size-value" id="label-size-${cardId}">${DEFAULT_LABEL_FONT_SIZE}</span>
                             <button class="lbl-size-btn" onclick="changeLabelFontSize('${cardId}', 1)" aria-label="標籤字體放大">A+</button>
                         </div>
-                        <input type="color" class="area-color-picker" id="color-${cardId}" value="#ff0000" title="選擇這個禁航區的顏色" onchange="processAllData()">
+                        <input type="color" class="area-color-picker" id="color-${cardId}" value="#ff0000" title="選擇這個禁航區的顏色" onchange="processAllData()" oninput="syncColorButtons()">
+                        <button class="zx-color-btn" id="colorbtn-${cardId}" onclick="openColorPopover('${cardId}', this)" title="選擇這個禁航區的顏色" aria-label="選擇禁航區顏色" style="--swatch:#ff0000"></button>
                         <button class="btn-vis" id="btn-vis-${cardId}" onclick="toggleAreaVisibility('${cardId}')">👁 顯示</button>
                         ${cardCount > 1 ? `<button class="btn-del" onclick="removeAreaCard('${cardId}')">刪除</button>` : ''}
                     </div>
@@ -2240,6 +2324,68 @@
         container.insertAdjacentHTML('beforeend', cardHTML);
         scheduleWorkspaceSave();
     }
+
+    // ===================== Beta：禁航區顏色選擇面板（取代系統的選色視窗；「自訂」才打開系統選色器） =====================
+    const AREA_COLOR_PRESETS = [
+        ['#ff0000', '紅（預設）'], ['#ff8c00', '橘'], ['#ffd400', '黃'], ['#00c853', '綠'], ['#00e5ff', '青'],
+        ['#2962ff', '藍'], ['#aa00ff', '紫'], ['#ff00ff', '洋紅'], ['#ffffff', '白'], ['#000000', '黑']
+    ];
+    let colorPopoverCardId = null;
+
+    function syncColorButtons() {
+        document.querySelectorAll('.area-color-picker').forEach(input => {
+            const btn = document.getElementById(input.id.replace('color-', 'colorbtn-'));
+            if (btn) btn.style.setProperty('--swatch', input.value);
+        });
+    }
+
+    function openColorPopover(cardId, anchorBtn) {
+        const pop = document.getElementById('colorPopover');
+        if (!pop.hidden && colorPopoverCardId === cardId) { closeColorPopover(); return; }
+        colorPopoverCardId = cardId;
+        const current = (document.getElementById(`color-${cardId}`).value || '').toLowerCase();
+        const grid = pop.querySelector('.cp-grid');
+        grid.innerHTML = AREA_COLOR_PRESETS.map(([hex, name]) =>
+            `<button class="cp-swatch${hex === current ? ' selected' : ''}" style="--swatch:${hex}" title="${name}" aria-label="${name}" onclick="pickAreaColor('${hex}')"></button>`).join('');
+        pop.hidden = false;
+        // 貼著按鈕下方，空間不夠就放上方，左右不超出畫面
+        const r = anchorBtn.getBoundingClientRect();
+        const pw = pop.offsetWidth, ph = pop.offsetHeight, margin = 8;
+        let left = Math.min(Math.max(margin, r.right - pw), window.innerWidth - pw - margin);
+        let top = r.bottom + 6;
+        if (top + ph > window.innerHeight - margin) top = Math.max(margin, r.top - ph - 6);
+        pop.style.left = left + 'px';
+        pop.style.top = top + 'px';
+    }
+
+    function closeColorPopover() {
+        document.getElementById('colorPopover').hidden = true;
+        colorPopoverCardId = null;
+    }
+
+    function pickAreaColor(hex) {
+        const input = document.getElementById(`color-${colorPopoverCardId}`);
+        closeColorPopover();
+        if (!input) return;
+        input.value = hex;
+        syncColorButtons();
+        input.dispatchEvent(new Event('change'));
+    }
+
+    function pickCustomAreaColor() {
+        const input = document.getElementById(`color-${colorPopoverCardId}`);
+        closeColorPopover();
+        if (!input) return;
+        try { if (input.showPicker) { input.showPicker(); return; } } catch (e) {}
+        input.click();
+    }
+
+    document.addEventListener('click', e => {
+        const pop = document.getElementById('colorPopover');
+        if (pop && !pop.hidden && !e.target.closest('#colorPopover') && !e.target.closest('.zx-color-btn')) closeColorPopover();
+    });
+    window.addEventListener('resize', () => { if (colorPopoverCardId) closeColorPopover(); });
+    document.getElementById('sidebar').addEventListener('scroll', () => { if (colorPopoverCardId) closeColorPopover(); });
 
     function removeAreaCard(cardId) {
         const card = document.getElementById(cardId);
@@ -4283,7 +4429,7 @@ ${coords}
                 const card = document.getElementById(`area-card-${cardCount}`);
                 card.querySelector('.area-input').value = c.text || '';
                 const colorInput = card.querySelector('.area-color-picker');
-                if (colorInput && c.color) colorInput.value = c.color;
+                if (colorInput && c.color) { colorInput.value = c.color; syncColorButtons(); }
                 if (c.labelFontSize) setLabelFontSize(card.id, c.labelFontSize);
             });
 
@@ -4542,6 +4688,79 @@ ${coords}
         try { localStorage.setItem(LAST_SEEN_VERSION_KEY, APP_VERSION); } catch (e) {}
     }
 
+    // ===================== Beta：把 emoji 換成線條圖示 =====================
+    // 只在 Beta 外觀時處理：每個 emoji 包成 <span class="emo">，旁邊加一個 SVG 圖示，由 CSS 決定顯示哪一個。
+    // 切回經典版時再拆掉，經典版的畫面完全不受影響。地圖本身（標籤、彈出視窗）不處理。
+    const EMOJI_ICONS = {
+        '🪄': 'draw', '🚀': 'route', '📋': 'copy', '👁': 'eye', '🙈': 'eye-off', '📁': 'folder', '❓': 'help',
+        '🎨': 'contrast', '💾': 'save', '📄': 'file-plus', '⬇': 'download', '⬆': 'upload', '📤': 'upload',
+        '📥': 'download', '📍': 'pin', '🗑': 'trash', '📐': 'measure', '📏': 'ruler', '⭕': 'circle', '♦': 'rect',
+        '⛶': 'fullscreen', '✅': 'check-circle', '⚠': 'alert', '🔄': 'refresh', '🔀': 'split', '📮': 'send',
+        '📖': 'book', '🎉': 'sparkle', '📲': 'phone', '🔎': 'search', '↩': 'undo', '➕': 'plus', '✔': 'check',
+        '📝': 'edit', '🗂': 'cards', '🗺': 'map', 'ℹ': 'info'
+    };
+    const EMOJI_RE = new RegExp('(' + Object.keys(EMOJI_ICONS).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')\uFE0F? ?', 'gu');
+    let iconObserver = null;
+
+    function iconizeTextNode(node) {
+        const parent = node.parentNode;
+        if (!parent || parent.closest('.emo, svg, textarea, script, style, .leaflet-pane, input, [contenteditable]')) return;
+        const text = node.nodeValue;
+        EMOJI_RE.lastIndex = 0;
+        if (!EMOJI_RE.test(text)) return;
+        EMOJI_RE.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = EMOJI_RE.exec(text))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+            const span = document.createElement('span');
+            span.className = 'emo';
+            span.textContent = m[0];
+            frag.appendChild(span);
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('class', 'zx-ico');
+            svg.setAttribute('aria-hidden', 'true');
+            const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+            use.setAttribute('href', '#zxi-' + EMOJI_ICONS[m[1]]);
+            svg.appendChild(use);
+            frag.appendChild(svg);
+            last = m.index + m[0].length;
+        }
+        if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+        parent.replaceChild(frag, node);
+    }
+
+    function iconizeTree(root) {
+        if (root.nodeType === Node.TEXT_NODE) { iconizeTextNode(root); return; }
+        if (root.nodeType !== Node.ELEMENT_NODE) return;
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const nodes = [];
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+        nodes.forEach(iconizeTextNode);
+    }
+
+    function enableLineIcons() {
+        iconizeTree(document.body);
+        if (iconObserver) return;
+        iconObserver = new MutationObserver(muts => {
+            muts.forEach(m => {
+                if (m.type === 'characterData') iconizeTextNode(m.target);
+                else m.addedNodes.forEach(iconizeTree);
+            });
+        });
+        iconObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
+    }
+
+    function disableLineIcons() {
+        if (iconObserver) { iconObserver.disconnect(); iconObserver = null; }
+        document.querySelectorAll('svg.zx-ico').forEach(el => el.remove());
+        document.querySelectorAll('span.emo').forEach(el => {
+            const parent = el.parentNode;
+            el.replaceWith(document.createTextNode(el.textContent));
+            if (parent) parent.normalize();
+        });
+    }
+
     // ===================== 外觀切換（經典版預設，Zone X 淺色／深色為 Beta） =====================
     const UI_THEME_KEY = 'nofly-ui-theme';
     const UI_THEMES = ['classic', 'zx-light', 'zx-dark'];
@@ -4565,6 +4784,8 @@ ${coords}
         if (theme === 'classic' && document.body.classList.contains('shot-mode')) exitScreenshotMode();
         placeLayerToggles(theme !== 'classic');
         closeMoreMenu();
+        if (typeof closeColorPopover === 'function') closeColorPopover();
+        if (theme === 'classic') disableLineIcons(); else enableLineIcons();
     }
 
     // Beta：把「顯示禁航區尺寸／ADIZ／發射場」三個開關搬進地圖右上角的圖層選單；經典版放回面板
