@@ -110,7 +110,9 @@
         .install-steps li { margin-bottom: 6px; }
         .install-key { display: inline-block; background: #edf2f7; border: 1px solid #cbd5e0; border-radius: 6px; padding: 0 6px; font-weight: bold; white-space: nowrap; }
         .install-warn { background: #fffaf0; border: 1px solid #fbd38d; border-radius: 8px; padding: 8px 10px; font-size: 13px; color: #744210; margin-top: 8px; }
-        .install-now-btn { width: 100%; min-height: 44px; font-size: 15px; margin: 4px 0 8px; }
+        .install-now-btn { width: 100%; min-height: 48px; font-size: 16px; margin: 4px 0 8px; }
+        #installModal .install-now-btn { background: #dd6b20; color: #ffffff; box-shadow: 0 3px 8px rgba(221, 107, 32, 0.45); }
+        #installModal .install-now-btn:hover, #installModal .install-now-btn:active { background: #c05621; }
 
         /* 手機版底部抽屜的拖曳把手（桌面版預設隱藏） */
         #sheetHandle { display: none; }
@@ -763,7 +765,7 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v7）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
+                    <li>標題旁的版本號（例如 v8）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。</li>
                 </ul>
@@ -814,10 +816,11 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v7';
+    const APP_VERSION = 'v8';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v8', items: ['安裝提示裡的「📲 立即安裝」按鈕改成橘色，更容易看到。'] },
         { version: 'v7', items: ['App 取名為「禁區」，安裝後主畫面圖示下方會顯示這個名字。'] },
         { version: 'v6', items: [
             '網站可以安裝成 App 了！加到手機主畫面或電腦桌面，點圖示就能直接打開。',
@@ -4026,7 +4029,7 @@ ${coords}
     window.addEventListener('beforeinstallprompt', e => {
         e.preventDefault();
         deferredInstallPrompt = e;
-        if (!document.getElementById('installModal').hidden) renderInstallInstructions();
+        if (!document.getElementById('installModal').hidden) { renderInstallInstructions(); updateInstallCloseBtn(); }
     });
 
     window.addEventListener('appinstalled', () => {
@@ -4109,8 +4112,8 @@ ${coords}
         try {
             const choice = await promptEvent.userChoice;
             if (choice && choice.outcome === 'accepted') closeModal('installModal');
-            else renderInstallInstructions();
-        } catch (e) { renderInstallInstructions(); }
+            else { renderInstallInstructions(); updateInstallCloseBtn(); }
+        } catch (e) { renderInstallInstructions(); updateInstallCloseBtn(); }
     }
 
     // manual = true：使用者自己從使用說明打開，只顯示「關閉」，不記錄稍後／不再提醒
@@ -4118,10 +4121,17 @@ ${coords}
         renderInstallInstructions();
         const footer = document.getElementById('installFooter');
         footer.innerHTML = manual || isRunningAsApp()
-            ? '<button class="modal-btn-primary" onclick="closeModal(\'installModal\')">關閉</button>'
+            ? `<button id="installCloseBtn" onclick="closeModal('installModal')">關閉</button>`
             : `<button class="modal-btn-secondary" onclick="dismissInstallReminder('never')">不要再提醒</button>
                <button class="modal-btn-primary" onclick="dismissInstallReminder('later')">稍後再說</button>`;
+        updateInstallCloseBtn();
         openModal('installModal');
+    }
+
+    // 有「立即安裝」按鈕時，「關閉」改成灰色，讓安裝按鈕最顯眼
+    function updateInstallCloseBtn() {
+        const btn = document.getElementById('installCloseBtn');
+        if (btn) btn.className = deferredInstallPrompt && !isRunningAsApp() ? 'modal-btn-secondary' : 'modal-btn-primary';
     }
 
     function dismissInstallReminder(mode) {
