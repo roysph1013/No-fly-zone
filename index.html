@@ -747,8 +747,26 @@
         #layerTogglePanel.in-map .switch-label { color: #333; font-weight: normal; gap: 6px; min-height: 0; padding: 2px 0; font-size: 13px; }
         #layerTogglePanel.in-map .switch-label input[type="checkbox"] { width: auto; height: auto; }
 
+        /* ---------- Beta：卡片上的「複製簡報文字」；不顯示可編輯的簡報文字區 ---------- */
+        html[data-ui^="zx"] #output-section { display: none !important; }
+        html[data-ui^="zx"] .zx-card-copy { display: flex; width: 100%; margin-top: 8px; background: transparent; color: var(--zx-ink); border: 1px solid var(--zx-line-strong); border-radius: 8px; padding: 9px; font-size: 13px; }
+        html[data-ui^="zx"] .zx-card-copy:hover { background: var(--zx-sunken); }
+
+        /* ---------- Beta：地圖右上角按鈕合併成一條同樣大小的工具列 ---------- */
+        html[data-ui^="zx"] .leaflet-top.leaflet-right { top: 10px; right: 10px; display: flex; flex-direction: column; align-items: flex-end; padding: 4px; gap: 2px; background: rgba(255, 255, 255, 0.95); border-radius: 12px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28); pointer-events: auto; }
+        html[data-ui^="zx"] .leaflet-top.leaflet-right .leaflet-control { margin: 0; border: none; box-shadow: none; background: transparent; border-radius: 8px; float: none; clear: none; }
+        html[data-ui^="zx"] .leaflet-top.leaflet-right .leaflet-control-layers-expanded { background: transparent; padding: 4px 8px 6px 6px; }
+        html[data-ui^="zx"] .leaflet-top.leaflet-right .leaflet-bar a,
+        html[data-ui^="zx"] .leaflet-top.leaflet-right .leaflet-control-layers-toggle { width: 40px !important; height: 40px !important; line-height: 40px !important; border: none; border-radius: 8px; background-color: transparent; font-size: 19px; }
+        html[data-ui^="zx"] .leaflet-top.leaflet-right .leaflet-control-layers-toggle { background-size: 22px 22px; }
+        html[data-ui^="zx"] .leaflet-top.leaflet-right .leaflet-bar a:hover,
+        html[data-ui^="zx"] .leaflet-top.leaflet-right .leaflet-control-layers-toggle:hover { background-color: #edf2f7; }
+        html[data-ui^="zx"] .leaflet-top.leaflet-right .measure-submenu { border-top: 1px solid #e2e8f0; border-radius: 0; padding-top: 2px; }
+        html[data-ui^="zx"] .leaflet-top.leaflet-right .leaflet-control-measure-toggle.active,
+        html[data-ui^="zx"] .leaflet-top.leaflet-right .measure-submenu a.active { background-color: #ff9f0a !important; color: #1b1203; }
+
         /* ---------- Beta：固定在面板底部的操作列與「⋯ 更多」 ---------- */
-        .zx-actionbar, .zx-tabs, .zx-tab-empty { display: none; }
+        .zx-actionbar, .zx-card-copy { display: none; }
         html[data-ui^="zx"] .btn-group { display: none; }
         html[data-ui^="zx"] .zx-actionbar { display: flex; gap: 8px; position: sticky; bottom: -20px; margin: auto -20px -20px; padding: 12px 20px 16px; background: var(--zx-panel); border-top: 1px solid var(--zx-line); z-index: 5; }
         .zx-btn-primary { flex: 1; background: var(--zx-accent); color: var(--zx-accent-ink); border-radius: 10px; padding: 12px; font-size: 14px; box-shadow: 0 3px 10px rgba(255, 159, 10, 0.35); }
@@ -788,25 +806,6 @@
 
         @media (max-width: 768px) {
             .btn-theme { padding: 6px 12px; font-size: 13px; }
-            /* Beta 手機版：抽屜分頁 */
-            html[data-ui^="zx"] .zx-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 3px; border-radius: 10px; background: var(--zx-sunken); border: 1px solid var(--zx-line); position: sticky; top: -10px; z-index: 6; flex-shrink: 0; }
-            html[data-ui^="zx"] .zx-tab { background: transparent; color: var(--zx-ink-3); padding: 9px 0; min-height: 40px; border-radius: 8px; font-size: 14px; }
-            html[data-ui^="zx"] .zx-tab.active { background: var(--zx-brand); color: var(--zx-panel); }
-            html[data-ui="zx-dark"] .zx-tab.active { background: #1f4672; color: #ffffff; }
-            html[data-ui^="zx"] #sidebar:not(.sheet-expanded) .zx-tabs { visibility: hidden; }
-            /* 原文：專案、卡片原文、新增；結果：卡片標題＋解析結果；簡報文字：PPT 文字 */
-            html[data-ui^="zx"] #sidebar[data-tab="input"] .parse-status,
-            html[data-ui^="zx"] #sidebar[data-tab="input"] #output-section { display: none !important; }
-            html[data-ui^="zx"] #sidebar[data-tab="result"] .project-panel,
-            html[data-ui^="zx"] #sidebar[data-tab="result"] .area-card textarea,
-            html[data-ui^="zx"] #sidebar[data-tab="result"] .btn-add,
-            html[data-ui^="zx"] #sidebar[data-tab="result"] #output-section { display: none !important; }
-            html[data-ui^="zx"] #sidebar[data-tab="ppt"] .project-panel,
-            html[data-ui^="zx"] #sidebar[data-tab="ppt"] #areaContainer,
-            html[data-ui^="zx"] #sidebar[data-tab="ppt"] .btn-add { display: none !important; }
-            html[data-ui^="zx"] #sidebar[data-tab="result"] #zxResultEmpty.show,
-            html[data-ui^="zx"] #sidebar[data-tab="ppt"] #zxPptEmpty.show { display: block; }
-            html[data-ui^="zx"] .zx-tab-empty { font-size: 14px; color: var(--zx-ink-3); padding: 18px 8px; text-align: center; line-height: 1.6; }
             html[data-ui^="zx"] .zx-actionbar { margin: auto -16px -20px; padding: 10px 16px calc(14px + env(safe-area-inset-bottom)); }
             .zx-btn-primary, .zx-btn-secondary { min-height: 48px; }
             .zx-more-menu button { min-height: 44px; font-size: 14px; }
@@ -830,7 +829,8 @@
             html[data-ui^="zx"] .sheet-title-peek .zx-wordmark { font-size: 13px; }
             #themeModal { padding: 20px 16px; }
             #themeModal .modal-panel { height: auto; max-height: 85dvh; border-radius: 12px; }
-            .leaflet-control-shot-toggle { width: 44px !important; height: 44px !important; line-height: 44px !important; }
+            html[data-ui^="zx"] .leaflet-top.leaflet-right .leaflet-bar a,
+            html[data-ui^="zx"] .leaflet-top.leaflet-right .leaflet-control-layers-toggle { width: 44px !important; height: 44px !important; line-height: 44px !important; }
         }
     </style>
 </head>
@@ -862,13 +862,6 @@
         </div>
     </details>
 
-    <!-- 手機版 Beta：抽屜分頁（原文／結果／簡報文字） -->
-    <div class="zx-tabs" role="tablist" aria-label="切換內容">
-        <button class="zx-tab" data-tab="input" role="tab" onclick="setSheetTab('input')">原文</button>
-        <button class="zx-tab" data-tab="result" role="tab" onclick="setSheetTab('result')">結果</button>
-        <button class="zx-tab" data-tab="ppt" role="tab" onclick="setSheetTab('ppt')">簡報文字</button>
-    </div>
-
     <div class="control-panel" id="layerTogglePanel">
         <div class="layer-toggle-title">地圖顯示</div>
         <label class="switch-label">
@@ -883,7 +876,6 @@
     </div>
 
     <div id="areaContainer"></div>
-    <div class="zx-tab-empty" id="zxResultEmpty">還沒有解析結果。先到「原文」貼上航警，再按「🪄 繪製禁航區」。</div>
 
     <button class="btn-add" onclick="addAreaCard()">＋ 新增禁航區</button>
 
@@ -910,7 +902,6 @@
         <strong>PPT 後製專用文字格式：</strong>
         <div id="areaOutputContainer"></div>
     </div>
-    <div class="zx-tab-empty" id="zxPptEmpty">還沒有簡報文字。按「🪄 繪製禁航區」後，這裡會出現每個禁航區的簡報用文字。</div>
 
     <!-- Beta：固定在面板底部的操作列，KML 與清空收進「⋯ 更多」 -->
     <div class="zx-actionbar">
@@ -1068,8 +1059,8 @@
                     <li>標題旁的「🎨 外觀」可以切換：經典版（預設）、Zone X 淺色 Beta、Zone X 深色 Beta。選擇會記在這台裝置上。</li>
                     <li>Beta 版只換外觀，功能都一樣；地圖上的紅色禁航區和黃字黑底標籤不會改變。不習慣隨時可以切回經典版。</li>
                     <li>Beta 版的面板底部固定一排按鈕：「🪄 繪製禁航區」「🚀 路徑」和「⋯ 更多」；KML 匯出／匯入、全部清空都在「⋯ 更多」裡。</li>
-                    <li>Beta 版的「顯示禁航區尺寸／ADIZ／發射場」開關，移到地圖右上角圖層按鈕（▤）裡的「地圖顯示」。</li>
-                    <li>Beta 手機版的面板分成「原文」「結果」「簡報文字」三個分頁；按「繪製禁航區」後會自動切到「結果」。</li>
+                    <li>Beta 版的「顯示禁航區尺寸／ADIZ／發射場」開關，移到地圖右上角圖層按鈕裡的「地圖顯示」。地圖右上角的按鈕合併成一條同樣大小的工具列。</li>
+                    <li>Beta 版每張禁航區卡片的解析結果下方有「📋 複製簡報文字」，按一下就能貼到簡報；Beta 版不顯示可以修改的簡報文字欄位（需要修改請切回經典版）。</li>
                     <li>Beta 版打開網站時只跳一張歡迎卡：選擇要不要繼續上次的專案，也能從卡片看更新重點、使用說明或安裝成 App。</li>
                     <li>⛶ 截圖模式（只有 Beta 版有）：按地圖右上角的 ⛶，控制面板和地圖上的按鈕全部收起來，只留地圖和禁航區，直接截圖貼到簡報。</li>
                     <li>離開截圖模式：按左上角的「← 返回」，或電腦按 Esc。「返回」幾秒後會自動淡出，碰一下畫面就會再出現。</li>
@@ -1095,7 +1086,7 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v15）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
+                    <li>標題旁的版本號（例如 v16）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。使用 Esri 衛星圖時，圖資來源為 Esri、Maxar、Earthstar Geographics。</li>
                 </ul>
@@ -1200,10 +1191,15 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v15';
+    const APP_VERSION = 'v16';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v16', items: [
+            'Zone X Beta：地圖右上角的按鈕改成同樣大小，合併成一條工具列，不佔空間。',
+            'Zone X Beta：拿掉手機的分頁，卡片維持原文＋下方結果；每張卡片多一顆「📋 複製簡報文字」。',
+            'Zone X Beta：不再顯示可以修改的簡報文字欄位，畫面更精簡（經典版不變）。'
+        ] },
         { version: 'v15', items: [
             'Zone X Beta：打開網站只跳一張歡迎卡，繼續上次的專案、看更新、安裝 App 一次選完。',
             'Zone X Beta：面板底部固定「繪製禁航區」按鈕，KML 和清空收進「⋯ 更多」。',
@@ -3624,7 +3620,7 @@
         if (allParsedAreas.length === 0) {
             alert('沒有解析到任何有效的禁航區座標！請查看各區塊下方的解析狀態提示。');
             document.getElementById('output-section').style.display = 'none';
-            if (getUiTheme() !== 'classic' && isMobileLayout()) setSheetTab('result');
+            renderCardCopyButtons();
             return;
         }
 
@@ -3636,8 +3632,6 @@
 
         renderAreaOutputs();
         document.getElementById('output-section').style.display = 'block';
-        if (getUiTheme() !== 'classic' && isMobileLayout() && !isRestoringWorkspace) setSheetTab('result');
-        else updateTabEmptyStates();
     }
 
     function clearAllData() {
@@ -3688,10 +3682,41 @@
         // 清空視同從空白重新開始：脫離目前開啟的專案，避免自動儲存把已存的專案也清成空的
         currentProjectId = null;
         saveWorkspaceNow();
-        if (getUiTheme() !== 'classic') setSheetTab('input');
+        renderCardCopyButtons();
+    }
+
+    // Beta：每張解析成功的卡片，在解析結果下方放一顆「複製簡報文字」（經典版用 CSS 隱藏）
+    function renderCardCopyButtons() {
+        document.querySelectorAll('.zx-card-copy').forEach(el => el.remove());
+        allParsedAreas.forEach(area => {
+            const status = document.getElementById(`status-${area.cardId}`);
+            if (!status) return;
+            status.insertAdjacentHTML('afterend', `<button class="zx-card-copy" onclick="copyCardPptText('${area.cardId}')">📋 複製簡報文字</button>`);
+        });
+    }
+
+    function copyCardPptText(cardId) {
+        const area = allParsedAreas.find(a => a.cardId === cardId);
+        if (!area) return;
+        const text = buildFormattedText(area);
+        const done = () => showToast('已複製簡報文字，可以直接貼到簡報');
+        const fallback = () => {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            let ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) {}
+            ta.remove();
+            if (ok) done(); else alert('複製失敗，請改用經典版的簡報文字區手動複製。');
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+        else fallback();
     }
 
     function renderAreaOutputs() {
+        renderCardCopyButtons();
         const container = document.getElementById('areaOutputContainer');
         container.innerHTML = '';
 
@@ -4540,7 +4565,6 @@ ${coords}
         if (theme === 'classic' && document.body.classList.contains('shot-mode')) exitScreenshotMode();
         placeLayerToggles(theme !== 'classic');
         closeMoreMenu();
-        updateTabEmptyStates();
     }
 
     // Beta：把「顯示禁航區尺寸／ADIZ／發射場」三個開關搬進地圖右上角的圖層選單；經典版放回面板
@@ -4552,7 +4576,7 @@ ${coords}
             if (list && panel.parentElement !== list) list.appendChild(panel);
             panel.classList.add('in-map');
         } else {
-            const anchor = document.querySelector('#sidebar .zx-tabs');
+            const anchor = document.getElementById('projectPanel');
             if (anchor && panel.previousElementSibling !== anchor) anchor.after(panel);
             panel.classList.remove('in-map');
         }
@@ -4577,24 +4601,6 @@ ${coords}
         if (menu && !menu.hidden && !e.target.closest('.zx-more-wrap')) closeMoreMenu();
     });
 
-    // Beta 手機版：抽屜分頁（原文／結果／簡報文字）
-    function setSheetTab(tab) {
-        const sidebar = document.getElementById('sidebar');
-        sidebar.dataset.tab = tab;
-        document.querySelectorAll('.zx-tab').forEach(btn => {
-            const on = btn.dataset.tab === tab;
-            btn.classList.toggle('active', on);
-            btn.setAttribute('aria-selected', on ? 'true' : 'false');
-        });
-        updateTabEmptyStates();
-        sidebar.scrollTop = 0;
-    }
-    function updateTabEmptyStates() {
-        const hasResult = [...document.querySelectorAll('.parse-status')].some(el => el.style.display === 'block');
-        const hasPpt = document.getElementById('output-section').style.display === 'block';
-        document.getElementById('zxResultEmpty').classList.toggle('show', !hasResult);
-        document.getElementById('zxPptEmpty').classList.toggle('show', !hasPpt);
-    }
 
     function setUiTheme(theme) {
         if (!UI_THEMES.includes(theme)) theme = 'classic';
@@ -4655,7 +4661,6 @@ ${coords}
         }
     });
     new ScreenshotModeControl().addTo(map);
-    setSheetTab('input');
     applyUiTheme(getUiTheme());
 
     // ===================== Beta：開網站時的歡迎卡 =====================
