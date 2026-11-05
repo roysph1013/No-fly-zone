@@ -199,6 +199,9 @@
             .modal-close { min-width: 44px; min-height: 44px; }
             .btn-help { padding: 6px 12px; font-size: 13px; }
             .guide-section > summary { padding: 12px; }
+            /* 更新重點在手機上維持置中的小視窗，不佔滿全螢幕 */
+            #whatsNewModal { padding: 20px 16px; }
+            #whatsNewModal .modal-panel { height: auto; max-height: 80dvh; border-radius: 12px; }
             /* 安裝提示在手機上改為底部卡片，不佔滿全螢幕，看得到後面的網頁 */
             #installModal { align-items: flex-end; }
             #installModal .modal-panel { height: auto; max-height: 90dvh; border-radius: 14px 14px 0 0; }
@@ -765,7 +768,7 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v8）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
+                    <li>標題旁的版本號（例如 v9）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。</li>
                 </ul>
@@ -816,10 +819,11 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v8';
+    const APP_VERSION = 'v9';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v9', items: ['手機上的「更新重點」改成畫面中間的小視窗，不再佔滿整個螢幕。'] },
         { version: 'v8', items: ['安裝提示裡的「📲 立即安裝」按鈕改成橘色，更容易看到。'] },
         { version: 'v7', items: ['App 取名為「禁區」，安裝後主畫面圖示下方會顯示這個名字。'] },
         { version: 'v6', items: [
