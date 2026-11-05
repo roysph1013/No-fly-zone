@@ -13,6 +13,15 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Zone X">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <script>
+        // 外觀：經典版（預設）／Zone X 淺色 Beta／Zone X 深色 Beta。在畫面出來前就套用，避免閃一下
+        (function () {
+            try {
+                var t = localStorage.getItem('nofly-ui-theme');
+                if (t === 'zx-light' || t === 'zx-dark') document.documentElement.setAttribute('data-ui', t);
+            } catch (e) {}
+        })();
+    </script>
     <!-- Leaflet 地圖套件：檔案放在網站自己的 vendor 資料夾，不依賴外部網站（外部掛掉或被擋時網站照樣能用） -->
     <link rel="stylesheet" href="vendor/leaflet-1.9.4/leaflet.css" />
     <script src="vendor/leaflet-1.9.4/leaflet.js"></script>
@@ -576,6 +585,179 @@
             padding: 8px 10px;
         }
         .kml-export-menu button:hover { background: #e2e8f0; }
+
+        /* ===================== 外觀切換按鈕與選擇視窗（各外觀共用） ===================== */
+        .btn-theme { margin-left: 6px; background: #ebf8ff; color: #2b6cb0; border: 1px solid #90cdf4; border-radius: 14px; padding: 3px 10px; font-size: 12px; font-weight: bold; }
+        .btn-theme:hover { background: #bee3f8; }
+        .sheet-title-peek .btn-theme { margin-left: 6px; vertical-align: middle; }
+        .zx-brand, .zx-only { display: none; }
+        #themeModal .modal-panel { max-width: 440px; }
+        .theme-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+        .theme-option { width: 100%; justify-content: flex-start; gap: 12px; text-align: left; white-space: normal; background: #f7fafc; color: #2d3748; border: 2px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-weight: normal; }
+        .theme-option:hover { background: #edf2f7; }
+        .theme-option.selected { border-color: #3182ce; background: #ebf8ff; }
+        .theme-option-text { display: flex; flex-direction: column; gap: 2px; }
+        .theme-option-text b { font-size: 14px; }
+        .theme-option-text small { font-size: 12px; color: #718096; }
+        .theme-swatch { width: 42px; height: 42px; border-radius: 8px; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.12); }
+        .theme-swatch-classic { background: linear-gradient(135deg, #ffffff 0 50%, #3182ce 50% 100%); }
+        .theme-swatch-light { background: linear-gradient(135deg, #ffffff 0 50%, #ff9f0a 50% 100%); }
+        .theme-swatch-dark { background: linear-gradient(135deg, #0f2440 0 50%, #ff9f0a 50% 100%); }
+        .beta-tag { font-size: 10px; font-weight: bold; color: #b85f00; border: 1px solid currentColor; border-radius: 4px; padding: 0 4px; vertical-align: 2px; }
+
+        /* ===================== 截圖模式（Zone X Beta）：隱藏面板與地圖上所有按鈕 ===================== */
+        .leaflet-control-shot-toggle { width: 36px !important; height: 36px !important; line-height: 36px !important; font-size: 18px; text-align: center; display: block; text-decoration: none; }
+        body.shot-mode #sidebar, body.shot-mode #toggle-sidebar-btn, body.shot-mode .leaflet-top { display: none !important; }
+        .shot-exit-btn { position: fixed; top: calc(10px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); z-index: 3500; background: rgba(10, 26, 46, 0.45); color: rgba(255, 255, 255, 0.9); font-size: 13px; padding: 8px 14px; border-radius: 18px; min-height: 36px; transition: opacity 0.6s ease; }
+        .shot-exit-btn[hidden] { display: none; }
+        .shot-exit-btn.faded { opacity: 0; pointer-events: none; }
+
+        /* ===================== Zone X Beta 外觀（淺色／深色） ===================== */
+        /* 只換面板外觀；地圖上的禁航區顏色、黃字黑底邊長標籤完全不動 */
+        @font-face { font-family: 'Zen Dots'; src: url('vendor/zen-dots/zen-dots-latin-400-normal.woff2') format('woff2'); font-display: swap; }
+        html[data-ui="zx-light"] {
+            --zx-bg: #f3f6fa; --zx-panel: #ffffff; --zx-card: #f7f9fc; --zx-sunken: #eef2f7; --zx-input: #ffffff;
+            --zx-line: rgba(22, 55, 90, 0.13); --zx-line-strong: rgba(22, 55, 90, 0.26);
+            --zx-ink: #10233b; --zx-ink-2: #44576e; --zx-ink-3: #6c8097;
+            --zx-brand: #16375a; --zx-accent: #ff9f0a; --zx-accent-hover: #ffad2e; --zx-accent-ink: #1b1203; --zx-accent-text: #b85f00;
+            --zx-ok-bg: #edf8f3; --zx-ok-line: #9fd8bf; --zx-ok-ink: #17694f;
+            --zx-warn-bg: #fff7e8; --zx-warn-line: #f5c97a; --zx-warn-ink: #7a4a06;
+            --zx-bad-bg: #fff1f1; --zx-bad-line: #f2a9a9; --zx-bad-ink: #9b2323; --zx-danger: #d23f3f;
+            --zx-overlay: rgba(16, 35, 59, 0.45);
+        }
+        html[data-ui="zx-dark"] {
+            color-scheme: dark;
+            --zx-bg: #0a1a2e; --zx-panel: #0f2440; --zx-card: #14304f; --zx-sunken: #0b1d33; --zx-input: #0a1a2e;
+            --zx-line: rgba(196, 214, 236, 0.14); --zx-line-strong: rgba(196, 214, 236, 0.28);
+            --zx-ink: #eef3fa; --zx-ink-2: #b4c3d6; --zx-ink-3: #8296b0;
+            --zx-brand: #eef3fa; --zx-accent: #ff9f0a; --zx-accent-hover: #ffad2e; --zx-accent-ink: #1b1203; --zx-accent-text: #ffb340;
+            --zx-ok-bg: rgba(79, 209, 165, 0.10); --zx-ok-line: rgba(79, 209, 165, 0.40); --zx-ok-ink: #8ee3c3;
+            --zx-warn-bg: rgba(255, 209, 102, 0.10); --zx-warn-line: rgba(255, 209, 102, 0.40); --zx-warn-ink: #ffd98a;
+            --zx-bad-bg: rgba(255, 107, 107, 0.10); --zx-bad-line: rgba(255, 107, 107, 0.45); --zx-bad-ink: #ffb0b0; --zx-danger: #ff7b7b;
+            --zx-overlay: rgba(2, 7, 14, 0.62);
+        }
+        html[data-ui^="zx"] .zx-only { display: block; }
+        html[data-ui^="zx"] body { background: var(--zx-bg); }
+        html[data-ui^="zx"] #sidebar { background: var(--zx-panel); color: var(--zx-ink); box-shadow: 1px 0 0 var(--zx-line), 4px 0 18px rgba(0, 0, 0, 0.12); }
+        html[data-ui^="zx"] #sidebar h2 { border-bottom: 1px solid var(--zx-line); padding-bottom: 10px; color: var(--zx-ink); }
+        html[data-ui^="zx"] .classic-title { display: none; }
+        html[data-ui^="zx"] .zx-brand { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+        .zx-logo { width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0; display: none; }
+        html[data-ui="zx-dark"] .zx-logo-dark, html[data-ui="zx-light"] .zx-logo-light { display: block; }
+        html[data-ui="zx-light"] .zx-logo-light { border-radius: 0; }
+        .zx-text { display: flex; flex-direction: column; min-width: 0; }
+        .zx-wordmark { font-family: 'Zen Dots', "Microsoft JhengHei", sans-serif; font-weight: normal; font-size: 17px; letter-spacing: 0.08em; line-height: 1.15; color: var(--zx-brand); white-space: nowrap; }
+        .zx-x { color: var(--zx-accent); }
+        .zx-sub { font-size: 11px; font-weight: normal; color: var(--zx-ink-3); }
+        .zx-beta { font-size: 9px; font-weight: bold; letter-spacing: 0.08em; color: var(--zx-accent-text); border: 1px solid currentColor; border-radius: 4px; padding: 0 4px; }
+        html[data-ui^="zx"] .sheet-title-peek .zx-brand { vertical-align: middle; gap: 6px; }
+        html[data-ui^="zx"] .sheet-title-peek .zx-logo { width: 24px; height: 24px; border-radius: 6px; }
+        html[data-ui^="zx"] .sheet-title-peek .zx-wordmark { font-size: 14px; }
+        html[data-ui^="zx"] .sheet-title-peek .zx-sub { display: none; }
+        html[data-ui^="zx"] .sheet-title-peek { color: var(--zx-ink); }
+        html[data-ui^="zx"] .sheet-grip { background: var(--zx-line-strong); }
+        html[data-ui^="zx"] .app-version { font-family: monospace; font-size: 11px; color: var(--zx-ink-3); border: 1px solid var(--zx-line-strong); border-radius: 999px; padding: 0 7px; margin-left: 8px; }
+        html[data-ui^="zx"] .btn-help, html[data-ui^="zx"] .btn-theme { background: transparent; color: var(--zx-ink-2); border: 1px solid var(--zx-line-strong); }
+        html[data-ui^="zx"] .btn-help:hover, html[data-ui^="zx"] .btn-theme:hover { background: var(--zx-sunken); }
+        html[data-ui^="zx"] #toggle-sidebar-btn { background: var(--zx-panel); color: var(--zx-ink); border: 1px solid var(--zx-line-strong); }
+        html[data-ui^="zx"] #toggle-sidebar-btn:hover { background: var(--zx-sunken); }
+
+        html[data-ui^="zx"] .project-panel, html[data-ui^="zx"] .control-panel { background: var(--zx-sunken); border: 1px solid var(--zx-line); border-radius: 10px; }
+        html[data-ui^="zx"] .project-panel > summary, html[data-ui^="zx"] #currentProjectName, html[data-ui^="zx"] .switch-label { color: var(--zx-ink); }
+        html[data-ui^="zx"] .project-panel > summary::after, html[data-ui^="zx"] .project-empty, html[data-ui^="zx"] .project-hint { color: var(--zx-ink-3); }
+        html[data-ui^="zx"] .project-save-status { color: var(--zx-ok-ink); }
+        html[data-ui^="zx"] input[type="checkbox"] { accent-color: var(--zx-accent); }
+        html[data-ui^="zx"] .btn-proj, html[data-ui^="zx"] .project-item .btn-proj-rename { background: transparent; color: var(--zx-ink); border: 1px solid var(--zx-line-strong); }
+        html[data-ui^="zx"] .btn-proj:hover, html[data-ui^="zx"] .project-item .btn-proj-rename:hover { background: var(--zx-card); }
+        html[data-ui^="zx"] .project-item { background: var(--zx-panel); border-color: var(--zx-line); }
+        html[data-ui^="zx"] .project-item.current { border-color: var(--zx-accent); box-shadow: 0 0 0 1px var(--zx-accent); }
+        html[data-ui^="zx"] .project-item-name { color: var(--zx-ink); }
+        html[data-ui^="zx"] .project-item-meta { color: var(--zx-ink-3); }
+        html[data-ui^="zx"] .project-item .btn-proj-open { background: var(--zx-accent); color: var(--zx-accent-ink); }
+        html[data-ui^="zx"] .project-item .btn-proj-del { background: transparent; color: var(--zx-danger); border: 1px solid var(--zx-danger); }
+
+        html[data-ui^="zx"] .area-card { background: var(--zx-card); border: 1px solid var(--zx-line); border-radius: 12px; }
+        html[data-ui^="zx"] .area-title { color: var(--zx-ink); }
+        html[data-ui^="zx"] .label-size-ctrl { background: var(--zx-input); border-color: var(--zx-line-strong); border-radius: 6px; }
+        html[data-ui^="zx"] .label-size-ctrl .lbl-size-btn { background: transparent; color: var(--zx-ink-2); }
+        html[data-ui^="zx"] .label-size-ctrl .lbl-size-btn:hover { background: var(--zx-sunken); }
+        html[data-ui^="zx"] .label-size-ctrl .lbl-size-btn:disabled { color: var(--zx-ink-3); opacity: 0.5; }
+        html[data-ui^="zx"] .lbl-size-value { color: var(--zx-ink); }
+        html[data-ui^="zx"] .area-color-picker { border-color: var(--zx-line-strong); }
+        html[data-ui^="zx"] .btn-vis { background: transparent; color: var(--zx-ink-2); border: 1px solid var(--zx-line-strong); border-radius: 999px; }
+        html[data-ui^="zx"] .btn-vis:hover { background: var(--zx-sunken); }
+        html[data-ui^="zx"] .btn-vis.hidden-state { background: var(--zx-sunken); color: var(--zx-ink-3); border-style: dashed; }
+        html[data-ui^="zx"] .btn-del { background: transparent; color: var(--zx-danger); border: 1px solid var(--zx-danger); }
+        html[data-ui^="zx"] textarea { background: var(--zx-input); color: var(--zx-ink); border-color: var(--zx-line-strong); border-radius: 8px; }
+        html[data-ui^="zx"] textarea::placeholder, html[data-ui^="zx"] .meta-edit input::placeholder { color: var(--zx-ink-3); }
+        html[data-ui^="zx"] textarea:focus, html[data-ui^="zx"] .meta-edit input:focus { outline: none; border-color: var(--zx-accent); box-shadow: 0 0 0 3px rgba(255, 159, 10, 0.22); }
+
+        html[data-ui^="zx"] .btn-add { background: transparent; color: var(--zx-ink-2); border: 1.5px dashed var(--zx-line-strong); border-radius: 10px; }
+        html[data-ui^="zx"] .btn-add:hover { border-color: var(--zx-accent); color: var(--zx-ink); background: transparent; }
+        html[data-ui^="zx"] .btn-parse { background: var(--zx-accent); color: var(--zx-accent-ink); border-radius: 10px; box-shadow: 0 3px 10px rgba(255, 159, 10, 0.35); }
+        html[data-ui^="zx"] .btn-parse:hover { background: var(--zx-accent-hover); box-shadow: 0 4px 14px rgba(255, 159, 10, 0.45); }
+        html[data-ui^="zx"] .btn-flight-path, html[data-ui^="zx"] .btn-kml, html[data-ui^="zx"] .btn-import { background: transparent; color: var(--zx-ink); border: 1px solid var(--zx-line-strong); box-shadow: none; border-radius: 10px; }
+        html[data-ui^="zx"] .btn-flight-path:hover, html[data-ui^="zx"] .btn-kml:hover, html[data-ui^="zx"] .btn-import:hover { background: var(--zx-sunken); transform: none; box-shadow: none; }
+        html[data-ui^="zx"] .btn-clear { background: transparent; color: var(--zx-danger); border: 1px solid var(--zx-line-strong); border-radius: 10px; }
+        html[data-ui^="zx"] .btn-clear:hover { background: var(--zx-bad-bg); border-color: var(--zx-danger); color: var(--zx-danger); }
+        html[data-ui^="zx"] .btn-resort { background: transparent; color: var(--zx-accent-text); border: 1px solid currentColor; }
+        html[data-ui^="zx"] .kml-export-menu { background: var(--zx-panel); border-color: var(--zx-line-strong); }
+        html[data-ui^="zx"] .kml-export-menu button { background: transparent; color: var(--zx-ink); }
+        html[data-ui^="zx"] .kml-export-menu button:hover { background: var(--zx-sunken); }
+
+        html[data-ui^="zx"] .parse-status.ok { background: var(--zx-ok-bg); border-color: var(--zx-ok-line); color: var(--zx-ok-ink); }
+        html[data-ui^="zx"] .parse-status.warn { background: var(--zx-warn-bg); border-color: var(--zx-warn-line); color: var(--zx-warn-ink); }
+        html[data-ui^="zx"] .parse-status.fail { background: var(--zx-bad-bg); border-color: var(--zx-bad-line); color: var(--zx-bad-ink); }
+        html[data-ui^="zx"] .parse-status .coord-preview { color: var(--zx-ink-2); }
+        html[data-ui^="zx"] .report-note { color: var(--zx-ink-3); }
+        html[data-ui^="zx"] #output-section { background: var(--zx-sunken); border-color: var(--zx-line); color: var(--zx-ink); border-radius: 10px; }
+        html[data-ui^="zx"] .area-output { background: var(--zx-panel); border-color: var(--zx-line); border-radius: 10px; }
+        html[data-ui^="zx"] .area-output-header { color: var(--zx-ink); }
+        html[data-ui^="zx"] .btn-copy-single { background: transparent; color: var(--zx-ink); border-color: var(--zx-line-strong); }
+        html[data-ui^="zx"] .btn-copy-single:hover { background: var(--zx-sunken); }
+        html[data-ui^="zx"] .meta-edit label { color: var(--zx-ink-3); }
+        html[data-ui^="zx"] .meta-edit input { background: var(--zx-input); color: var(--zx-ink); border-color: var(--zx-line-strong); }
+        html[data-ui^="zx"] .formatted-text-single { background: var(--zx-input); border-color: var(--zx-line); color: var(--zx-ink); }
+
+        html[data-ui^="zx"] .modal-overlay { background: var(--zx-overlay); }
+        html[data-ui^="zx"] .modal-panel { background: var(--zx-panel); color: var(--zx-ink); }
+        html[data-ui^="zx"] .modal-header, html[data-ui^="zx"] .modal-footer { border-color: var(--zx-line); }
+        html[data-ui^="zx"] .modal-header h3, html[data-ui^="zx"] .modal-body, html[data-ui^="zx"] .guide-section > summary, html[data-ui^="zx"] .guide-quickstart b { color: var(--zx-ink); }
+        html[data-ui^="zx"] .modal-close { color: var(--zx-ink-2); }
+        html[data-ui^="zx"] .modal-close:hover { background: var(--zx-sunken); }
+        html[data-ui^="zx"] .modal-btn-primary { background: var(--zx-accent); color: var(--zx-accent-ink); }
+        html[data-ui^="zx"] .modal-btn-primary:hover { background: var(--zx-accent-hover); }
+        html[data-ui^="zx"] .modal-btn-secondary { background: var(--zx-sunken); color: var(--zx-ink); border: 1px solid var(--zx-line); }
+        html[data-ui^="zx"] .guide-quickstart { background: var(--zx-sunken); border-color: var(--zx-line-strong); }
+        html[data-ui^="zx"] .guide-section, html[data-ui^="zx"] .guide-section[open] > summary { border-color: var(--zx-line); }
+        html[data-ui^="zx"] .guide-note { color: var(--zx-ink-3); }
+        html[data-ui^="zx"] .whatsnew-version, html[data-ui^="zx"] .beta-tag { color: var(--zx-accent-text); }
+        html[data-ui^="zx"] .modal-body code { background: var(--zx-sunken); color: var(--zx-ink); border-radius: 4px; padding: 0 4px; }
+        html[data-ui^="zx"] .install-key { background: var(--zx-sunken); border-color: var(--zx-line-strong); color: var(--zx-ink); }
+        html[data-ui^="zx"] .install-warn { background: var(--zx-warn-bg); border-color: var(--zx-warn-line); color: var(--zx-warn-ink); }
+        html[data-ui^="zx"] .theme-option { background: var(--zx-card); color: var(--zx-ink); border-color: var(--zx-line); }
+        html[data-ui^="zx"] .theme-option:hover { background: var(--zx-sunken); }
+        html[data-ui^="zx"] .theme-option.selected { border-color: var(--zx-accent); background: rgba(255, 159, 10, 0.10); }
+        html[data-ui^="zx"] .theme-option-text small { color: var(--zx-ink-3); }
+
+        @media (max-width: 768px) {
+            .btn-theme { padding: 6px 12px; font-size: 13px; }
+            html[data-ui^="zx"] #sidebar { box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.3); }
+            /* 手機上隱藏「禁航區繪製小工具」副標，標題列才放得下按鈕 */
+            html[data-ui^="zx"] #sidebar h2 .zx-sub { display: none; }
+            html[data-ui^="zx"] #sidebar h2 .zx-logo { width: 28px; height: 28px; }
+            .theme-option { min-height: 56px; }
+        }
+        /* 很窄的手機（≤ 400px）：按鈕只留圖示與短字，Zone X 標題列隱藏版本號與 BETA 字樣，避免擠在一起 */
+        @media (max-width: 400px) {
+            .narrow-hide { display: none; }
+            html[data-ui^="zx"] #sidebar h2 .app-version, html[data-ui^="zx"] .zx-beta { display: none; }
+            html[data-ui^="zx"] #sidebar h2 .zx-wordmark { font-size: 15px; }
+            html[data-ui^="zx"] .sheet-title-peek .zx-wordmark { font-size: 13px; }
+            #themeModal { padding: 20px 16px; }
+            #themeModal .modal-panel { height: auto; max-height: 85dvh; border-radius: 12px; }
+            .leaflet-control-shot-toggle { width: 44px !important; height: 44px !important; line-height: 44px !important; }
+        }
     </style>
 </head>
 <body>
@@ -585,9 +767,9 @@
 <div id="sidebar">
     <div id="sheetHandle" onclick="toggleMobileSheet()">
         <div class="sheet-grip"></div>
-        <span class="sheet-title-peek">禁航區繪製小工具<span class="app-version"></span><button class="btn-help" onclick="event.stopPropagation(); openModal('guideModal')">❓ 說明</button></span>
+        <span class="sheet-title-peek"><span class="classic-title">禁航區繪製小工具</span><span class="zx-brand"><img class="zx-logo zx-logo-dark" src="icons/icon-192.png?v=2" alt=""><img class="zx-logo zx-logo-light" src="icons/logo-globe-light.png" alt=""><span class="zx-text"><span class="zx-wordmark">ZONE <span class="zx-x">X</span></span><span class="zx-sub">禁航區繪製小工具</span></span><span class="zx-beta">BETA</span></span><span class="app-version"></span><button class="btn-help" onclick="event.stopPropagation(); openModal('guideModal')">❓ 說明</button><button class="btn-theme" onclick="event.stopPropagation(); openThemePicker()" title="切換外觀" aria-label="切換外觀">🎨</button></span>
     </div>
-    <h2>禁航區繪製小工具<span class="app-version"></span><button class="btn-help" onclick="openModal('guideModal')">❓ 使用說明</button></h2>
+    <h2><span class="classic-title">禁航區繪製小工具</span><span class="zx-brand"><img class="zx-logo zx-logo-dark" src="icons/icon-192.png?v=2" alt=""><img class="zx-logo zx-logo-light" src="icons/logo-globe-light.png" alt=""><span class="zx-text"><span class="zx-wordmark">ZONE <span class="zx-x">X</span></span><span class="zx-sub">禁航區繪製小工具</span></span><span class="zx-beta">BETA</span></span><span class="app-version"></span><button class="btn-help" onclick="openModal('guideModal')">❓ <span class="narrow-hide">使用</span>說明</button><button class="btn-theme" onclick="openThemePicker()" title="切換外觀" aria-label="切換外觀">🎨<span class="narrow-hide"> 外觀</span></button></h2>
 
     <details class="project-panel" id="projectPanel">
         <summary>📁 專案：<span id="currentProjectName">未命名</span><span class="project-save-status" id="projectSaveStatus"></span></summary>
@@ -772,6 +954,16 @@
             </details>
 
             <details class="guide-section">
+                <summary>🎨 外觀與截圖模式（Beta）</summary>
+                <ul>
+                    <li>標題旁的「🎨 外觀」可以切換：經典版（預設）、Zone X 淺色 Beta、Zone X 深色 Beta。選擇會記在這台裝置上。</li>
+                    <li>Beta 版只換外觀，功能都一樣；地圖上的紅色禁航區和黃字黑底標籤不會改變。不習慣隨時可以切回經典版。</li>
+                    <li>⛶ 截圖模式（只有 Beta 版有）：按地圖右上角的 ⛶，控制面板和地圖上的按鈕全部收起來，只留地圖和禁航區，直接截圖貼到簡報。</li>
+                    <li>離開截圖模式：按左上角的「← 返回」，或電腦按 Esc。「返回」幾秒後會自動淡出，碰一下畫面就會再出現。</li>
+                </ul>
+            </details>
+
+            <details class="guide-section">
                 <summary>📲 安裝成 App</summary>
                 <ul>
                     <li>可以把網站安裝到手機主畫面或電腦桌面，App 名稱是「Zone X」，之後點圖示就能打開，畫面更大、沒有網址列。</li>
@@ -790,7 +982,7 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v13）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
+                    <li>標題旁的版本號（例如 v14）是目前版本；有更新時，打開網頁會跳出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。使用 Esri 衛星圖時，圖資來源為 Esri、Maxar、Earthstar Geographics。</li>
                 </ul>
@@ -816,6 +1008,39 @@
         </div>
     </div>
 </div>
+
+<!-- ===================== 外觀選擇（經典版／Zone X Beta） ===================== -->
+<div id="themeModal" class="modal-overlay" hidden onclick="if (event.target === this) closeModal('themeModal')">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="themeTitle">
+        <div class="modal-header">
+            <h3 id="themeTitle">🎨 外觀</h3>
+            <button class="modal-close" onclick="closeModal('themeModal')" aria-label="關閉">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="theme-options" role="radiogroup" aria-label="選擇外觀">
+                <button class="theme-option" data-theme="classic" role="radio" onclick="setUiTheme('classic')">
+                    <span class="theme-swatch theme-swatch-classic"></span>
+                    <span class="theme-option-text"><b>經典版（預設）</b><small>目前的介面</small></span>
+                </button>
+                <button class="theme-option" data-theme="zx-light" role="radio" onclick="setUiTheme('zx-light')">
+                    <span class="theme-swatch theme-swatch-light"></span>
+                    <span class="theme-option-text"><b>Zone X 淺色 <span class="beta-tag">Beta</span></b><small>白底面板、橘色主按鈕、截圖模式</small></span>
+                </button>
+                <button class="theme-option" data-theme="zx-dark" role="radio" onclick="setUiTheme('zx-dark')">
+                    <span class="theme-swatch theme-swatch-dark"></span>
+                    <span class="theme-option-text"><b>Zone X 深色 <span class="beta-tag">Beta</span></b><small>深藍面板、橘色主按鈕、截圖模式</small></span>
+                </button>
+            </div>
+            <div class="guide-note">Beta 版還在測試中，只換外觀並多了「截圖模式」，所有功能都一樣。地圖上的禁航區（紅色）和邊長標籤（黃字黑底）不會改變。覺得不習慣隨時可以切回經典版，選擇會記在這台裝置上。</div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn-primary" onclick="closeModal('themeModal')">完成</button>
+        </div>
+    </div>
+</div>
+
+<!-- 截圖模式的「返回」按鈕（幾秒後自動淡出，碰一下畫面會再出現） -->
+<button id="shotExitBtn" class="shot-exit-btn" onclick="exitScreenshotMode()" hidden>← 返回</button>
 
 <!-- ===================== 網頁內的確認視窗（取代瀏覽器的系統確認框） ===================== -->
 <div id="confirmModal" class="modal-overlay" hidden onclick="if (event.target === this) closeConfirmDialog(false)">
@@ -862,10 +1087,14 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v13';
+    const APP_VERSION = 'v14';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v14', items: [
+            '新增「🎨 外觀」按鈕，可以試用 Zone X 淺色或深色的新介面（Beta），預設仍是原本的經典版。',
+            'Beta 版多了「⛶ 截圖模式」：一鍵收起所有按鈕，畫面只留地圖和禁航區，方便截圖貼到簡報。'
+        ] },
         { version: 'v13', items: ['衛星底圖改回 Google 當預設，色調跟以前一樣。', 'Google 衛星圖載不出來時，會自動改用 Esri 衛星圖，地圖不會空白。'] },
         { version: 'v12', items: [
             '衛星底圖改用 Esri（官方開放的圖資），比較不會突然變空白；原本的 Google 衛星圖還在圖層選單裡當備用。',
@@ -4119,7 +4348,8 @@ ${coords}
 
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
-            ['guideModal', 'whatsNewModal', 'installModal'].forEach(closeModal);
+            ['guideModal', 'whatsNewModal', 'installModal', 'themeModal'].forEach(closeModal);
+            if (document.body.classList.contains('shot-mode')) exitScreenshotMode();
             if (!document.getElementById('confirmModal').hidden) closeConfirmDialog(false);
         }
     });
@@ -4155,6 +4385,90 @@ ${coords}
         }
         try { localStorage.setItem(LAST_SEEN_VERSION_KEY, APP_VERSION); } catch (e) {}
     }
+
+    // ===================== 外觀切換（經典版預設，Zone X 淺色／深色為 Beta） =====================
+    const UI_THEME_KEY = 'nofly-ui-theme';
+    const UI_THEMES = ['classic', 'zx-light', 'zx-dark'];
+
+    function getUiTheme() {
+        const t = document.documentElement.getAttribute('data-ui');
+        return UI_THEMES.includes(t) ? t : 'classic';
+    }
+
+    function applyUiTheme(theme) {
+        if (theme === 'classic') document.documentElement.removeAttribute('data-ui');
+        else document.documentElement.setAttribute('data-ui', theme);
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', theme === 'zx-dark' ? '#0f2440' : (theme === 'zx-light' ? '#ffffff' : '#16375a'));
+        document.querySelectorAll('.theme-option').forEach(btn => {
+            const on = btn.dataset.theme === theme;
+            btn.classList.toggle('selected', on);
+            btn.setAttribute('aria-checked', on ? 'true' : 'false');
+        });
+        // 經典版沒有截圖模式，切回來時順便離開
+        if (theme === 'classic' && document.body.classList.contains('shot-mode')) exitScreenshotMode();
+    }
+
+    function setUiTheme(theme) {
+        if (!UI_THEMES.includes(theme)) theme = 'classic';
+        try { localStorage.setItem(UI_THEME_KEY, theme); } catch (e) {}
+        applyUiTheme(theme);
+    }
+
+    function openThemePicker() {
+        applyUiTheme(getUiTheme());
+        openModal('themeModal');
+    }
+
+    // ===================== 截圖模式（Zone X Beta）：只留地圖和禁航區，方便截圖貼到簡報 =====================
+    let shotFadeTimer = null;
+
+    function showShotExitBtn() {
+        const btn = document.getElementById('shotExitBtn');
+        btn.hidden = false;
+        btn.classList.remove('faded');
+        clearTimeout(shotFadeTimer);
+        shotFadeTimer = setTimeout(() => btn.classList.add('faded'), 3000);
+    }
+
+    function enterScreenshotMode() {
+        cancelActiveDrawTool();
+        closeKmlExportMenu();
+        document.body.classList.add('shot-mode');
+        showShotExitBtn();
+        setTimeout(() => map.invalidateSize(), 50);
+    }
+
+    function exitScreenshotMode() {
+        document.body.classList.remove('shot-mode');
+        clearTimeout(shotFadeTimer);
+        const btn = document.getElementById('shotExitBtn');
+        btn.hidden = true;
+        btn.classList.remove('faded');
+        setTimeout(() => map.invalidateSize(), 50);
+    }
+
+    // 截圖模式中碰一下地圖，讓「返回」再出現幾秒
+    document.getElementById('map').addEventListener('pointerdown', () => {
+        if (document.body.classList.contains('shot-mode')) showShotExitBtn();
+    });
+
+    const ScreenshotModeControl = L.Control.extend({
+        options: { position: 'topright' },
+        onAdd: function () {
+            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control zx-only');
+            const link = L.DomUtil.create('a', 'leaflet-control-shot-toggle', container);
+            link.innerHTML = '⛶';
+            link.href = '#';
+            link.title = '截圖模式：隱藏所有按鈕，只留地圖和禁航區';
+            link.setAttribute('aria-label', '截圖模式');
+            L.DomEvent.disableClickPropagation(container);
+            L.DomEvent.on(link, 'click', L.DomEvent.stop).on(link, 'click', enterScreenshotMode);
+            return container;
+        }
+    });
+    new ScreenshotModeControl().addTo(map);
+    applyUiTheme(getUiTheme());
 
     // ===================== 網頁內確認視窗 =====================
     let confirmDialogOnOk = null;
