@@ -769,7 +769,10 @@
         html[data-ui^="zx"] .point-edit-popup .btn-vis { color: var(--zx-ink); }
         html[data-ui^="zx"] .btn-label-del { background: transparent; color: var(--zx-danger); border: 1px solid var(--zx-danger); }
 
-        /* ---------- Beta：地圖右下角的復原／重做 ---------- */
+        /* ---------- Beta：地圖左上角的復原／重做 ---------- */
+        /* 電腦：排在收合側邊欄的 ◀ 按鈕右邊（◀ 在地圖內左 10px、上 15px、32×32），收合時跟著地圖一起移動 */
+        html[data-ui^="zx"] .leaflet-top.leaflet-left { top: 11px; left: 50px; }
+        html[data-ui^="zx"] .leaflet-top.leaflet-left .leaflet-control { margin: 0; }
         html[data-ui^="zx"] .leaflet-control.zx-history { display: flex; border: none; border-radius: 12px; overflow: hidden; background: rgba(255, 255, 255, 0.95); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28); }
         html[data-ui^="zx"] .zx-history a { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: none; border-radius: 0; background: transparent; }
         html[data-ui^="zx"] .zx-history a + a { border-left: 1px solid #e2e8f0; }
@@ -900,7 +903,8 @@
             .cp-hex, .cp-preview { height: 40px; }
             .cp-preview { width: 40px; }
             .cp-back, .cp-apply { min-height: 44px; font-size: 14px; }
-            /* 復原／重做放在底部面板上方，拇指好按 */
+            /* 手機：放在地圖左上角，面板展開時也不會被擋住；圖資來源標示移到面板上方 */
+            html[data-ui^="zx"] .leaflet-top.leaflet-left { top: calc(10px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); }
             html[data-ui^="zx"] .leaflet-bottom.leaflet-right { bottom: calc(76px + env(safe-area-inset-bottom)); }
             html[data-ui^="zx"] .zx-history a { width: 48px; height: 46px; }
             html[data-ui^="zx"] #sidebar { box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.3); }
@@ -1125,7 +1129,7 @@
             <details class="guide-section">
                 <summary>↩️ 復原／重做</summary>
                 <ul>
-                    <li>地圖右下角的兩顆箭頭：左邊復原（回到上一步），右邊重做。手機上在面板上方，拇指好按。</li>
+                    <li>地圖左上角的兩顆箭頭：左邊復原（回到上一步），右邊重做。手機上面板展開時也不會被擋住；電腦版在收合側邊欄的 ◀ 按鈕右邊。</li>
                     <li>電腦也可以按 Ctrl+Z 復原、Ctrl+Shift+Z 或 Ctrl+Y 重做（Mac 用 ⌘）；在輸入框裡打字時，Ctrl+Z 只會復原文字。</li>
                     <li>可以復原：繪製禁航區、改原文、改顏色、調標籤字體、新增或刪除卡片、測量與標記、飛行路徑、清空。最多 60 步。</li>
                     <li>不會記住：拖曳過的邊長標籤位置、按過「隱藏」的禁航區。換專案或開新專案後，復原紀錄會清空。</li>
@@ -1207,7 +1211,7 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v24）是目前版本；有更新時，打開網站會在歡迎卡上列出更新重點。</li>
+                    <li>標題旁的版本號（例如 v25）是目前版本；有更新時，打開網站會在歡迎卡上列出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。使用 Esri 衛星圖時，圖資來源為 Esri、Maxar、Earthstar Geographics。</li>
                 </ul>
@@ -1373,10 +1377,11 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v24';
+    const APP_VERSION = 'v25';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v25', items: ['「復原／重做」移到地圖左上角，手機展開面板時也不會被擋住；電腦版排在收合側邊欄按鈕旁邊，收合時會跟著移動。'] },
         { version: 'v24', items: ['外觀統一使用新版 Zone X 介面（淺色為預設，也可以選深色 Beta）。'] },
         { version: 'v23', items: ['使用說明改寫成新版 Zone X 介面的操作方式，新增「面板底部的按鈕」「復原／重做」「截圖模式」等說明。'] },
         { version: 'v22', items: [
@@ -5191,9 +5196,9 @@ ${coords}
         if (r) { r.classList.toggle('disabled', !redoStack.length); r.setAttribute('aria-disabled', redoStack.length ? 'false' : 'true'); }
     }
 
-    // 地圖右下角的復原／重做按鈕（手機在底部面板上方，拇指好按；電腦在地圖右下角，也可以用 Ctrl+Z／Ctrl+Shift+Z）
+    // 地圖左上角的復原／重做按鈕（手機面板展開時也看得到；電腦排在 ◀ 收合鈕右邊，也可以用 Ctrl+Z／Ctrl+Shift+Z）
     const HistoryControl = L.Control.extend({
-        options: { position: 'bottomright' },
+        options: { position: 'topleft' },
         onAdd: function () {
             const c = L.DomUtil.create('div', 'leaflet-bar leaflet-control zx-only zx-history');
             c.innerHTML = '<a href="#" id="undoBtn" class="disabled" title="復原（Ctrl+Z）" aria-label="復原" role="button"><svg class="zx-ico" aria-hidden="true"><use href="#zxi-undo"/></svg></a>' +
