@@ -557,6 +557,8 @@
         .point-edit-popup .popup-coord-label {
             font-size: 11px; color: #718096; margin-bottom: 3px;
         }
+        .point-edit-popup .popup-coord-hint { font-size: 11px; line-height: 1.5; color: #718096; margin-top: 4px; text-align: left; white-space: normal; }
+        html[data-ui^="zx"] .point-edit-popup .popup-coord-hint { color: var(--zx-ink-3); }
         .point-edit-popup .popup-coord-field input[type="text"] {
             width: 190px; margin-bottom: 0;
         }
@@ -1150,6 +1152,8 @@
                     <li>📏 測距：電腦逐點點選，點最後一點或雙擊結束；手機點兩下（起點、終點）就完成。</li>
                     <li>⭕ 圓形、♦️ 矩形：在地圖上按住拖曳畫出，會標示半徑或寬高。</li>
                     <li>📍 點位：點地圖放下點位，旁邊會打開小視窗，直接輸入名稱後按「✔ 套用」；之後點標記也可以修改名稱、經緯度、是否顯示名稱，或刪除。</li>
+                    <li>手機快速新增點位：在地圖上長按約半秒，就會在那裡放下點位並打開小視窗。</li>
+                    <li>點位的經緯度可以只用空白分隔：十進位打「26.344 118.234」，度分秒打「24 12 35 123 11 56」（度 分 秒 度 分 秒），度分打「24 12.5 123 11.9」。南緯、西經在度數前加負號。也支援「21.5, 121.5」或「21°30'00"N, 121°30'00"E」。</li>
                     <li>點一下畫好的圖形可以刪除；🗑️ 可一次清除所有測量圖形（不影響禁航區）。</li>
                     <li>再按一次同一個工具可以取消；使用中的工具會亮起來。</li>
                 </ul>
@@ -1211,7 +1215,7 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v25）是目前版本；有更新時，打開網站會在歡迎卡上列出更新重點。</li>
+                    <li>標題旁的版本號（例如 v26）是目前版本；有更新時，打開網站會在歡迎卡上列出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。使用 Esri 衛星圖時，圖資來源為 Esri、Maxar、Earthstar Geographics。</li>
                 </ul>
@@ -1377,10 +1381,14 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v25';
+    const APP_VERSION = 'v26';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v26', items: [
+            '手機在地圖上長按約半秒，就能直接新增點位。',
+            '點位經緯度可以只用空白分隔：例如「26.344 118.234」或度分秒「24 12 35 123 11 56」。'
+        ] },
         { version: 'v25', items: ['「復原／重做」移到地圖左上角，手機展開面板時也不會被擋住；電腦版排在收合側邊欄按鈕旁邊，收合時會跟著移動。'] },
         { version: 'v24', items: ['外觀統一使用新版 Zone X 介面（淺色為預設，也可以選深色 Beta）。'] },
         { version: 'v23', items: ['使用說明改寫成新版 Zone X 介面的操作方式，新增「面板底部的按鈕」「復原／重做」「截圖模式」等說明。'] },
@@ -1776,13 +1784,7 @@
         } else if (type === 'rectangle') {
             registerRectangle(layer);
         } else if (type === 'marker') {
-            // 不用瀏覽器的輸入視窗（LINE 等內建瀏覽器會擋掉），直接打開點位的編輯小視窗讓使用者改名
-            const pointObj = promptAndRegisterPoint(layer.getLatLng(), `點位 ${drawnFeatures.points.length + 1}`);
-            pointObj.marker.openPopup();
-            setTimeout(() => {
-                const nameInput = document.getElementById(`point-edit-${pointObj.id}-name`);
-                if (nameInput) { nameInput.focus(); nameInput.select(); }
-            }, 60);
+            addPointAt(layer.getLatLng());
         }
 
         // 完成一次繪製後自動回到「未選取工具」狀態，避免誤觸連續繪製
@@ -1838,8 +1840,31 @@
 
     // 點位經緯度輸入解析：同時支援十進位與度分秒（含中文北緯/東經），格式為「緯度, 經度」
     // 重複使用檔案既有的 parseSingleCoordinate / normalizeChineseCoordText（禁航區座標解析已驗證過的邏輯）
+    // 簡易寫法：全部用空白分隔的數字
+    //   2 個＝十進位「緯度 經度」，例如 26.344 118.234
+    //   4 個＝度分「度 分 度 分」，例如 24 12.5 123 11.9
+    //   6 個＝度分秒「度 分 秒 度 分 秒」，例如 24 12 35 123 11 56
+    // 南緯、西經在度數前加負號，例如 -33 52 10 151 12 30
+    function parseSpaceSeparatedLatLon(text) {
+        const tokens = text.trim().split(/\s+/);
+        if (![2, 4, 6].includes(tokens.length) || !tokens.every(t => /^-?\d+(\.\d+)?$/.test(t))) return undefined;
+        const toDeg = parts => {
+            const negative = parts[0].startsWith('-');
+            const [d, m = 0, sec = 0] = parts.map(t => Math.abs(parseFloat(t)));
+            if (m >= 60 || sec >= 60) return NaN;
+            return (negative ? -1 : 1) * (d + m / 60 + sec / 3600);
+        };
+        const half = tokens.length / 2;
+        const lat = half === 1 ? parseFloat(tokens[0]) : toDeg(tokens.slice(0, half));
+        const lon = half === 1 ? parseFloat(tokens[1]) : toDeg(tokens.slice(half));
+        if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
+        return { lat, lon };
+    }
+
     function parseLatLonInput(text) {
         if (!text || !text.trim()) return null;
+        const simple = parseSpaceSeparatedLatLon(text);
+        if (simple !== undefined) return simple;
         let cleaned = normalizeChineseCoordText(text.trim());
         cleaned = cleaned.replace(/、/g, ',').replace(/，/g, ',');
         const parts = cleaned.split(',').map(s => s.trim()).filter(Boolean);
@@ -1980,6 +2005,25 @@
         scheduleWorkspaceSave();
     }
 
+    // 新增一個點位並打開它的編輯小視窗（不用瀏覽器的輸入視窗，LINE 等內建瀏覽器會擋掉）
+    function addPointAt(latlng) {
+        const pointObj = promptAndRegisterPoint(latlng, `點位 ${drawnFeatures.points.length + 1}`);
+        pointObj.marker.openPopup();
+        setTimeout(() => {
+            const nameInput = document.getElementById(`point-edit-${pointObj.id}-name`);
+            if (nameInput) { nameInput.focus(); nameInput.select(); }
+        }, 60);
+        return pointObj;
+    }
+
+    // 手機／觸控：在地圖上長按約半秒，直接在那裡新增點位（跟測量工具的「點位」一樣）
+    map.on('contextmenu', e => {
+        const touch = window.matchMedia('(pointer: coarse)').matches || isMobileLayout();
+        if (!touch || activeDrawHandler || document.body.classList.contains('shot-mode')) return;
+        if (navigator.vibrate) { try { navigator.vibrate(25); } catch (err) {} }
+        addPointAt(e.latlng);
+    });
+
     // --- 點位（標示點位＋可命名／顯示或隱藏／編輯）---
     function promptAndRegisterPoint(latlng, presetName, presetVisible) {
         const name = (presetName !== undefined && presetName !== '') ? presetName : '未命名點位';
@@ -2028,8 +2072,9 @@
                 <input type="text" id="${popupId}-name" value="${escapeAttr(featureObj.name)}">
                 <label><input type="checkbox" id="${popupId}-vis" ${featureObj.visible ? 'checked' : ''}> 顯示名稱標籤</label>
                 <div class="popup-coord-field">
-                    <div class="popup-coord-label">經緯度（十進位或度分秒皆可）</div>
-                    <input type="text" id="${popupId}-coord" value="${escapeAttr(currentCoordText)}" placeholder="例如: 21.5, 121.5 或 21°30'00&quot;N,121°30'00&quot;E">
+                    <div class="popup-coord-label">經緯度</div>
+                    <input type="text" id="${popupId}-coord" value="${escapeAttr(currentCoordText)}" placeholder="例如 26.344 118.234" autocomplete="off" spellcheck="false">
+                    <div class="popup-coord-hint">用空白分隔即可<br>十進位：26.344 118.234<br>度分秒：24 12 35 123 11 56</div>
                 </div>
                 <div class="popup-btn-row">
                     <button class="btn-vis" onclick="applyPointEdit(${featureObj.id})">✔ 套用</button>
@@ -2052,7 +2097,7 @@
         // 先驗證經緯度欄位，格式錯誤就中止並提示，不套用任何變更，避免部分套用造成混淆
         const parsed = parseLatLonInput(coordInput.value);
         if (coordInput.value.trim() && !parsed) {
-            alert('經緯度格式無法辨識，請確認格式（例如: 21.5, 121.5 或 21°30\'00"N,121°30\'00"E）');
+            alert('經緯度格式無法辨識，或超出範圍（緯度 -90～90、經度 -180～180）。\n\n可以這樣輸入：\n十進位：26.344 118.234\n度分秒：24 12 35 123 11 56\n也支援 21.5, 121.5 或 21°30\'00"N, 121°30\'00"E');
             return;
         }
 
