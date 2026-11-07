@@ -14,12 +14,11 @@
     <meta name="apple-mobile-web-app-title" content="Zone X">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <script>
-        // 外觀：Zone X 淺色（預設）／Zone X 深色 Beta／經典版。在畫面出來前就套用，避免閃一下。
-        // 沒選過的人一律用 Zone X 淺色；選過「經典版」或「深色」的人維持原本的選擇
+        // 外觀：Zone X 淺色（預設）／Zone X 深色 Beta。在畫面出來前就套用，避免閃一下。
+        // 經典版目前不開放（程式保留但不提供選擇）；以前選過經典版的人一律改用 Zone X 淺色
         (function () {
             var t = null;
             try { t = localStorage.getItem('nofly-ui-theme'); } catch (e) {}
-            if (t === 'classic') return;
             document.documentElement.setAttribute('data-ui', t === 'zx-dark' ? 'zx-dark' : 'zx-light');
         })();
     </script>
@@ -1044,7 +1043,6 @@
                     <li>按卡片上的「📋 複製簡報文字」貼到簡報；要截地圖的話，按地圖右上角的 ⛶ 進入截圖模式。</li>
                 </ol>
                 <div class="guide-note">手機版：控制面板在畫面下方，點一下標題列或往上拖就能展開。</div>
-                <div class="guide-note">以下以預設的「Zone X」介面說明；使用「經典版」時，不同的地方會另外註明。</div>
             </div>
 
             <details class="guide-section">
@@ -1089,7 +1087,6 @@
                     <li>👁 顯示／🙈 隱藏：暫時在地圖上隱藏這個禁航區。</li>
                     <li>📋 複製簡報文字：繪製成功後出現在解析結果下方，按一下就複製好這個禁航區的簡報文字。</li>
                     <li>原文框右下角可以拖曳調整高度。</li>
-                    <li>經典版：顏色是方形色塊，點了會打開手機或電腦內建的選色器；沒有「複製簡報文字」按鈕（改在下方的簡報文字區複製）。</li>
                 </ul>
             </details>
 
@@ -1101,7 +1098,6 @@
                     <li>🗑️ 清空：清空所有卡片的原文和地圖上的禁航區、飛行路徑，會先跟你確認；已存的專案不會被刪除，清空後 10 秒內可以按「復原」。很窄的手機上只顯示垃圾桶圖示。</li>
                     <li>⋯ 更多：匯出禁航區 KML、匯出測量與標記 KML、匯入 KML。</li>
                     <li>這排按鈕固定在面板最下面，往下捲也一直看得到。</li>
-                    <li>經典版：按鈕在面板下方分開排列，名稱是「🪄 繪製禁航區」「🚀 繪製飛行路徑」「📤 匯出 KML」「📥 匯入 KML」「🗑️ 全部清空」。</li>
                 </ul>
             </details>
 
@@ -1111,7 +1107,6 @@
                     <li>每個禁航區會自動產生一段簡報用文字，按卡片上的「📋 複製簡報文字」即可複製，直接貼到簡報。</li>
                     <li>顯示「XX」代表原文中找不到，貼到簡報後請自行補上。</li>
                     <li>NOTAM 的 B)／C) 時間會自動換算成台灣時間（+8 小時）。</li>
-                    <li>經典版：面板下方有「PPT 後製專用文字格式」，可以直接修改標題、海域、時間、性質（多邊形另有管制類型），再按「📋 複製本區文字」。需要修改文字時可以切到經典版。</li>
                 </ul>
             </details>
 
@@ -1124,7 +1119,6 @@
                     <li>滑鼠移到禁航區上會顯示「禁航區 #N」。</li>
                     <li>邊長標籤可以拖曳移位；點一下標籤可以刪除（電腦也可以按 Delete 鍵）。</li>
                     <li>電腦版可按左上角 ◀ 收合側邊欄，讓地圖更大。</li>
-                    <li>經典版：「顯示禁航區尺寸／ADIZ／發射場」三個勾選在面板上方，地圖右上角只有圖層和 📐 兩顆按鈕。</li>
                 </ul>
             </details>
 
@@ -1135,7 +1129,6 @@
                     <li>電腦也可以按 Ctrl+Z 復原、Ctrl+Shift+Z 或 Ctrl+Y 重做（Mac 用 ⌘）；在輸入框裡打字時，Ctrl+Z 只會復原文字。</li>
                     <li>可以復原：繪製禁航區、改原文、改顏色、調標籤字體、新增或刪除卡片、測量與標記、飛行路徑、清空。最多 60 步。</li>
                     <li>不會記住：拖曳過的邊長標籤位置、按過「隱藏」的禁航區。換專案或開新專案後，復原紀錄會清空。</li>
-                    <li>經典版沒有這個功能。</li>
                 </ul>
             </details>
 
@@ -1144,7 +1137,6 @@
                 <ul>
                     <li>按地圖右上角的 ⛶，控制面板和地圖上的按鈕全部收起來，只留地圖和禁航區，直接截圖貼到簡報。</li>
                     <li>離開：按左上角的「← 返回」，或電腦按 Esc。「返回」幾秒後會自動淡出，碰一下畫面就會再出現。</li>
-                    <li>經典版沒有這個功能。</li>
                 </ul>
             </details>
 
@@ -1162,7 +1154,7 @@
             <details class="guide-section">
                 <summary>🚀 飛行路徑</summary>
                 <ul>
-                    <li>按面板底部的「🚀 飛行路徑」（經典版是「🚀 繪製飛行路徑」），會依禁航區位置畫出一條推估方向的直線。</li>
+                    <li>按面板底部的「🚀 飛行路徑」，會依禁航區位置畫出一條推估方向的直線。</li>
                     <li>兩個以上禁航區：穿過各區中心；單一禁航區：沿它的長邊方向。單一圓形無法判斷方向。</li>
                     <li>只用地圖上顯示中的禁航區計算；按「🙈 隱藏」的不會算進去。</li>
                     <li>點一下路徑線可以刪除。飛行路徑會跟著專案一起儲存，重新打開專案時會自動畫回來。</li>
@@ -1173,7 +1165,7 @@
                 <summary>💾 專案（存檔）</summary>
                 <ul>
                     <li>「📁 專案」可以另存為新專案、開新專案，也可以在清單中開啟、改名、刪除。</li>
-                    <li>開啟中的專案會自動儲存。重新打開網站時會出現歡迎卡，選「繼續上次的專案」或「開新的空白專案」（經典版是跳出確認視窗詢問）。</li>
+                    <li>開啟中的專案會自動儲存。重新打開網站時會出現歡迎卡，選「繼續上次的專案」或「開新的空白專案」。</li>
                     <li>資料只存在這台裝置的這個瀏覽器，換裝置、換瀏覽器或清除瀏覽器資料就看不到。共用電腦請留意。</li>
                     <li>⬇️ 匯出備份：把所有專案下載成一個 .json 檔；⬆️ 匯入備份：把備份檔的專案加回清單（已有的不會重複）。可以用來換手機、或在 iPhone 的 App 和 Safari 之間搬資料。</li>
                 </ul>
@@ -1182,7 +1174,7 @@
             <details class="guide-section">
                 <summary>📤 KML 匯出／匯入</summary>
                 <ul>
-                    <li>在面板底部的「⋯ 更多」裡（經典版是面板下方的「📤 匯出 KML」「📥 匯入 KML」按鈕）。</li>
+                    <li>在面板底部的「⋯ 更多」裡。</li>
                     <li>📤 匯出：可選「禁航區」或「測量與標記」，下載後可以用 Google Earth 開啟。</li>
                     <li>📥 匯入 KML：把測量線、圓形、矩形和點位匯入地圖。</li>
                 </ul>
@@ -1191,10 +1183,8 @@
             <details class="guide-section">
                 <summary>🎨 外觀</summary>
                 <ul>
-                    <li>標題旁的「🎨」可以切換：Zone X 淺色（預設）、Zone X 深色（Beta，測試中）、經典版（原本的舊版介面）。選擇會記在這台裝置上。</li>
-                    <li>地圖上的紅色禁航區和黃字黑底標籤在每種外觀都一樣。</li>
-                    <li>Zone X 介面才有：底部固定按鈕列、卡片上的複製簡報文字、顏色面板、復原／重做、截圖模式、開網站時的歡迎卡、簡潔的線條圖示。</li>
-                    <li>經典版才有：可以直接修改的簡報文字欄位。</li>
+                    <li>標題旁的「🎨」可以切換：Zone X 淺色（預設）、Zone X 深色（Beta，測試中）。選擇會記在這台裝置上。</li>
+                    <li>地圖上的紅色禁航區和黃字黑底標籤在兩種外觀都一樣。</li>
                 </ul>
             </details>
 
@@ -1206,7 +1196,7 @@
                     <li>Android：Chrome 會出現「立即安裝」按鈕；沒有的話點右上角 ⋮ →「安裝應用程式」或「加到主畫面」。</li>
                     <li>電腦：Chrome／Edge 網址列右側的安裝圖示，或選單裡的「安裝」。</li>
                     <li>從 LINE、Facebook 點開的網頁不能安裝，要先改用 Safari 或 Chrome 開啟。</li>
-                    <li>手機打開網站時，歡迎卡上會有「📲 安裝成 App」（經典版會另外跳出安裝提醒），可以選「稍後再說」（3 天內不再提醒）或「不要再提醒」。</li>
+                    <li>手機打開網站時，歡迎卡上會有「📲 安裝成 App」，可以選「稍後再說」（3 天內不再提醒）或「不要再提醒」。</li>
                     <li>iPhone 注意：安裝後的 App 和 Safari 的專案資料是分開存的，不會互通；可以用專案的「匯出備份／匯入備份」搬過去。</li>
                     <li>App 改名或換圖示後，iPhone 要刪掉主畫面圖示再重新加入才會更新；Android 通常會自動更新。</li>
                     <li>安裝後一樣會自動拿到最新版本；沒有網路時也能打開上次用過的畫面（但地圖底圖需要網路）。</li>
@@ -1217,7 +1207,7 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v23）是目前版本；有更新時，打開網站會在歡迎卡上列出更新重點（經典版會跳出更新重點視窗）。</li>
+                    <li>標題旁的版本號（例如 v24）是目前版本；有更新時，打開網站會在歡迎卡上列出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。使用 Esri 衛星圖時，圖資來源為 Esri、Maxar、Earthstar Geographics。</li>
                 </ul>
@@ -1244,7 +1234,7 @@
     </div>
 </div>
 
-<!-- ===================== 外觀選擇（經典版／Zone X Beta） ===================== -->
+<!-- ===================== 外觀選擇（Zone X 淺色／深色 Beta） ===================== -->
 <div id="themeModal" class="modal-overlay" hidden onclick="if (event.target === this) closeModal('themeModal')">
     <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="themeTitle">
         <div class="modal-header">
@@ -1261,12 +1251,8 @@
                     <span class="theme-swatch theme-swatch-dark"></span>
                     <span class="theme-option-text"><b>Zone X 深色 <span class="beta-tag">Beta</span></b><small>深藍面板、橘色主按鈕、截圖模式</small></span>
                 </button>
-                <button class="theme-option" data-theme="classic" role="radio" onclick="setUiTheme('classic')">
-                    <span class="theme-swatch theme-swatch-classic"></span>
-                    <span class="theme-option-text"><b>經典版</b><small>原本的舊版介面</small></span>
-                </button>
             </div>
-            <div class="guide-note">預設是 Zone X 淺色。深色版還在測試（Beta）。地圖上的禁航區（紅色）和邊長標籤（黃字黑底）在每種外觀都一樣。想用回原本的介面可以選「經典版」，選擇會記在這台裝置上。</div>
+            <div class="guide-note">預設是 Zone X 淺色；深色版還在測試（Beta）。地圖上的禁航區（紅色）和邊長標籤（黃字黑底）在兩種外觀都一樣。選擇會記在這台裝置上。</div>
         </div>
         <div class="modal-footer">
             <button class="modal-btn-primary" onclick="closeModal('themeModal')">完成</button>
@@ -1387,14 +1373,14 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v23';
+    const APP_VERSION = 'v24';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
-        { version: 'v23', items: ['使用說明改寫成新版 Zone X 介面的操作方式，新增「面板底部的按鈕」「復原／重做」「截圖模式」等說明；經典版不同的地方另外註明。'] },
+        { version: 'v24', items: ['外觀統一使用新版 Zone X 介面（淺色為預設，也可以選深色 Beta）。'] },
+        { version: 'v23', items: ['使用說明改寫成新版 Zone X 介面的操作方式，新增「面板底部的按鈕」「復原／重做」「截圖模式」等說明。'] },
         { version: 'v22', items: [
-            '預設介面改為新版「Zone X 淺色」：白底面板、線條圖示、截圖模式、復原／重做都直接可以用。',
-            '想用回原本的介面，按標題旁的「🎨」選「經典版」即可，選擇會記在這台裝置上。'
+            '預設介面改為新版「Zone X 淺色」：白底面板、線條圖示、截圖模式、復原／重做都直接可以用。'
         ] },
         { version: 'v21', items: ['Zone X Beta：「自訂顏色」改成網站自己的色盤，可以拖曳挑任何顏色或輸入色碼，不再跳出手機系統的選色視窗。'] },
         { version: 'v20', items: ['修正：切換過外觀後，地圖右下角「復原／重做」按鈕的圖示會不見。'] },
@@ -4105,7 +4091,7 @@
             let ok = false;
             try { ok = document.execCommand('copy'); } catch (e) {}
             ta.remove();
-            if (ok) done(); else alert('複製失敗，請改用經典版的簡報文字區手動複製。');
+            if (ok) done(); else alert('複製失敗，請再按一次「複製簡報文字」，或重新整理網頁後再試。');
         };
         if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
         else fallback();
@@ -5020,11 +5006,12 @@ ${coords}
 
     // ===================== 外觀切換（經典版預設，Zone X 淺色／深色為 Beta） =====================
     const UI_THEME_KEY = 'nofly-ui-theme';
-    const UI_THEMES = ['classic', 'zx-light', 'zx-dark'];
+    // 經典版（'classic'）目前不開放，只保留淺色與深色
+    const UI_THEMES = ['zx-light', 'zx-dark'];
 
     function getUiTheme() {
         const t = document.documentElement.getAttribute('data-ui');
-        return UI_THEMES.includes(t) ? t : 'classic';
+        return UI_THEMES.includes(t) ? t : 'zx-light';
     }
 
     function applyUiTheme(theme) {
@@ -5081,7 +5068,7 @@ ${coords}
 
 
     function setUiTheme(theme) {
-        if (!UI_THEMES.includes(theme)) theme = 'classic';
+        if (!UI_THEMES.includes(theme)) theme = 'zx-light';
         try { localStorage.setItem(UI_THEME_KEY, theme); } catch (e) {}
         applyUiTheme(theme);
     }
