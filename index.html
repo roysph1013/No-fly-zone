@@ -562,16 +562,6 @@
         .point-edit-popup .popup-coord-field input[type="text"] {
             width: 190px; margin-bottom: 0;
         }
-        .point-edit-popup .popup-coord-row { display: flex; gap: 6px; align-items: center; }
-        .point-edit-popup .popup-coord-row input[type="text"] { width: 160px; flex: 1; min-width: 0; }
-        .point-edit-popup .btn-locate { flex-shrink: 0; width: 34px; height: 30px; padding: 0; background: #ffffff; color: #2b6cb0; border: 1px solid #cbd5e0; border-radius: 6px; }
-        .point-edit-popup .btn-locate:hover { background: #edf2f7; }
-        .point-edit-popup .btn-locate .locate-ico { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
-        .point-edit-popup .btn-locate.loading .locate-ico { animation: locate-spin 1s linear infinite; }
-        @keyframes locate-spin { to { transform: rotate(360deg); } }
-        html[data-ui^="zx"] .point-edit-popup .btn-locate { background: var(--zx-input); color: var(--zx-accent-text); border-color: var(--zx-line-strong); }
-        html[data-ui^="zx"] .point-edit-popup .btn-locate:hover { background: var(--zx-sunken); }
-        @media (max-width: 768px) { .point-edit-popup .btn-locate { width: 40px; height: 36px; } }
 
         /* KML 匯出選擇選單 */
         .kml-export-menu {
@@ -1163,7 +1153,7 @@
                     <li>⭕ 圓形、♦️ 矩形：在地圖上按住拖曳畫出，會標示半徑或寬高。</li>
                     <li>📍 點位：點地圖放下點位，旁邊會打開小視窗，直接輸入名稱後按「✔ 套用」；之後點標記也可以修改名稱、經緯度、是否顯示名稱，或刪除。</li>
                     <li>手機快速新增點位：在地圖上長按約半秒，就會在那裡放下點位並打開小視窗。</li>
-                    <li>點位小視窗經緯度旁的定位按鈕（⌖）：填入你目前所在位置的經緯度（第一次使用會詢問是否允許定位），再按「套用」把點位移過去。</li>
+                    <li>點一下點位小視窗的經緯度欄位，原本的經緯度會自動清空，可以直接輸入新座標（原本的座標會以淡灰色顯示在欄位裡當參考）；沒輸入就離開，會恢復原本的經緯度。</li>
                     <li>點位的經緯度可以只用空白分隔：十進位打「26.344 118.234」，度分秒打「24 12 35 123 11 56」（度 分 秒 度 分 秒），度分打「24 12.5 123 11.9」。南緯、西經在度數前加負號。也支援「21.5, 121.5」或「21°30'00"N, 121°30'00"E」。</li>
                     <li>點一下畫好的圖形可以刪除；🗑️ 可一次清除所有測量圖形（不影響禁航區）。</li>
                     <li>再按一次同一個工具可以取消；使用中的工具會亮起來。</li>
@@ -1226,7 +1216,7 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v27）是目前版本；有更新時，打開網站會在歡迎卡上列出更新重點。</li>
+                    <li>標題旁的版本號（例如 v28）是目前版本；有更新時，打開網站會在歡迎卡上列出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。使用 Esri 衛星圖時，圖資來源為 Esri、Maxar、Earthstar Geographics。</li>
                 </ul>
@@ -1392,11 +1382,11 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v27';
+    const APP_VERSION = 'v28';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
-        { version: 'v27', items: ['點位小視窗的經緯度旁多了定位按鈕，一鍵填入你目前所在位置，再按「套用」就能把點位移過去。'] },
+        { version: 'v28', items: ['點位小視窗：點一下經緯度欄位會自動清空，直接輸入新座標就好；沒輸入就會恢復原本的經緯度。'] },
         { version: 'v26', items: [
             '手機在地圖上長按約半秒，就能直接新增點位。',
             '點位經緯度可以只用空白分隔：例如「26.344 118.234」或度分秒「24 12 35 123 11 56」。'
@@ -2085,10 +2075,7 @@
                 <label><input type="checkbox" id="${popupId}-vis" ${featureObj.visible ? 'checked' : ''}> 顯示名稱標籤</label>
                 <div class="popup-coord-field">
                     <div class="popup-coord-label">經緯度</div>
-                    <div class="popup-coord-row">
-                        <input type="text" id="${popupId}-coord" value="${escapeAttr(currentCoordText)}" placeholder="例如 26.344 118.234" autocomplete="off" spellcheck="false">
-                        <button type="button" class="btn-locate" onclick="fillCurrentLocation('${popupId}-coord', this)" title="填入我目前的位置（手機定位）" aria-label="填入我目前的位置"><svg class="locate-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v3.5M12 18.5V22M2 12h3.5M18.5 12H22"/></svg></button>
-                    </div>
+                    <input type="text" id="${popupId}-coord" value="${escapeAttr(currentCoordText)}" data-original="${escapeAttr(currentCoordText)}" placeholder="${escapeAttr(currentCoordText)}" autocomplete="off" spellcheck="false" onfocus="clearCoordForTyping(this)" onblur="restoreCoordIfEmpty(this)">
                     <div class="popup-coord-hint">用空白分隔即可<br>十進位：26.344 118.234<br>度分秒：24 12 35 123 11 56</div>
                 </div>
                 <div class="popup-btn-row">
@@ -2098,28 +2085,13 @@
             </div>`;
     }
 
-    // 定位鈕：用手機／電腦的定位取得「我目前的位置」，填進經緯度欄位，按「套用」後點位才會移過去
-    function fillCurrentLocation(inputId, btn) {
-        const input = document.getElementById(inputId);
-        if (!input) return;
-        if (!navigator.geolocation) { showToast('這個瀏覽器不支援定位'); return; }
-        btn.classList.add('loading');
-        btn.disabled = true;
-        navigator.geolocation.getCurrentPosition(pos => {
-            btn.classList.remove('loading');
-            btn.disabled = false;
-            const { latitude, longitude, accuracy } = pos.coords;
-            input.value = `${latitude.toFixed(6)} ${longitude.toFixed(6)}`;
-            const acc = accuracy ? `（誤差約 ${Math.round(accuracy)} 公尺）` : '';
-            showToast(`已填入目前位置${acc}，按「套用」移動點位`, null, null, 3500);
-        }, err => {
-            btn.classList.remove('loading');
-            btn.disabled = false;
-            const msg = err.code === 1 ? '沒有定位權限：請在瀏覽器設定允許這個網站使用位置'
-                : err.code === 3 ? '定位逾時，請到空曠處或稍後再試'
-                : '目前抓不到位置，請確認手機的定位功能已開啟';
-            showToast(msg, null, null, 4500);
-        }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 });
+    // 點擊經緯度欄位時自動清空，方便直接輸入新座標；原本的經緯度留在淡灰色提示字裡當參考。
+    // 沒輸入就離開欄位時，把原本的經緯度放回去（按「套用」也不會移動點位）
+    function clearCoordForTyping(input) {
+        if (input.value === input.dataset.original) input.value = '';
+    }
+    function restoreCoordIfEmpty(input) {
+        if (!input.value.trim()) input.value = input.dataset.original || '';
     }
 
     function findPointFeature(id) {
