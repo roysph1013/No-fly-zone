@@ -997,10 +997,8 @@
             html[data-ui^="zx"] body.app-gars .gars-textarea { min-height: 110px; }
         }
         /* 手機（觸控）：地圖正中央的半透明紅色十字，不攔截手指 */
-        @media (hover: none) {
-            html[data-ui^="zx"] body.app-gars .gars-center-cross { display: block; position: fixed; z-index: 450; width: 44px; height: 44px; pointer-events: none; transform: translate(-50%, -50%);
-                background: linear-gradient(rgba(229, 62, 62, 0.7), rgba(229, 62, 62, 0.7)) center / 3px 100% no-repeat, linear-gradient(rgba(229, 62, 62, 0.7), rgba(229, 62, 62, 0.7)) center / 100% 3px no-repeat; }
-        }
+        html[data-ui^="zx"] body.app-gars.gars-touch .gars-center-cross { display: block; position: fixed; z-index: 450; width: 44px; height: 44px; pointer-events: none; transform: translate(-50%, -50%);
+            background: linear-gradient(rgba(229, 62, 62, 0.7), rgba(229, 62, 62, 0.7)) center / 3px 100% no-repeat, linear-gradient(rgba(229, 62, 62, 0.7), rgba(229, 62, 62, 0.7)) center / 100% 3px no-repeat; }
         /* 地圖左上角的 GARS 讀數（手機＝十字所在格；電腦＝滑鼠所在格），點一下複製 */
         html[data-ui^="zx"] .leaflet-control.gars-hud { border: none; border-radius: 12px; background: rgba(255, 255, 255, 0.95); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28); }
         .gars-hud-btn { display: block; min-height: 40px; min-width: 120px; padding: 6px 14px; border: none; background: transparent; border-radius: 12px; cursor: pointer; text-align: center;
@@ -6008,7 +6006,19 @@ ${coords}
     let garsRafPending = false;
     const garsCoverStore = new Map();
     let garsCoverSeq = 0;
-    const garsNoHover = window.matchMedia('(hover: none)');
+    // 判斷目前是手指還是滑鼠在操作。有些手機（例如部分三星機型）會誤報「可以懸停」，
+    // 所以不只看裝置宣告，也看實際的輸入：手指／觸控筆碰螢幕＝手機模式（十字），真的滑鼠移動＝電腦模式
+    let garsTouchInput = window.matchMedia('(pointer: coarse)').matches || window.matchMedia('(hover: none)').matches || isMobileLayout();
+    document.body.classList.toggle('gars-touch', garsTouchInput);
+    function garsSetTouchInput(touch) {
+        if (touch === garsTouchInput) return;
+        garsTouchInput = touch;
+        document.body.classList.toggle('gars-touch', touch);
+        if (appMode === 'gars') { garsCursorOnMap = false; garsRefresh(); }
+    }
+    document.addEventListener('pointerdown', e => garsSetTouchInput(e.pointerType !== 'mouse'), true);
+    // 瀏覽器在版面變動時會送出「沒有真的移動」的假滑鼠事件，只有滑鼠真的移動才切到電腦模式
+    document.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' && (e.movementX || e.movementY)) garsSetTouchInput(false); }, true);
 
     function garsLevelForZoom(z) { return z > 10 ? 5 : (z >= 8 ? 15 : 30); }
 
@@ -6120,7 +6130,7 @@ ${coords}
     function garsUpdateCenterInfo() {
         const c = map.getCenter();
         garsShowInfo(c.lat, c.lng, 'center');
-        if (garsNoHover.matches) garsShowHighlight(c.lat, c.lng); else garsHideHighlight();
+        if (garsTouchInput) garsShowHighlight(c.lat, c.lng); else garsHideHighlight();
     }
     function garsCopyCurrent() {
         const code = document.getElementById('garsDisplay').textContent;
@@ -6129,7 +6139,7 @@ ${coords}
 
     // ---------- 只在 GARS 模式掛上的地圖事件 ----------
     function garsOnMouseMove(e) {
-        if (garsNoHover.matches) return;
+        if (garsTouchInput) return;
         const { lat, lng } = e.latlng;
         if (lat < -90 || lat > 90) return;
         garsCursorOnMap = true;
@@ -6151,7 +6161,7 @@ ${coords}
 
     // 中心十字對準地圖容器的正中央（桌機有側邊面板時地圖不是滿版）
     function garsPlaceCenterCross() {
-        if (!garsNoHover.matches) return;
+        if (!garsTouchInput) return;
         const r = document.getElementById('map').getBoundingClientRect();
         const cross = document.querySelector('.gars-center-cross');
         cross.style.left = (r.left + r.width / 2) + 'px';
