@@ -1001,6 +1001,12 @@
             background: linear-gradient(rgba(229, 62, 62, 0.7), rgba(229, 62, 62, 0.7)) center / 3px 100% no-repeat, linear-gradient(rgba(229, 62, 62, 0.7), rgba(229, 62, 62, 0.7)) center / 100% 3px no-repeat; }
         html[data-ui^="zx"] body.app-gars .gars-center-code { display: block; position: fixed; z-index: 450; pointer-events: none; transform: translate(-50%, 30px); padding: 3px 10px; border-radius: 8px;
             background: rgba(255, 255, 255, 0.85); box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3); font-family: 'Zen Dots', ui-monospace, monospace; font-size: 17px; letter-spacing: 0.06em; line-height: 1.3; color: #c53030; white-space: nowrap; }
+        /* 電腦（有滑鼠）：不顯示十字，編碼改成跟著滑鼠，顯示在游標右下方 */
+        @media (hover: hover) {
+            html[data-ui^="zx"] body.app-gars .gars-center-cross { display: none; }
+            html[data-ui^="zx"] body.app-gars .gars-center-code { transform: translate(16px, 18px); font-size: 15px; }
+            html[data-ui^="zx"] body.app-gars:not(.gars-cursor-in) .gars-center-code { display: none; }
+        }
         body.shot-mode .gars-center-cross, body.shot-mode .gars-center-code { display: none !important; }
         @media (max-width: 480px) {
             html[data-ui^="zx"] .sheet-title-peek .app-version { display: none; }
@@ -1252,7 +1258,7 @@
                     <li>標題旁的「禁航區｜GARS」可以切換功能。切到 GARS 時，禁航區的卡片和按鈕會先收起來，地圖上已畫好的禁航區仍會顯示（只是不能編輯），切回「禁航區」就恢復。下次打開網站會停在你上次用的功能；網址後面加 <code>#gars</code> 也能直接打開 GARS。</li>
                     <li>GARS 是把地圖切成格子的編碼，例如 <code>603KM39</code>：前 3 碼數字是經度帶、2 個字母是緯度帶（5 碼＝30 分的格子），第 6 碼 1–4 是四等分的象限（15 分），第 7 碼 1–9 是九宮格的鍵位（5 分，1 在左上、9 在右下）。</li>
                     <li>進入 GARS 時底圖會換成灰色電子地圖，並自動開啟防空識別區和海峽中線；切回禁航區時，底圖和這兩個開關會回到原本的樣子。</li>
-                    <li>GARS 讀數：地圖正中央有半透明的紅色十字，十字下方會即時顯示它對到的格子的 GARS 碼，滑動地圖就跟著變，不用點。面板上方的讀數：電腦顯示滑鼠所在格子，滑鼠離開地圖時改顯示十字所在格子；手機顯示十字所在格子，並附十進位和度分座標，點一下面板上的 GARS 碼就能複製。地圖越放大，編碼越細（5 碼→6 碼→7 碼）。</li>
+                    <li>GARS 讀數：手機：地圖正中央有半透明的紅色十字，十字下方會即時顯示它對到的格子的 GARS 碼，滑動地圖就跟著變，不用點。電腦：滑鼠移到哪一格，游標旁邊就直接顯示那一格的 GARS 碼，不用點。面板上方的讀數會同步顯示同一格，並附十進位和度分座標（電腦滑鼠離開地圖時改顯示地圖中心），點一下面板上的 GARS 碼就能複製。地圖越放大，編碼越細（5 碼→6 碼→7 碼）。</li>
                     <li>搜尋：輸入 GARS 碼（例如 <code>603KM39</code>）會框出那一格；輸入座標（例如 <code>23.5 121</code>、<code>2330N12100E</code>）會放一根圖釘。按「定位」或 Enter 鍵。點圖釘可以看到十進位、度分、NOTAM 寫法和 GARS 碼。</li>
                     <li>目標標定：每行一筆座標或 GARS 碼。1 點放圖釘；2 點畫線並顯示距離（公里／浬）；3 點以上畫成區域，算出區域涵蓋的 GARS 格（範圍太大會自動改用較粗的格子），點區域打開清單，按「複製完整清單」複製全部格子。GARS 碼那一行會畫出那一格。看不懂的行會跳過並告訴你是第幾行。按「清除標定」全部清掉。</li>
                     <li>開關：「顯示 GARS 網格」（灰線是 30 分大格，放大後出現藍線 15 分格、再放大出現粉紅線 5 分格；大格的線比較粗，一眼就看得出細格屬於哪一個大格）、「顯示邊緣經緯度尺規」（地圖邊緣的經緯度刻度，手機的經度刻度在上方）。</li>
@@ -1520,7 +1526,7 @@
     const CHANGELOG = [
         { version: 'v30', items: [
             '新功能 GARS：標題旁多了「禁航區｜GARS」切換鈕，按 GARS 就能查詢 GARS 網格。',
-            'GARS 模式會顯示網格（大格線粗、細格線細，容易分辨）和地圖邊緣的經緯度刻度；地圖正中央有紅色十字，滑動地圖時十字下方會直接顯示它對到的格子 GARS 碼，不用點；電腦移動滑鼠也能看到游標所在格子。',
+            'GARS 模式會顯示網格（大格線粗、細格線細，容易分辨）和地圖邊緣的經緯度刻度；不用點就能看到 GARS 碼：手機看地圖正中央的紅色十字，滑動地圖時十字下方直接顯示格子編碼；電腦滑鼠移到哪一格，游標旁邊就顯示那一格的編碼。',
             '可以輸入 GARS 碼或座標直接定位；也能一次貼多行座標標定目標：1 點放圖釘、2 點量距離、3 點以上算出涵蓋的 GARS 格並可一鍵複製。',
             '地圖顯示多了「顯示海峽中線」開關；進入 GARS 時會自動打開海峽中線和防空識別區，切回禁航區時恢復原狀。'
         ] },
@@ -6094,6 +6100,7 @@ ${coords}
     }
     // 十字下方的 GARS 碼：只要地圖在動就跟著更新，不必點
     function garsUpdateCenterCode() {
+        if (!garsNoHover.matches) return;   // 電腦由滑鼠位置決定，見 garsOnMouseMove
         const c = map.getCenter();
         document.getElementById('garsCenterCode').textContent = latLngToGars(c.lat, normLng(c.lng), garsLevelForZoom(map.getZoom()));
     }
@@ -6115,8 +6122,14 @@ ${coords}
         garsCursorOnMap = true;
         garsShowInfo(lat, lng, 'cursor');
         garsShowHighlight(lat, lng);
+        // 編碼跟著滑鼠顯示，不用點
+        const tip = document.getElementById('garsCenterCode');
+        tip.textContent = latLngToGars(lat, normLng(lng), garsLevelForZoom(map.getZoom()));
+        tip.style.left = e.originalEvent.clientX + 'px';
+        tip.style.top = e.originalEvent.clientY + 'px';
+        document.body.classList.add('gars-cursor-in');
     }
-    function garsOnMouseOut() { garsCursorOnMap = false; garsUpdateCenterInfo(); }
+    function garsOnMouseOut() { garsCursorOnMap = false; document.body.classList.remove('gars-cursor-in'); garsUpdateCenterInfo(); }
     function garsOnMove() {
         if (garsRafPending) return;
         garsRafPending = true;
@@ -6132,6 +6145,7 @@ ${coords}
 
     // 中心十字對準地圖容器的正中央（桌機有側邊面板時地圖不是滿版）
     function garsPlaceCenterCross() {
+        if (!garsNoHover.matches) return;
         const r = document.getElementById('map').getBoundingClientRect();
         [document.querySelector('.gars-center-cross'), document.getElementById('garsCenterCode')].forEach(el => {
             el.style.left = (r.left + r.width / 2) + 'px';
@@ -6318,6 +6332,7 @@ ${coords}
         map.off('move', garsOnMove);
         map.off('moveend', garsOnMoveEnd);
         garsCursorOnMap = false;
+        document.body.classList.remove('gars-cursor-in');
         garsHideHighlight();
         [garsGridLayer, garsEdgeLayer, garsSearchLayer, garsTargetsLayer].forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
         garsEdgeLayer.clearLayers();
