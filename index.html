@@ -992,6 +992,8 @@
         .gars-mini-btn:hover { background: var(--zx-sunken); }
         .gars-mini-btn.on { background: var(--zx-mode); border-color: var(--zx-mode); color: var(--zx-mode-ink); }
         .gars-zone-all { justify-self: stretch; }
+        html[data-ui^="zx"] .gars-copy-all { width: 100%; background: var(--zx-mode); color: var(--zx-mode-ink); box-shadow: none; }
+        html[data-ui^="zx"] .gars-copy-all:hover { background: var(--zx-mode); filter: brightness(1.08); }
         @media (max-width: 768px) { .gars-mini-btn { min-height: 40px; padding: 8px 12px; } }
 
         /* 邊緣經緯度尺規 */
@@ -1300,7 +1302,7 @@
                     <li><b>地圖：</b>進入 GARS 時底圖會換成灰色電子地圖，並自動開啟防空識別區和海峽中線；切回禁航區時，底圖和這兩個開關會回到原本的樣子。</li>
                     <li><b>查格子（不用點）：</b>地圖左上角會直接顯示 GARS 碼。手機看地圖正中央的半透明紅色十字，滑動地圖時左上角就顯示十字對到的格子；電腦滑鼠移到哪一格，左上角就顯示那一格（滑鼠離開地圖時改顯示地圖中心）。點一下左上角或面板上的 GARS 碼就能複製；面板另外附十進位和度分座標。地圖越放大，編碼越細（5 碼→6 碼→7 碼）。</li>
                     <li><b>搜尋：</b>輸入 GARS 碼（例如 <code>603KM39</code>）會框出那一格；輸入座標（例如 <code>23.5 121</code>、<code>2330N12100E</code>）會放一根圖釘。按「定位」或 Enter 鍵。點圖釘可以看到十進位、度分、NOTAM 寫法和 GARS 碼。</li>
-                    <li><b>禁航區涵蓋的 GARS 格：</b>先在「禁航區」畫好禁航區，切到 GARS 後，面板會列出每個禁航區涵蓋幾格。「標出格子」會在地圖上用青藍色框出這些格子（再按一次隱藏），「複製」複製該禁航區的全部 GARS 碼，有兩個以上禁航區時可以「複製全部禁航區的 GARS 格」。在地圖上點禁航區也會跳出清單。只算目前顯示中的禁航區；範圍太大會自動改用較粗的格子。圓形用多邊形近似計算，邊緣格子可能略有出入。</li>
+                    <li><b>禁航區涵蓋的 GARS 格：</b>先在「禁航區」畫好禁航區，切到 GARS 後，面板會列出每個禁航區涵蓋幾格。「標出格子」會在地圖上用青藍色框出這些格子（再按一次隱藏），「複製」複製該禁航區的全部 GARS 碼，最上面的「一鍵複製全部 GARS 格」會把所有禁航區涵蓋的格子合併成一份清單（重複的只算一次）一次複製；有兩個以上禁航區時，也可以按「按禁航區分行複製」，每個禁航區一行。在地圖上點禁航區也會跳出清單。只算目前顯示中的禁航區；範圍太大會自動改用較粗的格子。圓形用多邊形近似計算，邊緣格子可能略有出入。</li>
                     <li><b>目標標定：</b>每行一筆座標或 GARS 碼。1 點放圖釘；2 點畫線並顯示距離（公里／浬）；3 點以上畫成區域，算出區域涵蓋的 GARS 格（範圍太大會自動改用較粗的格子），點區域打開清單，按「複製完整清單」複製全部格子。GARS 碼那一行會畫出那一格。看不懂的行會跳過並告訴你是第幾行。按「清除標定」全部清掉。</li>
                     <li><b>開關（在地圖右上角圖層選單的「地圖顯示」裡，只在 GARS 模式出現）：</b>「顯示 GARS 網格」（灰線是 30 分大格，放大後出現藍線 15 分格、再放大出現粉紅線 5 分格；大格的線比較粗，一眼就看得出細格屬於哪一個大格）、「顯示邊緣經緯度尺規」（地圖邊緣的經緯度刻度，手機的經度刻度在上方）。</li>
                     <li><b>注意：</b>GARS 模式下不能畫禁航區、測量或復原；標定的結果切回禁航區時會先收起來，再切回 GARS 就會看到。</li>
@@ -1566,7 +1568,7 @@
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
         { version: 'v34', items: [
-            'GARS 新功能：可以看每個禁航區涵蓋哪些 GARS 格。GARS 面板多了「禁航區涵蓋的 GARS 格」，列出每個禁航區的格數，可以一鍵複製，或按「標出格子」在地圖上畫出來。',
+            'GARS 新功能：可以看每個禁航區涵蓋哪些 GARS 格。GARS 面板多了「禁航區涵蓋的 GARS 格」，按「一鍵複製全部 GARS 格」就能複製所有禁航區涵蓋的格子；也可以單獨複製某個禁航區，或按「標出格子」在地圖上畫出來。',
             '在 GARS 模式點地圖上的禁航區，也會跳出它涵蓋的 GARS 格清單。'
         ] },
         { version: 'v33', items: ['手機展開面板時，標題旁的版本號又看得到了。'] },
@@ -6395,7 +6397,13 @@ ${coords}
             box.innerHTML = '<div class="gars-note">地圖上還沒有禁航區。先切回「禁航區」畫好禁航區，這裡會列出每個禁航區涵蓋的 GARS 格；在地圖上點禁航區也看得到。</div>';
             return;
         }
-        box.innerHTML = zones.map(z => {
+        // 最上面：一鍵複製全部禁航區涵蓋的格子（合併、去掉重複）
+        const all = new Set();
+        zones.forEach(z => garsZoneCoverage(z.id).cells.forEach(c => all.add(c.code)));
+        const head = all.size
+            ? `<button type="button" class="zx-btn-primary gars-btn gars-copy-all" onclick="garsCopyUnion()">一鍵複製全部 GARS 格（共 ${all.size} 格）</button>`
+            : '';
+        box.innerHTML = head + zones.map(z => {
             const cov = garsZoneCoverage(z.id);
             const sub = cov.level ? `${GARS_LV_NAME[cov.level]} 格・${cov.cells.length} 格` : '範圍太大，無法計算';
             const shown = garsZoneShown === z.id;
@@ -6405,7 +6413,7 @@ ${coords}
                 <button type="button" class="gars-mini-btn${shown ? ' on' : ''}" onclick="garsToggleZoneCells('${z.id}')" aria-pressed="${shown}">${shown ? '隱藏格子' : '標出格子'}</button>
                 <button type="button" class="gars-mini-btn" onclick="garsCopyZone('${z.id}')">複製</button>
             </div>`;
-        }).join('') + (zones.length > 1 ? '<button type="button" class="gars-mini-btn gars-zone-all" onclick="garsCopyAllZones()">複製全部禁航區的 GARS 格</button>' : '');
+        }).join('') + (zones.length > 1 ? '<button type="button" class="gars-mini-btn gars-zone-all" onclick="garsCopyAllZones()">按禁航區分行複製</button>' : '');
     }
 
     function garsCopyZone(cardId) {
@@ -6413,6 +6421,14 @@ ${coords}
         if (!cov.cells.length) { showToast('這個禁航區沒有可複製的 GARS 格'); return; }
         const z = garsZoneEntries().find(e => e.id === cardId);
         copyTextToClipboard(cov.cells.map(c => c.code).join(', '), `已複製禁航區 #${z ? z.num : ''} 的 ${cov.cells.length} 格 GARS 碼`);
+    }
+
+    function garsCopyUnion() {
+        const all = new Set();
+        garsZoneEntries().forEach(z => garsZoneCoverage(z.id).cells.forEach(c => all.add(c.code)));
+        if (!all.size) { showToast('沒有可複製的 GARS 格'); return; }
+        const list = [...all].sort();
+        copyTextToClipboard(list.join(', '), `已複製全部 ${list.length} 格 GARS 碼`);
     }
 
     function garsCopyAllZones() {
