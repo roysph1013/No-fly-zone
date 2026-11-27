@@ -617,6 +617,7 @@
         /* ===================== Zone X Beta 外觀（淺色／深色） ===================== */
         /* 只換面板外觀；地圖上的禁航區顏色、黃字黑底邊長標籤完全不動 */
         @font-face { font-family: 'Zen Dots'; src: url('vendor/zen-dots/zen-dots-latin-400-normal.woff2') format('woff2'); font-display: swap; }
+        @font-face { font-family: 'Orbitron'; font-weight: 700; src: url('vendor/orbitron/orbitron-latin-700-normal.woff2') format('woff2'); font-display: swap; }
         html[data-ui="zx-light"] {
             --zx-bg: #f3f6fa; --zx-panel: #ffffff; --zx-card: #f7f9fc; --zx-sunken: #eef2f7; --zx-input: #ffffff;
             --zx-line: rgba(22, 55, 90, 0.13); --zx-line-strong: rgba(22, 55, 90, 0.26);
@@ -1030,7 +1031,7 @@
         /* 地圖左上角的 GARS 讀數（手機＝十字所在格；電腦＝滑鼠所在格），點一下複製 */
         html[data-ui^="zx"] .leaflet-control.gars-hud { border: none; border-radius: 12px; background: rgba(255, 255, 255, 0.95); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28); }
         .gars-hud-btn { display: block; width: 100%; min-height: 40px; min-width: 120px; padding: 6px 14px; border: none; background: transparent; border-radius: 12px; cursor: pointer; text-align: center;
-            font-family: 'Zen Dots', ui-monospace, monospace; font-size: 18px; letter-spacing: 0.06em; line-height: 28px; color: #b85f00; }
+            font-family: 'Orbitron', ui-monospace, monospace; font-weight: 700; font-size: 18px; letter-spacing: 0.06em; line-height: 28px; color: #b85f00; }
         .gars-hud-btn:hover { background: #fff6e8; }
         .gars-hud-coords { padding: 0 12px 7px; margin-top: -4px; font: 11px/1.45 ui-monospace, Menlo, Consolas, monospace; color: #4a5568; white-space: nowrap; text-align: center; pointer-events: none; }
         body.shot-mode .gars-center-cross, body.shot-mode .leaflet-control.gars-hud { display: none !important; }
@@ -1390,7 +1391,7 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v34；手機要展開面板才看得到）是目前版本；有更新時，打開網站會在歡迎卡上列出更新重點。</li>
+                    <li>標題旁的版本號（例如 v35；手機要展開面板才看得到）是目前版本；有更新時，打開網站會在歡迎卡上列出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。使用 Esri 衛星圖時，圖資來源為 Esri、Maxar、Earthstar Geographics。</li>
                 </ul>
@@ -1556,10 +1557,11 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v34';
+    const APP_VERSION = 'v35';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v35', items: ['GARS 模式地圖左上角的 GARS 碼改用方正的 Orbitron 字體，數字更好認。'] },
         { version: 'v34', items: [
             'GARS 新功能：可以看每個禁航區涵蓋哪些 GARS 格。GARS 面板多了「禁航區涵蓋的 GARS 格」，按「一鍵複製全部」就能複製所有禁航區涵蓋的格子；也可以單獨複製某個禁航區，或按「標出格子」在地圖上畫出來。',
             '在 GARS 模式點地圖上的禁航區，也會跳出它涵蓋的 GARS 格清單。',
