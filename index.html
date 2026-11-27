@@ -991,6 +991,8 @@
             html[data-ui^="zx"] .gars-mode-switch { margin-left: 8px; }
             html[data-ui^="zx"] .gms-btn { min-height: 32px; padding: 4px 11px; font-size: 13px; }
             html[data-ui^="zx"] #sidebar h2 .gms-btn { min-height: 42px; font-size: 14px; }
+            /* 收合的標題列放不下外觀鈕，展開後的標題列仍有 */
+            html[data-ui^="zx"] .sheet-title-peek .btn-theme { display: none; }
             html[data-ui^="zx"] body.app-gars .gars-hud { display: block; position: fixed; top: calc(10px + env(safe-area-inset-top)); left: calc(10px + env(safe-area-inset-left)); z-index: 1000; min-height: 44px; padding: 8px 14px; border: none; border-radius: 12px; background: rgba(255, 255, 255, 0.95); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28); font-family: 'Zen Dots', ui-monospace, monospace; font-size: 18px; letter-spacing: 0.06em; color: #b85f00; }
             html[data-ui^="zx"] body.app-gars .gars-row .gars-btn { min-height: 46px; }
             html[data-ui^="zx"] body.app-gars .gars-panel input[type="text"], html[data-ui^="zx"] body.app-gars .gars-textarea { font-size: 16px; min-height: 46px; }
@@ -1001,8 +1003,10 @@
                 background: linear-gradient(#ff9f0a, #ff9f0a) center / 2px 100% no-repeat, linear-gradient(#ff9f0a, #ff9f0a) center / 100% 2px no-repeat; filter: drop-shadow(0 0 1px #000); }
         }
         body.shot-mode .gars-hud, body.shot-mode .gars-center-cross { display: none !important; }
-        @media (max-width: 400px) {
+        @media (max-width: 480px) {
             html[data-ui^="zx"] .sheet-title-peek .app-version { display: none; }
+        }
+        @media (max-width: 400px) {
             html[data-ui^="zx"] .sheet-title-peek .gars-mode-switch { margin-left: 6px; }
             html[data-ui^="zx"] .sheet-title-peek .gms-btn { padding: 4px 9px; font-size: 12px; }
             /* 收合的標題列：外觀鈕收進展開後的標題列，說明只留圖示 */
@@ -1252,7 +1256,7 @@
                     <li>GARS 讀數：電腦顯示滑鼠所在格子的 GARS 碼，滑鼠離開地圖時改顯示地圖中心；手機看地圖中央的橘色十字，左上角會顯示它所在的 GARS 碼。地圖越放大，編碼越細（5 碼→6 碼→7 碼）。點一下 GARS 碼就能複製。下方同時顯示十進位和度分座標。</li>
                     <li>搜尋：輸入 GARS 碼（例如 <code>603KM39</code>）會框出那一格；輸入座標（例如 <code>23.5 121</code>、<code>2330N12100E</code>）會放一根圖釘。按「定位」或 Enter 鍵。點圖釘可以看到十進位、度分、NOTAM 寫法和 GARS 碼。</li>
                     <li>目標標定：每行一筆座標或 GARS 碼。1 點放圖釘；2 點畫線並顯示距離（公里／浬）；3 點以上畫成區域，算出區域涵蓋的 GARS 格（範圍太大會自動改用較粗的格子），點區域打開清單，按「複製完整清單」複製全部格子。GARS 碼那一行會畫出那一格。看不懂的行會跳過並告訴你是第幾行。按「清除標定」全部清掉。</li>
-                    <li>開關：「顯示 GARS 網格」（放大到一定程度才會出現細格）、「顯示邊緣經緯度尺規」（地圖邊緣的經緯度刻度，手機的經度刻度在上方）。</li>
+                    <li>開關：「顯示 GARS 網格」（灰線是 30 分大格，放大後出現藍線 15 分格、再放大出現粉紅線 5 分格；大格的線比較粗，一眼就看得出細格屬於哪一個大格）、「顯示邊緣經緯度尺規」（地圖邊緣的經緯度刻度，手機的經度刻度在上方）。</li>
                     <li>GARS 模式下不能畫禁航區、測量或復原；標定的結果切回禁航區時會先收起來，再切回 GARS 就會看到。</li>
                 </ul>
             </details>
@@ -1517,7 +1521,7 @@
     const CHANGELOG = [
         { version: 'v30', items: [
             '新功能 GARS：標題旁多了「禁航區｜GARS」切換鈕，按 GARS 就能查詢 GARS 網格。',
-            'GARS 模式會顯示網格和地圖邊緣的經緯度刻度；移動游標（手機看地圖中心十字）就能看到所在格子的 GARS 碼，點一下即可複製。',
+            'GARS 模式會顯示網格（大格線粗、細格線細，容易分辨）和地圖邊緣的經緯度刻度；移動游標（手機看地圖中心十字）就能看到所在格子的 GARS 碼，點一下即可複製。',
             '可以輸入 GARS 碼或座標直接定位；也能一次貼多行座標標定目標：1 點放圖釘、2 點量距離、3 點以上算出涵蓋的 GARS 格並可一鍵複製。',
             '地圖顯示多了「顯示海峽中線」開關；進入 GARS 時會自動打開海峽中線和防空識別區，切回禁航區時恢復原狀。'
         ] },
@@ -5962,9 +5966,15 @@ ${coords}
     // ---------- 圖層與狀態 ----------
     const GARS_CFG = {
         grid: {
-            30: { color: '#5b6b80', weight: 0.6, minZoom: 5 },
-            15: { color: '#2b6cb0', weight: 0.45, minZoom: 8 },
-            5:  { color: '#d53f8c', weight: 0.4, minZoom: 11 }
+            30: { color: '#5b6b80', minZoom: 5 },
+            15: { color: '#2b6cb0', minZoom: 8 },
+            5:  { color: '#d53f8c', minZoom: 11 }
+        },
+        // 線寬依「目前看得到的最細格」決定：越大的格子線越粗，一眼分得出細格屬於哪個大格
+        gridWeight: {
+            30: { 30: 0.8 },
+            15: { 30: 2, 15: 0.8 },
+            5:  { 30: 2.6, 15: 1.4, 5: 0.6 }
         },
         accent: '#ff9f0a',
         coverMaxCandidates: 40000,  // 涵蓋計算的候選格上限，超過就自動改用較粗層級
@@ -6007,6 +6017,7 @@ ${coords}
         const west = Math.max(-180, b.getWest()), east = Math.min(180, b.getEast());
         const south = Math.max(-90, b.getSouth()), north = Math.min(90, b.getNorth());
         if (west >= east || south >= north) return;
+        const finest = z >= GARS_CFG.grid[5].minZoom ? 5 : (z >= GARS_CFG.grid[15].minZoom ? 15 : 30);
         // 先畫細格、再畫粗格（粗線在上）；和粗格重疊的細線略過
         [5, 15, 30].forEach(level => {
             const st = GARS_CFG.grid[level];
@@ -6026,7 +6037,7 @@ ${coords}
                 if (lat < -90 || lat > 90) continue;
                 lines.push([[lat, west], [lat, east]]);
             }
-            L.polyline(lines, { renderer: garsGridRenderer, pane: 'garsGridPane', interactive: false, color: st.color, weight: st.weight, opacity: 0.9 }).addTo(garsGridLayer);
+            L.polyline(lines, { renderer: garsGridRenderer, pane: 'garsGridPane', interactive: false, color: st.color, weight: GARS_CFG.gridWeight[finest][level], opacity: 0.9 }).addTo(garsGridLayer);
         });
     }
 
