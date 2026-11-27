@@ -1574,7 +1574,8 @@
             'GARS 新功能：可以看每個禁航區涵蓋哪些 GARS 格。GARS 面板多了「禁航區涵蓋的 GARS 格」，按「一鍵複製全部」就能複製所有禁航區涵蓋的格子；也可以單獨複製某個禁航區，或按「標出格子」在地圖上畫出來。',
             '在 GARS 模式點地圖上的禁航區，也會跳出它涵蓋的 GARS 格清單。',
             '清單預設「合併成大格」：整格都涵蓋就寫大格編號（例如 603KM），清單比較短；不想合併可以取消勾選。',
-            '別人傳來的一串 GARS 碼，直接貼到「目標標定」或「搜尋」，就會在地圖上框出每一格。'
+            '別人傳來的一串 GARS 碼，直接貼到「目標標定」或「搜尋」，就會在地圖上框出每一格。',
+            '修正：手機在面板捲到下面時按「標定」或「定位」，面板收起後會卡在中間、點不開，現在會正常收回到底部。'
         ] },
         { version: 'v33', items: ['手機展開面板時，標題旁的版本號又看得到了。'] },
         { version: 'v32', items: [
@@ -2636,8 +2637,18 @@
         const shouldExpand = (forceExpand !== undefined) ? forceExpand : !sidebar.classList.contains('sheet-expanded');
         sidebar.classList.toggle('sheet-expanded', shouldExpand);
         sidebar.style.transform = ''; // 清掉拖曳過程中設定的行內樣式，交回CSS class控制
+        // 收合時捲回最上面，否則面板停在捲到一半的地方，看不到也點不到標題列
+        if (!shouldExpand) {
+            if (document.activeElement && sidebar.contains(document.activeElement)) document.activeElement.blur();
+            sidebar.scrollTop = 0;
+        }
         setTimeout(() => { map.invalidateSize(); }, 350);
     }
+
+    // 收合狀態下，瀏覽器有時會自動把面板捲動（例如輸入框還有焦點），一律拉回最上面
+    document.getElementById('sidebar').addEventListener('scroll', function () {
+        if (isMobileLayout() && !this.classList.contains('sheet-expanded') && this.scrollTop) this.scrollTop = 0;
+    });
 
     // 拖曳手勢：讓底部抽屜可以像 Google 地圖一樣用手指拖上拖下
     (function setupSheetDrag() {
