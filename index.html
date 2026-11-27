@@ -979,6 +979,21 @@
         body.app-gars #layerTogglePanel .switch-label.gars-only { display: flex; }
         html[data-ui^="zx"] .gars-btn.zx-btn-secondary { background: transparent; color: var(--zx-ink); border: 1px solid var(--zx-line-strong); border-radius: 10px; }
 
+        body.app-gars path.leaflet-interactive:focus { outline: none; }
+        /* 禁航區涵蓋格清單 */
+        .gars-zone-list { display: grid; gap: 8px; }
+        .gars-zone-row { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 8px 10px; border: 1px solid var(--zx-line); border-radius: 10px; background: var(--zx-panel); }
+        .gars-zone-dot { flex: 0 0 auto; width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2); }
+        .gars-zone-info { flex: 1; min-width: 0; display: grid; }
+        .gars-zone-info b { font-size: 14px; color: var(--zx-ink); }
+        .gars-zone-info small { font-size: 12px; color: var(--zx-ink-3); }
+        .gars-zone-row .gars-mini-btn { flex: 0 0 auto; }
+        .gars-mini-btn { background: transparent; color: var(--zx-ink); border: 1px solid var(--zx-line-strong); border-radius: 8px; padding: 6px 10px; font-size: 13px; font-weight: bold; cursor: pointer; white-space: nowrap; box-shadow: none; }
+        .gars-mini-btn:hover { background: var(--zx-sunken); }
+        .gars-mini-btn.on { background: var(--zx-mode); border-color: var(--zx-mode); color: var(--zx-mode-ink); }
+        .gars-zone-all { justify-self: stretch; }
+        @media (max-width: 768px) { .gars-mini-btn { min-height: 40px; padding: 8px 12px; } }
+
         /* 邊緣經緯度尺規 */
         .gars-ruler-label { display: flex; align-items: center; justify-content: center; font: bold 11px/16px ui-monospace, Menlo, Consolas, monospace; color: #1f3550; white-space: nowrap; pointer-events: none !important; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 2px #fff; }
         .gars-ruler-label.lat { justify-content: flex-end; }
@@ -989,6 +1004,7 @@
         .gars-popup-code { font-family: ui-monospace, Menlo, Consolas, monospace; color: #b85f00; letter-spacing: 0.04em; }
         .gars-popup-sep { border-top: 1px solid #e2e8f0; margin: 6px 0; }
         .gars-cover-list { max-height: 120px; overflow: auto; font: 12px/1.5 ui-monospace, Menlo, Consolas, monospace; background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; margin: 4px 0 6px; overflow-wrap: anywhere; }
+        .gars-popup-btn-2 { margin-top: 6px; background: transparent !important; color: #0b7285 !important; border: 1px solid #0b7285 !important; }
         .gars-popup-btn { width: 100%; min-height: 36px; background: #ff9f0a; color: #1b1203; border: none; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; }
 
         @media (max-width: 768px) {
@@ -1123,6 +1139,11 @@
                 <input type="text" id="garsSearchInput" placeholder="例如 603KM39 或 23.5 121" autocomplete="off" spellcheck="false" autocapitalize="characters" enterkeyhint="search">
                 <button type="button" class="zx-btn-primary gars-btn" onclick="garsSearch()">定位</button>
             </div>
+        </section>
+
+        <section class="gars-card">
+            <div class="gars-label">禁航區涵蓋的 GARS 格</div>
+            <div id="garsZoneList" class="gars-zone-list"></div>
         </section>
 
         <section class="gars-card">
@@ -1279,6 +1300,7 @@
                     <li><b>地圖：</b>進入 GARS 時底圖會換成灰色電子地圖，並自動開啟防空識別區和海峽中線；切回禁航區時，底圖和這兩個開關會回到原本的樣子。</li>
                     <li><b>查格子（不用點）：</b>地圖左上角會直接顯示 GARS 碼。手機看地圖正中央的半透明紅色十字，滑動地圖時左上角就顯示十字對到的格子；電腦滑鼠移到哪一格，左上角就顯示那一格（滑鼠離開地圖時改顯示地圖中心）。點一下左上角或面板上的 GARS 碼就能複製；面板另外附十進位和度分座標。地圖越放大，編碼越細（5 碼→6 碼→7 碼）。</li>
                     <li><b>搜尋：</b>輸入 GARS 碼（例如 <code>603KM39</code>）會框出那一格；輸入座標（例如 <code>23.5 121</code>、<code>2330N12100E</code>）會放一根圖釘。按「定位」或 Enter 鍵。點圖釘可以看到十進位、度分、NOTAM 寫法和 GARS 碼。</li>
+                    <li><b>禁航區涵蓋的 GARS 格：</b>先在「禁航區」畫好禁航區，切到 GARS 後，面板會列出每個禁航區涵蓋幾格。「標出格子」會在地圖上用青藍色框出這些格子（再按一次隱藏），「複製」複製該禁航區的全部 GARS 碼，有兩個以上禁航區時可以「複製全部禁航區的 GARS 格」。在地圖上點禁航區也會跳出清單。只算目前顯示中的禁航區；範圍太大會自動改用較粗的格子。圓形用多邊形近似計算，邊緣格子可能略有出入。</li>
                     <li><b>目標標定：</b>每行一筆座標或 GARS 碼。1 點放圖釘；2 點畫線並顯示距離（公里／浬）；3 點以上畫成區域，算出區域涵蓋的 GARS 格（範圍太大會自動改用較粗的格子），點區域打開清單，按「複製完整清單」複製全部格子。GARS 碼那一行會畫出那一格。看不懂的行會跳過並告訴你是第幾行。按「清除標定」全部清掉。</li>
                     <li><b>開關（在地圖右上角圖層選單的「地圖顯示」裡，只在 GARS 模式出現）：</b>「顯示 GARS 網格」（灰線是 30 分大格，放大後出現藍線 15 分格、再放大出現粉紅線 5 分格；大格的線比較粗，一眼就看得出細格屬於哪一個大格）、「顯示邊緣經緯度尺規」（地圖邊緣的經緯度刻度，手機的經度刻度在上方）。</li>
                     <li><b>注意：</b>GARS 模式下不能畫禁航區、測量或復原；標定的結果切回禁航區時會先收起來，再切回 GARS 就會看到。</li>
@@ -1373,7 +1395,7 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v33；手機要展開面板才看得到）是目前版本；有更新時，打開網站會在歡迎卡上列出更新重點。</li>
+                    <li>標題旁的版本號（例如 v34；手機要展開面板才看得到）是目前版本；有更新時，打開網站會在歡迎卡上列出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。使用 Esri 衛星圖時，圖資來源為 Esri、Maxar、Earthstar Geographics。</li>
                 </ul>
@@ -1539,10 +1561,14 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v33';
+    const APP_VERSION = 'v34';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v34', items: [
+            'GARS 新功能：可以看每個禁航區涵蓋哪些 GARS 格。GARS 面板多了「禁航區涵蓋的 GARS 格」，列出每個禁航區的格數，可以一鍵複製，或按「標出格子」在地圖上畫出來。',
+            '在 GARS 模式點地圖上的禁航區，也會跳出它涵蓋的 GARS 格清單。'
+        ] },
         { version: 'v33', items: ['手機展開面板時，標題旁的版本號又看得到了。'] },
         { version: 'v32', items: [
             'GARS 的「顯示 GARS 網格」「顯示邊緣經緯度尺規」開關移到地圖右上角圖層選單的「地圖顯示」裡，和其他圖層開關放在一起。',
@@ -4269,6 +4295,9 @@
                 className: 'area-hover-tooltip'
             });
 
+            // GARS 模式：點禁航區可以看它涵蓋哪些 GARS 格
+            shapeLayer.on('click', e => { if (typeof appMode !== 'undefined' && appMode === 'gars') garsOpenZonePopup(cardId, e.latlng); });
+
             areaMapObjects[cardId] = { shape: shapeLayer, labels: currentLabels, visible: true };
 
             const visBtn = document.getElementById(`btn-vis-${cardId}`);
@@ -4293,6 +4322,7 @@
 
         renderAreaOutputs();
         document.getElementById('output-section').style.display = 'block';
+        if (appMode === 'gars') garsRenderZoneList();
     }
 
     function clearAllData() {
@@ -5924,12 +5954,12 @@ ${coords}
         return false;
     }
     // 自動選最細、而且候選格不超過上限的層級（5' → 15' → 30'）；格子內縮 1e-7° 避免只碰到邊的鄰格被算進來
-    function computeCoverage(poly, maxCandidates) {
+    function computeCoverage(poly, maxCandidates, forceLevel) {
         let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
         poly.forEach(([la, ln]) => { minLat = Math.min(minLat, la); maxLat = Math.max(maxLat, la); minLng = Math.min(minLng, ln); maxLng = Math.max(maxLng, ln); });
         const xMin = (minLng + 180) * 60, xMax = (maxLng + 180) * 60, yMin = (minLat + 90) * 60, yMax = (maxLat + 90) * 60;
-        let level = null;
-        for (const lv of [5, 15, 30]) {
+        let level = forceLevel || null;
+        if (!level) for (const lv of [5, 15, 30]) {
             const nx = Math.floor(xMax / lv) - Math.floor(xMin / lv) + 1, ny = Math.floor(yMax / lv) - Math.floor(yMin / lv) + 1;
             if (nx * ny <= maxCandidates) { level = lv; break; }
         }
@@ -6308,6 +6338,125 @@ ${coords}
         showToast(bad.length ? `已標定 ${what}；第 ${bad.join('、')} 行無法判讀，已略過` : `已標定 ${what}`, null, null, bad.length ? 5000 : 2500);
     }
 
+    // ---------- 禁航區涵蓋的 GARS 格 ----------
+    const garsZoneCellLayer = L.layerGroup();   // 「標出格子」畫出的格子（在禁航區圖形下方）
+    let garsZoneShown = null;                   // 目前標出格子的禁航區 cardId
+
+    function garsZoneEntries() {
+        return Object.keys(areaMapObjects)
+            .filter(id => areaMapObjects[id].visible !== false && map.hasLayer(areaMapObjects[id].shape))
+            .map(id => {
+                const area = allParsedAreas.find(a => a.cardId === id);
+                const colorInput = document.getElementById(`color-${id}`);
+                return { id, num: area ? area.num : '?', color: colorInput ? colorInput.value : '#ff0000' };
+            })
+            .sort((a, b) => Number(a.num) - Number(b.num));
+    }
+
+    // 把禁航區圖形轉成座標點：圓形用 72 邊形近似；航段（線）逐段計算
+    function garsZoneCoverage(cardId) {
+        const obj = areaMapObjects[cardId];
+        if (!obj) return { level: null, cells: [] };
+        const shape = obj.shape;
+        const MAX = GARS_CFG.coverMaxCandidates;
+        if (shape instanceof L.Circle) {
+            const c = shape.getLatLng(), rNM = shape.getRadius() / 1852, poly = [];
+            for (let b = 0; b < 360; b += 5) { const p = destinationPoint(c.lat, c.lng, rNM, b); poly.push([p.lat, p.lon]); }
+            return computeCoverage(poly, MAX);
+        }
+        if (shape instanceof L.Polygon) {
+            let ll = shape.getLatLngs();
+            while (Array.isArray(ll[0])) ll = ll[0];
+            return computeCoverage(ll.map(p => [p.lat, p.lng]), MAX);
+        }
+        const pts = shape.getLatLngs().map(p => [p.lat, p.lng]);
+        const whole = computeCoverage(pts.length > 2 ? pts : pts.concat([pts[0]]), MAX); // 只用來決定格子大小
+        if (!whole.level) return whole;
+        const seen = new Map();
+        for (let i = 0; i < pts.length - 1; i++) {
+            const [a, b] = [pts[i], pts[i + 1]];
+            computeCoverage([a, b], Infinity, whole.level).cells.forEach(c => seen.set(c.code, c));
+            // 航段剛好落在格線上時，上面的算法碰不到格子內部；沿線取點補上（和單點 GARS 一樣，格線上的點算北／東側那格）
+            const n = Math.max(2, Math.ceil(Math.max(Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1])) / (whole.level / 60) * 10));
+            for (let k = 0; k < n; k++) {
+                const t = (k + 0.5) / n, c = cellOf(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, whole.level);
+                if (!seen.has(c.code)) seen.set(c.code, { code: c.code, west: c.west, south: c.south, size: c.size });
+            }
+        }
+        return { level: whole.level, cells: [...seen.values()].sort((a, b) => a.code < b.code ? -1 : 1) };
+    }
+
+    const GARS_LV_NAME = { 30: "30'", 15: "15'", 5: "5'" };
+
+    function garsRenderZoneList() {
+        const box = document.getElementById('garsZoneList');
+        const zones = garsZoneEntries();
+        if (!zones.length) {
+            box.innerHTML = '<div class="gars-note">地圖上還沒有禁航區。先切回「禁航區」畫好禁航區，這裡會列出每個禁航區涵蓋的 GARS 格；在地圖上點禁航區也看得到。</div>';
+            return;
+        }
+        box.innerHTML = zones.map(z => {
+            const cov = garsZoneCoverage(z.id);
+            const sub = cov.level ? `${GARS_LV_NAME[cov.level]} 格・${cov.cells.length} 格` : '範圍太大，無法計算';
+            const shown = garsZoneShown === z.id;
+            return `<div class="gars-zone-row">
+                <span class="gars-zone-dot" style="background:${escapeAttr(z.color)}"></span>
+                <span class="gars-zone-info"><b>禁航區 #${escapeHtml(String(z.num))}</b><small>${sub}</small></span>
+                <button type="button" class="gars-mini-btn${shown ? ' on' : ''}" onclick="garsToggleZoneCells('${z.id}')" aria-pressed="${shown}">${shown ? '隱藏格子' : '標出格子'}</button>
+                <button type="button" class="gars-mini-btn" onclick="garsCopyZone('${z.id}')">複製</button>
+            </div>`;
+        }).join('') + (zones.length > 1 ? '<button type="button" class="gars-mini-btn gars-zone-all" onclick="garsCopyAllZones()">複製全部禁航區的 GARS 格</button>' : '');
+    }
+
+    function garsCopyZone(cardId) {
+        const cov = garsZoneCoverage(cardId);
+        if (!cov.cells.length) { showToast('這個禁航區沒有可複製的 GARS 格'); return; }
+        const z = garsZoneEntries().find(e => e.id === cardId);
+        copyTextToClipboard(cov.cells.map(c => c.code).join(', '), `已複製禁航區 #${z ? z.num : ''} 的 ${cov.cells.length} 格 GARS 碼`);
+    }
+
+    function garsCopyAllZones() {
+        const lines = garsZoneEntries().map(z => {
+            const cov = garsZoneCoverage(z.id);
+            return `禁航區 #${z.num}（${GARS_LV_NAME[cov.level] || '-'} 格，${cov.cells.length} 格）：${cov.cells.map(c => c.code).join(', ')}`;
+        });
+        copyTextToClipboard(lines.join('\n'), `已複製 ${lines.length} 個禁航區的 GARS 格`);
+    }
+
+    function garsToggleZoneCells(cardId, keepView) {
+        garsZoneCellLayer.clearLayers();
+        if (garsZoneShown === cardId) { garsZoneShown = null; garsRenderZoneList(); return; }
+        const cov = garsZoneCoverage(cardId);
+        if (!cov.cells.length) { showToast('範圍太大，無法標出格子'); return; }
+        if (cov.cells.length > GARS_CFG.coverDrawMax) { showToast(`格子太多（${cov.cells.length} 格），只能複製清單，無法在地圖上標出`, null, null, 4000); return; }
+        garsZoneShown = cardId;
+        cov.cells.forEach(c => L.rectangle([[c.south, c.west], [c.south + c.size, c.west + c.size]],
+            { renderer: garsCoverRenderer, pane: 'garsGridPane', interactive: false, color: '#0b7285', weight: 1.2, fillColor: '#3bc9db', fillOpacity: 0.18 }).addTo(garsZoneCellLayer));
+        if (!keepView) {
+            map.fitBounds(areaMapObjects[cardId].shape.getBounds(), { padding: [30, 30], maxZoom: 12 });
+            if (isMobileLayout()) toggleMobileSheet(false);
+        }
+        garsRenderZoneList();
+    }
+
+    function garsOpenZonePopup(cardId, latlng) {
+        const z = garsZoneEntries().find(e => e.id === cardId);
+        if (!z) return;
+        const cov = garsZoneCoverage(cardId);
+        const codes = cov.cells.map(c => c.code);
+        const id = 'zone' + (++garsCoverSeq);
+        garsCoverStore.set(id, codes);
+        const shown = codes.slice(0, GARS_CFG.coverListMax).join(', ') + (codes.length > GARS_CFG.coverListMax ? ` …（還有 ${codes.length - GARS_CFG.coverListMax} 格，請用「複製完整清單」）` : '');
+        const html = `<div class="gars-popup"><b>禁航區 #${escapeHtml(String(z.num))}</b>` +
+            (cov.level
+                ? `<div>涵蓋 ${GARS_LV_NAME[cov.level]} 格：<b>${codes.length}</b> 格${cov.level !== 5 ? '（範圍較大，已改用較粗的格子）' : ''}</div>` +
+                  `<div class="gars-cover-list">${shown}</div>` +
+                  `<button type="button" class="gars-popup-btn" onclick="garsCopyCover('${id}')">複製完整清單</button>` +
+                  `<button type="button" class="gars-popup-btn gars-popup-btn-2" onclick="map.closePopup(); garsToggleZoneCells('${cardId}', true)">${garsZoneShown === cardId ? '隱藏格子' : '在地圖上標出格子'}</button>`
+                : '<div>範圍太大，無法計算涵蓋格</div>') + `</div>`;
+        L.popup({ maxWidth: Math.min(280, window.innerWidth - 90) }).setLatLng(latlng).setContent(html).openOn(map);
+    }
+
     function garsClearTargets() {
         garsTargetsLayer.clearLayers();
         garsSearchLayer.clearLayers();
@@ -6356,7 +6505,8 @@ ${coords}
         adiz.checked = true; toggleADIZVisibility();
         median.checked = true; toggleMedianLineVisibility();
 
-        [garsGridLayer, garsEdgeLayer, garsSearchLayer, garsTargetsLayer].forEach(l => l.addTo(map));
+        [garsGridLayer, garsEdgeLayer, garsSearchLayer, garsTargetsLayer, garsZoneCellLayer].forEach(l => l.addTo(map));
+        garsRenderZoneList();
         garsHud.addTo(map);
         map.on('mousemove', garsOnMouseMove);
         map.on('mouseout', garsOnMouseOut);
@@ -6371,7 +6521,7 @@ ${coords}
         map.off('moveend', garsOnMoveEnd);
         garsCursorOnMap = false;
         garsHideHighlight();
-        [garsGridLayer, garsEdgeLayer, garsSearchLayer, garsTargetsLayer].forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
+        [garsGridLayer, garsEdgeLayer, garsSearchLayer, garsTargetsLayer, garsZoneCellLayer].forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
         garsHud.remove();
         garsEdgeLayer.clearLayers();
         garsGridLayer.clearLayers();
