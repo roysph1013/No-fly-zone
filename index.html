@@ -1029,7 +1029,7 @@
             filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.5)); }
         /* 地圖左上角的 GARS 讀數（手機＝十字所在格；電腦＝滑鼠所在格），點一下複製 */
         html[data-ui^="zx"] .leaflet-control.gars-hud { border: none; border-radius: 12px; background: rgba(255, 255, 255, 0.95); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28); }
-        .gars-hud-btn { display: block; min-height: 40px; min-width: 120px; padding: 6px 14px; border: none; background: transparent; border-radius: 12px; cursor: pointer; text-align: center;
+        .gars-hud-btn { display: block; width: 100%; min-height: 40px; min-width: 120px; padding: 6px 14px; border: none; background: transparent; border-radius: 12px; cursor: pointer; text-align: center;
             font-family: 'Zen Dots', ui-monospace, monospace; font-size: 18px; letter-spacing: 0.06em; line-height: 28px; color: #b85f00; }
         .gars-hud-btn:hover { background: #fff6e8; }
         .gars-hud-coords { padding: 0 12px 7px; margin-top: -4px; font: 11px/1.45 ui-monospace, Menlo, Consolas, monospace; color: #4a5568; white-space: nowrap; text-align: center; pointer-events: none; }
@@ -1293,8 +1293,8 @@
                     <li><b>切換：</b>標題列和「說明」「外觀」同一排的小按鈕「禁航區｜GARS」可以切換功能，目前使用中的一邊會亮青藍色（手機收合面板時在標題列最右邊；說明和外觀要展開面板才看得到）。切到 GARS 時，禁航區的卡片和按鈕會先收起來，地圖上已畫好的禁航區仍會顯示（只是不能編輯），切回「禁航區」就恢復。下次打開網站會停在你上次用的功能；網址後面加 <code>#gars</code> 也能直接打開 GARS。</li>
                     <li><b>GARS 碼怎麼看：</b>GARS 是把地圖切成格子的編碼，例如 <code>603KM39</code>：前 3 碼數字是經度帶、2 個字母是緯度帶（5 碼＝30 分的格子），第 6 碼 1–4 是四等分的象限（15 分），第 7 碼 1–9 是九宮格的鍵位（5 分，1 在左上、9 在右下）。</li>
                     <li><b>地圖：</b>進入 GARS 時底圖會換成灰色電子地圖，並自動開啟防空識別區和海峽中線；切回禁航區時，底圖和這兩個開關會回到原本的樣子。</li>
-                    <li><b>查格子（不用點）：</b>地圖左上角會直接顯示 GARS 碼。手機看地圖正中央的半透明紅色十字，滑動地圖時左上角就顯示十字對到的格子；電腦滑鼠移到哪一格，左上角就顯示那一格（滑鼠離開地圖時改顯示地圖中心）。GARS 碼下方用小字同時顯示十進位和度分（六十進位）座標。點一下左上角的 GARS 碼就能複製。地圖越放大，編碼越細（5 碼→6 碼→7 碼）。</li>
-                    <li><b>搜尋：</b>輸入 GARS 碼（例如 <code>603KM39</code>）會框出那一格；輸入座標（例如 <code>23.5 121</code>、<code>2330N12100E</code>）會放一根圖釘。按「定位」或 Enter 鍵。點圖釘可以看到十進位、度分、NOTAM 寫法和 GARS 碼。</li>
+                    <li><b>查格子（不用點）：</b>地圖左上角會直接顯示 GARS 碼。手機看地圖正中央的半透明紅色十字，滑動地圖時左上角就顯示十字對到的格子；電腦滑鼠移到哪一格，左上角就顯示那一格（滑鼠離開地圖時改顯示地圖中心）。GARS 碼下方用小字同時顯示十進位和度分秒（六十進位）座標。點一下左上角的 GARS 碼就能複製。地圖越放大，編碼越細（5 碼→6 碼→7 碼）。</li>
+                    <li><b>搜尋：</b>輸入 GARS 碼（例如 <code>603KM39</code>）會框出那一格；輸入座標（例如 <code>23.5 121</code>、<code>2330N12100E</code>）會放一根圖釘。按「定位」或 Enter 鍵。點圖釘可以看到十進位、度分秒、NOTAM 寫法和 GARS 碼。</li>
                     <li><b>禁航區涵蓋的 GARS 格：</b>先在「禁航區」畫好禁航區，切到 GARS 後，面板會列出每個禁航區涵蓋幾格。「標出格子」會在地圖上用青藍色框出這些格子（再按一次隱藏），「複製」複製該禁航區的全部 GARS 碼，「合併成大格」預設勾選：某個 15' 象限的 9 個 5' 小格都涵蓋到，就改寫成 1 個 6 碼；某個 30' 大格的 4 個象限都齊了，就改寫成 1 個 5 碼（例如 603KM），範圍完全一樣、清單比較短，這也是實務上常見的寫法；取消勾選就全部列最細的 5' 格。最上面的「一鍵複製全部」會把所有禁航區涵蓋的格子合併成一份清單（重複的只算一次）一次複製；有兩個以上禁航區時，也可以按「按禁航區分行複製」，每個禁航區一行。在地圖上點禁航區也會跳出清單。只算目前顯示中的禁航區；範圍太大會自動改用較粗的格子。圓形用多邊形近似計算，邊緣格子可能略有出入。</li>
                     <li><b>目標標定：</b>每行一筆座標或 GARS 碼。1 點放圖釘；2 點畫線並顯示距離（公里／浬）；3 點以上畫成區域，算出區域涵蓋的 GARS 格（範圍太大會自動改用較粗的格子），點區域打開清單，按「複製完整清單」複製全部格子。GARS 碼那一行會畫出那一格；也可以直接貼上一串 GARS 碼（逗號、頓號或空白分隔，例如別人用「一鍵複製」傳來的清單，前面帶「禁航區 #1（…）：」也可以），每一格都會框出來，格式錯誤的編號會被略過並提示。「搜尋」框也能貼一串 GARS 碼，一次框出全部。看不懂的行會跳過並告訴你是第幾行。按「清除標定」全部清掉。</li>
                     <li><b>開關（在地圖右上角圖層選單的「地圖顯示」裡，只在 GARS 模式出現）：</b>「顯示 GARS 網格」（灰線是 30 分大格，放大後出現藍線 15 分格、再放大出現粉紅線 5 分格；大格的線比較粗，一眼就看得出細格屬於哪一個大格）、「顯示邊緣經緯度尺規」（地圖邊緣的經緯度刻度，手機的經度刻度在上方）。</li>
@@ -1565,7 +1565,7 @@
             '在 GARS 模式點地圖上的禁航區，也會跳出它涵蓋的 GARS 格清單。',
             '清單預設「合併成大格」：整格都涵蓋就寫大格編號（例如 603KM），清單比較短；不想合併可以取消勾選。',
             '別人傳來的一串 GARS 碼，直接貼到「目標標定」或「搜尋」，就會在地圖上框出每一格。',
-            '地圖左上角的 GARS 碼下方，直接用小字顯示十進位和度分座標；面板上原本的「地圖中心 GARS」卡片拿掉，面板更精簡。',
+            '地圖左上角的 GARS 碼下方，直接用小字顯示十進位和度分秒座標；面板上原本的「地圖中心 GARS」卡片拿掉，面板更精簡。',
             '修正：手機在面板捲到下面時按「標定」或「定位」，面板收起後會卡在中間、點不開，現在會正常收回到底部。'
         ] },
         { version: 'v33', items: ['手機展開面板時，標題旁的版本號又看得到了。'] },
@@ -6002,7 +6002,16 @@ ${coords}
     // ---------- 格式化（度分沿用禁航區的 formatCoordString；十進位、NOTAM 式、尺規另寫） ----------
     function garsHemi(v, isLat) { return isLat ? (v >= 0 ? 'N' : 'S') : (v >= 0 ? 'E' : 'W'); }
     function garsFmtDeg(lat, lng) { return `${Math.abs(lat).toFixed(4)}°${garsHemi(lat, true)}　${Math.abs(lng).toFixed(4)}°${garsHemi(lng, false)}`; }
-    function garsFmtDM(lat, lng) { const f = formatCoordString(lat, lng); return `${f.latStr}　${f.lonStr}`; }
+    // 六十進位：度分秒（秒到小數 1 位），例如 23°32'17.6"N　121°15'00.0"E
+    function garsFmtDM(lat, lng) {
+        const f = (v, isLat) => {
+            let t = Math.round(Math.abs(v) * 36000);           // 0.1 秒為單位，避免 59.95 秒進位錯誤
+            const d = Math.floor(t / 36000); t -= d * 36000;
+            const m = Math.floor(t / 600); t -= m * 600;
+            return `${d}°${String(m).padStart(2, '0')}'${(t / 10).toFixed(1).padStart(4, '0')}"${garsHemi(v, isLat)}`;
+        };
+        return `${f(lat, true)}　${f(lng, false)}`;
+    }
     function garsFmtNotam(lat, lng) {
         const f = (v, dw) => {
             const t = Math.round(Math.abs(v) * 3600);
