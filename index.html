@@ -997,8 +997,12 @@
             html[data-ui^="zx"] body.app-gars .gars-textarea { min-height: 110px; }
         }
         /* 手機（觸控）：地圖正中央的半透明紅色十字，不攔截手指 */
-        html[data-ui^="zx"] body.app-gars.gars-touch .gars-center-cross { display: block; position: fixed; z-index: 450; width: 44px; height: 44px; pointer-events: none; transform: translate(-50%, -50%);
-            background: linear-gradient(rgba(229, 62, 62, 0.7), rgba(229, 62, 62, 0.7)) center / 3px 100% no-repeat, linear-gradient(rgba(229, 62, 62, 0.7), rgba(229, 62, 62, 0.7)) center / 100% 3px no-repeat; }
+        /* 小巧的準星：四段短線、中心留空，看得到十字下方的格線 */
+        html[data-ui^="zx"] body.app-gars.gars-touch .gars-center-cross { display: block; position: fixed; z-index: 450; width: 22px; height: 22px; pointer-events: none; transform: translate(-50%, -50%);
+            --gx: rgba(229, 62, 62, 0.6);
+            background: linear-gradient(var(--gx), var(--gx)) top center / 2px 8px no-repeat, linear-gradient(var(--gx), var(--gx)) bottom center / 2px 8px no-repeat,
+                        linear-gradient(var(--gx), var(--gx)) left center / 8px 2px no-repeat, linear-gradient(var(--gx), var(--gx)) right center / 8px 2px no-repeat;
+            filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.5)); }
         /* 地圖左上角的 GARS 讀數（手機＝十字所在格；電腦＝滑鼠所在格），點一下複製 */
         html[data-ui^="zx"] .leaflet-control.gars-hud { border: none; border-radius: 12px; background: rgba(255, 255, 255, 0.95); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28); }
         .gars-hud-btn { display: block; min-height: 40px; min-width: 120px; padding: 6px 14px; border: none; background: transparent; border-radius: 12px; cursor: pointer; text-align: center;
