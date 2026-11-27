@@ -974,8 +974,9 @@
         .gars-btn { flex: 0 0 auto; padding: 9px 16px; font-size: 14px; font-weight: bold; }
         .gars-row .gars-btn.zx-btn-primary { min-width: 76px; }
         .gars-row-split .gars-btn { flex: 1; }
-        .gars-card.gars-toggles { gap: 2px; }
-        html[data-ui^="zx"] .gars-toggles .switch-label { font-size: 14px; font-weight: 600; }
+        /* GARS 的網格、尺規開關放在地圖右上角圖層選單的「地圖顯示」裡，只在 GARS 模式出現 */
+        #layerTogglePanel .switch-label.gars-only { display: none; }
+        body.app-gars #layerTogglePanel .switch-label.gars-only { display: flex; }
         html[data-ui^="zx"] .gars-btn.zx-btn-secondary { background: transparent; color: var(--zx-ink); border: 1px solid var(--zx-line-strong); border-radius: 10px; }
 
         /* 邊緣經緯度尺規 */
@@ -1003,7 +1004,7 @@
         }
         /* 手機（觸控）：地圖正中央的半透明紅色十字，不攔截手指 */
         /* 小巧的準星：四段短線、中心留空，看得到十字下方的格線 */
-        html[data-ui^="zx"] body.app-gars.gars-touch .gars-center-cross { display: block; position: fixed; z-index: 450; width: 22px; height: 22px; pointer-events: none; transform: translate(-50%, -50%);
+        html[data-ui^="zx"] body.app-gars.gars-touch .gars-center-cross { display: block; position: absolute; left: 50%; top: 50%; z-index: 650; width: 22px; height: 22px; pointer-events: none; transform: translate(-50%, -50%);
             --gx: rgba(229, 62, 62, 0.6);
             background: linear-gradient(var(--gx), var(--gx)) top center / 2px 8px no-repeat, linear-gradient(var(--gx), var(--gx)) bottom center / 2px 8px no-repeat,
                         linear-gradient(var(--gx), var(--gx)) left center / 8px 2px no-repeat, linear-gradient(var(--gx), var(--gx)) right center / 8px 2px no-repeat;
@@ -1069,6 +1070,13 @@
         <label class="switch-label">
             <input type="checkbox" id="toggleLaunchSites" checked onchange="toggleLaunchSitesVisibility()"> 顯示發射場位置
         </label>
+        <!-- 只在 GARS 模式出現 -->
+        <label class="switch-label gars-only">
+            <input type="checkbox" id="garsGridToggle" checked onchange="garsRefresh()"> 顯示 GARS 網格
+        </label>
+        <label class="switch-label gars-only">
+            <input type="checkbox" id="garsRulerToggle" checked onchange="garsUpdateEdgeLabels()"> 顯示邊緣經緯度尺規
+        </label>
     </div>
 
     <div id="areaContainer"></div>
@@ -1125,11 +1133,6 @@
                 <button type="button" id="garsDeployBtn" class="zx-btn-primary gars-btn" onclick="garsDeploy()">標定</button>
                 <button type="button" class="zx-btn-secondary gars-btn" onclick="garsClearTargets()">清除標定</button>
             </div>
-        </section>
-
-        <section class="gars-card gars-toggles">
-            <label class="switch-label"><input type="checkbox" id="garsGridToggle" checked onchange="garsRefresh()"> 顯示 GARS 網格</label>
-            <label class="switch-label"><input type="checkbox" id="garsRulerToggle" checked onchange="garsUpdateEdgeLabels()"> 顯示邊緣經緯度尺規</label>
         </section>
     </div>
 
@@ -1261,7 +1264,7 @@
                 <ul>
                     <li>地圖右上角的工具列，由上到下是：圖層、📐 測量與標記、⛶ 截圖模式。</li>
                     <li>圖層：底圖預設是 Google 衛星圖，也可以改選「Esri 衛星圖（備用）」、OpenStreetMap 或「灰調電子地圖」（GARS 模式預設，灰色、看格線比較清楚）；Google 衛星圖載不出來時，會自動改用 Esri 並跳出提示。也可以開啟 Google 中文地名標籤，或 Esri 英文地名／國界標籤。</li>
-                    <li>圖層裡的「地圖顯示」：顯示禁航區尺寸（邊長標籤）、防空識別區 (ADIZ)、海峽中線（紅色細線，預設關閉）、發射場位置。</li>
+                    <li>圖層裡的「地圖顯示」：顯示禁航區尺寸（邊長標籤）、防空識別區 (ADIZ)、海峽中線（紅色細線，預設關閉）、發射場位置；GARS 模式另外多了「顯示 GARS 網格」「顯示邊緣經緯度尺規」。</li>
                     <li>滑鼠移到禁航區上會顯示「禁航區 #N」。</li>
                     <li>邊長標籤可以拖曳移位；點一下標籤可以刪除（電腦也可以按 Delete 鍵）。</li>
                     <li>電腦版可按左上角 ◀ 收合側邊欄，讓地圖更大。</li>
@@ -1277,7 +1280,7 @@
                     <li><b>查格子（不用點）：</b>地圖左上角會直接顯示 GARS 碼。手機看地圖正中央的半透明紅色十字，滑動地圖時左上角就顯示十字對到的格子；電腦滑鼠移到哪一格，左上角就顯示那一格（滑鼠離開地圖時改顯示地圖中心）。點一下左上角或面板上的 GARS 碼就能複製；面板另外附十進位和度分座標。地圖越放大，編碼越細（5 碼→6 碼→7 碼）。</li>
                     <li><b>搜尋：</b>輸入 GARS 碼（例如 <code>603KM39</code>）會框出那一格；輸入座標（例如 <code>23.5 121</code>、<code>2330N12100E</code>）會放一根圖釘。按「定位」或 Enter 鍵。點圖釘可以看到十進位、度分、NOTAM 寫法和 GARS 碼。</li>
                     <li><b>目標標定：</b>每行一筆座標或 GARS 碼。1 點放圖釘；2 點畫線並顯示距離（公里／浬）；3 點以上畫成區域，算出區域涵蓋的 GARS 格（範圍太大會自動改用較粗的格子），點區域打開清單，按「複製完整清單」複製全部格子。GARS 碼那一行會畫出那一格。看不懂的行會跳過並告訴你是第幾行。按「清除標定」全部清掉。</li>
-                    <li><b>開關：</b>「顯示 GARS 網格」（灰線是 30 分大格，放大後出現藍線 15 分格、再放大出現粉紅線 5 分格；大格的線比較粗，一眼就看得出細格屬於哪一個大格）、「顯示邊緣經緯度尺規」（地圖邊緣的經緯度刻度，手機的經度刻度在上方）。</li>
+                    <li><b>開關（在地圖右上角圖層選單的「地圖顯示」裡，只在 GARS 模式出現）：</b>「顯示 GARS 網格」（灰線是 30 分大格，放大後出現藍線 15 分格、再放大出現粉紅線 5 分格；大格的線比較粗，一眼就看得出細格屬於哪一個大格）、「顯示邊緣經緯度尺規」（地圖邊緣的經緯度刻度，手機的經度刻度在上方）。</li>
                     <li><b>注意：</b>GARS 模式下不能畫禁航區、測量或復原；標定的結果切回禁航區時會先收起來，再切回 GARS 就會看到。</li>
                 </ul>
             </details>
@@ -1370,7 +1373,7 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v31）是目前版本；有更新時，打開網站會在歡迎卡上列出更新重點。</li>
+                    <li>標題旁的版本號（例如 v32）是目前版本；有更新時，打開網站會在歡迎卡上列出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。使用 Esri 衛星圖時，圖資來源為 Esri、Maxar、Earthstar Geographics。</li>
                 </ul>
@@ -1536,10 +1539,14 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v31';
+    const APP_VERSION = 'v32';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v32', items: [
+            'GARS 的「顯示 GARS 網格」「顯示邊緣經緯度尺規」開關移到地圖右上角圖層選單的「地圖顯示」裡，和其他圖層開關放在一起。',
+            '修正：手機打開圖層選單時，中央紅色十字不會再浮在選單上面。'
+        ] },
         { version: 'v31', items: ['使用說明新增「GARS 3 步驟快速上手」，GARS 的教學分段標示，更容易找到要看的地方。'] },
         { version: 'v30', items: [
             '新功能 GARS：標題列「說明」旁多了「禁航區｜GARS」小切換鈕，按 GARS 就能查詢 GARS 網格。',
@@ -6181,16 +6188,10 @@ ${coords}
     function garsOnMoveEnd() { garsDrawGrid(); garsUpdateEdgeLabels(); if (!garsCursorOnMap) garsUpdateCenterInfo(); }
 
     // 中心十字對準地圖容器的正中央（桌機有側邊面板時地圖不是滿版）
-    function garsPlaceCenterCross() {
-        if (!garsTouchInput) return;
-        const r = document.getElementById('map').getBoundingClientRect();
-        const cross = document.querySelector('.gars-center-cross');
-        cross.style.left = (r.left + r.width / 2) + 'px';
-        cross.style.top = (r.top + r.height / 2) + 'px';
-    }
+    // 十字放進地圖容器裡（在地圖之上、按鈕與選單之下），永遠在地圖正中央
+    map.getContainer().appendChild(document.querySelector('.gars-center-cross'));
 
     function garsRefresh() {
-        garsPlaceCenterCross();
         garsDrawGrid();
         garsHideHighlight();
         garsUpdateEdgeLabels();
@@ -6410,7 +6411,7 @@ ${coords}
         return 'zone';
     }
 
-    map.on('resize', () => { if (appMode === 'gars') { garsPlaceCenterCross(); garsOnMoveEnd(); } });
+    map.on('resize', () => { if (appMode === 'gars') garsOnMoveEnd(); });
     window.addEventListener('hashchange', () => {
         if ((location.hash || '').toLowerCase() === '#gars' && appMode !== 'gars') setAppMode('gars');
     });
