@@ -991,8 +991,6 @@
         .gars-mini-btn:hover { background: var(--zx-sunken); }
         .gars-mini-btn.on { background: var(--zx-mode); border-color: var(--zx-mode); color: var(--zx-mode-ink); }
         .gars-zone-all { justify-self: stretch; }
-        .gars-merge-toggle { font-size: 14px; }
-        .gars-zone-list > .gars-note { margin-top: -6px; }
         html[data-ui^="zx"] .gars-copy-all { width: 100%; background: var(--zx-mode); color: var(--zx-mode-ink); box-shadow: none; }
         html[data-ui^="zx"] .gars-copy-all:hover { background: var(--zx-mode); filter: brightness(1.08); }
         @media (max-width: 768px) { .gars-mini-btn { min-height: 40px; padding: 8px 12px; } }
@@ -1291,12 +1289,12 @@
             <details class="guide-section">
                 <summary>🔎 GARS 網格查詢</summary>
                 <ul>
-                    <li><b>切換：</b>標題列和「說明」「外觀」同一排的小按鈕「禁航區｜GARS」可以切換功能，目前使用中的一邊會亮青藍色（手機收合面板時在標題列最右邊；說明和外觀要展開面板才看得到）。切到 GARS 時，禁航區的卡片和按鈕會先收起來，地圖上已畫好的禁航區仍會顯示（只是不能編輯），切回「禁航區」就恢復。下次打開網站會停在你上次用的功能；網址後面加 <code>#gars</code> 也能直接打開 GARS。</li>
+                    <li><b>切換：</b>標題列和「說明」「外觀」同一排的小按鈕「禁航區｜GARS」可以切換功能，目前使用中的一邊會亮青藍色（手機收合面板時在標題列最右邊；說明和外觀要展開面板才看得到）。切到 GARS 時，禁航區的卡片和按鈕會先收起來，地圖上已畫好的禁航區仍會顯示（只是不能編輯），切回「禁航區」就恢復。每次打開網站都會先進入「禁航區」；網址後面加 <code>#gars</code> 可以直接打開 GARS。</li>
                     <li><b>GARS 碼怎麼看：</b>GARS 是把地圖切成格子的編碼，例如 <code>603KM39</code>：前 3 碼數字是經度帶、2 個字母是緯度帶（5 碼＝30 分的格子），第 6 碼 1–4 是四等分的象限（15 分），第 7 碼 1–9 是九宮格的鍵位（5 分，1 在左上、9 在右下）。</li>
                     <li><b>地圖：</b>進入 GARS 時底圖會換成灰色電子地圖，並自動開啟防空識別區和海峽中線；切回禁航區時，底圖和這兩個開關會回到原本的樣子。</li>
                     <li><b>查格子（不用點）：</b>地圖左上角會直接顯示 GARS 碼。手機看地圖正中央的半透明紅色十字，滑動地圖時左上角就顯示十字對到的格子；電腦滑鼠移到哪一格，左上角就顯示那一格（滑鼠離開地圖時改顯示地圖中心）。GARS 碼下方用小字同時顯示十進位和度分秒（六十進位）座標。點一下左上角的 GARS 碼就能複製。地圖越放大，編碼越細（5 碼→6 碼→7 碼）。</li>
                     <li><b>搜尋：</b>輸入 GARS 碼（例如 <code>603KM39</code>）會框出那一格；輸入座標（例如 <code>23.5 121</code>、<code>2330N12100E</code>）會放一根圖釘。按「定位」或 Enter 鍵。點圖釘可以看到十進位、度分秒、NOTAM 寫法和 GARS 碼。</li>
-                    <li><b>禁航區涵蓋的 GARS 格：</b>先在「禁航區」畫好禁航區，切到 GARS 後，面板會列出每個禁航區涵蓋幾格。「標出格子」會在地圖上用青藍色框出這些格子（再按一次隱藏），「複製」複製該禁航區的全部 GARS 碼，「合併成大格」預設勾選：某個 15' 象限的 9 個 5' 小格都涵蓋到，就改寫成 1 個 6 碼；某個 30' 大格的 4 個象限都齊了，就改寫成 1 個 5 碼（例如 603KM），範圍完全一樣、清單比較短，這也是實務上常見的寫法；取消勾選就全部列最細的 5' 格。最上面的「一鍵複製全部」會把所有禁航區涵蓋的格子合併成一份清單（重複的只算一次）一次複製；有兩個以上禁航區時，也可以按「按禁航區分行複製」，每個禁航區一行。在地圖上點禁航區也會跳出清單。只算目前顯示中的禁航區；範圍太大會自動改用較粗的格子。圓形用多邊形近似計算，邊緣格子可能略有出入。</li>
+                    <li><b>禁航區涵蓋的 GARS 格：</b>先在「禁航區」畫好禁航區，切到 GARS 後，面板會列出每個禁航區涵蓋幾格。「標出格子」會在地圖上用青藍色框出這些格子（再按一次隱藏），「複製」複製該禁航區的全部 GARS 碼，清單會自動合併成大格：某個 15' 象限的 9 個 5' 小格都涵蓋到，就寫成 1 個 6 碼；某個 30' 大格的 4 個象限都齊了，就寫成 1 個 5 碼（例如 603KM），範圍完全一樣、清單比較短，這也是實務上常見的寫法。最上面的「一鍵複製全部」會把所有禁航區涵蓋的格子合併成一份清單（重複的只算一次）一次複製；有兩個以上禁航區時，也可以按「按禁航區分行複製」，每個禁航區一行。在地圖上點禁航區也會跳出清單。只算目前顯示中的禁航區；範圍太大會自動改用較粗的格子。圓形用多邊形近似計算，邊緣格子可能略有出入。</li>
                     <li><b>目標標定：</b>每行一筆座標或 GARS 碼。1 點放圖釘；2 點畫線並顯示距離（公里／浬）；3 點以上畫成區域，算出區域涵蓋的 GARS 格（範圍太大會自動改用較粗的格子），點區域打開清單，按「複製完整清單」複製全部格子。GARS 碼那一行會畫出那一格；也可以直接貼上一串 GARS 碼（逗號、頓號或空白分隔，例如別人用「一鍵複製」傳來的清單，前面帶「禁航區 #1（…）：」也可以），每一格都會框出來，格式錯誤的編號會被略過並提示。「搜尋」框也能貼一串 GARS 碼，一次框出全部。看不懂的行會跳過並告訴你是第幾行。按「清除標定」全部清掉。</li>
                     <li><b>開關（在地圖右上角圖層選單的「地圖顯示」裡，只在 GARS 模式出現）：</b>「顯示 GARS 網格」（灰線是 30 分大格，放大後出現藍線 15 分格、再放大出現粉紅線 5 分格；大格的線比較粗，一眼就看得出細格屬於哪一個大格）、「顯示邊緣經緯度尺規」（地圖邊緣的經緯度刻度，手機的經度刻度在上方）。</li>
                     <li><b>注意：</b>GARS 模式下不能畫禁航區、測量或復原；標定的結果切回禁航區時會先收起來，再切回 GARS 就會看到。</li>
@@ -1391,7 +1389,7 @@
             <details class="guide-section">
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
-                    <li>標題旁的版本號（例如 v36；手機要展開面板才看得到）是目前版本；有更新時，打開網站會在歡迎卡上列出更新重點。</li>
+                    <li>標題旁的版本號（例如 v37；手機要展開面板才看得到）是目前版本；有更新時，打開網站會在歡迎卡上列出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。使用 Esri 衛星圖時，圖資來源為 Esri、Maxar、Earthstar Geographics。</li>
                 </ul>
@@ -1557,16 +1555,20 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v36';
+    const APP_VERSION = 'v37';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v37', items: [
+            'GARS 格子清單一律自動合併成大格（整格都涵蓋就寫大格編號），拿掉「合併成大格」開關。',
+            '每次打開網站都先進入「禁航區」，不會停在上次用的 GARS。'
+        ] },
         { version: 'v36', items: ['半徑寫成「海裡」或「海哩」（例如「5.4海裡為半徑」）的圓形航警，現在也能正常畫出。'] },
         { version: 'v35', items: ['GARS 模式地圖左上角的 GARS 碼改用方正的 Orbitron 字體，數字更好認。'] },
         { version: 'v34', items: [
             'GARS 新功能：可以看每個禁航區涵蓋哪些 GARS 格。GARS 面板多了「禁航區涵蓋的 GARS 格」，按「一鍵複製全部」就能複製所有禁航區涵蓋的格子；也可以單獨複製某個禁航區，或按「標出格子」在地圖上畫出來。',
             '在 GARS 模式點地圖上的禁航區，也會跳出它涵蓋的 GARS 格清單。',
-            '清單預設「合併成大格」：整格都涵蓋就寫大格編號（例如 603KM），清單比較短；不想合併可以取消勾選。',
+            '清單會自動合併成大格：整格都涵蓋就寫大格編號（例如 603KM），清單比較短。',
             '別人傳來的一串 GARS 碼，直接貼到「目標標定」或「搜尋」，就會在地圖上框出每一格。',
             '地圖左上角的 GARS 碼下方，直接用小字顯示十進位和度分秒座標；面板上原本的「地圖中心 GARS」卡片拿掉，面板更精簡。',
             '修正：手機在面板捲到下面時按「標定」或「定位」，面板收起後會卡在中間、點不開，現在會正常收回到底部。'
@@ -6081,7 +6083,7 @@ ${coords}
         color: GARS_CFG.accent, weight: 1.2, opacity: 0.9, fillColor: GARS_CFG.accent, fillOpacity: 0.18
     });
 
-    const APP_MODE_KEY = 'nofly-app-mode';
+    try { localStorage.removeItem('nofly-app-mode'); } catch (e) {}   // 舊版會記住上次的模式；現在每次打開都從「禁航區」開始
     let appMode = 'zone';
     const garsSaved = { base: null, adiz: false, median: false };
     let garsCursorOnMap = false;
@@ -6314,10 +6316,8 @@ ${coords}
         if (list) copyTextToClipboard(list.join(', '), `已複製 ${list.length} 格 GARS 碼`);
     }
 
-    // ---------- 合併成大格：整格都涵蓋就寫大格編號（範圍不變，清單變短）----------
-    const GARS_MERGE_KEY = 'nofly-gars-merge';
-    let garsMergeOn = true;
-    try { if (localStorage.getItem(GARS_MERGE_KEY) === '0') garsMergeOn = false; } catch (e) {}
+    // ---------- 自動合併成大格：整格都涵蓋就寫大格編號（範圍不變，清單變短）----------
+    try { localStorage.removeItem('nofly-gars-merge'); } catch (e) {}   // 舊版的「合併成大格」開關已移除
 
     function garsMergeCodes(codes) {
         const set = new Set(codes.map(c => c.toUpperCase()));
@@ -6329,21 +6329,14 @@ ${coords}
     // 依目前設定把涵蓋格轉成要顯示／複製的編號
     function garsCoverCodes(cells) {
         const codes = cells.map(c => c.code);
-        return garsMergeOn ? garsMergeCodes(codes) : codes.slice().sort();
+        return garsMergeCodes(codes);
     }
     // 清單摘要文字，例如「12 個編號（原 42 個 5' 格）」或「5' 格・42 格」
     function garsCoverSummary(cov, codes) {
         if (!cov.level) return '範圍太大，無法計算';
         const lv = GARS_LV_NAME[cov.level];
-        if (garsMergeOn && codes.length !== cov.cells.length) return `${codes.length} 個編號・原 ${cov.cells.length} 個 ${lv} 格`;
+        if (codes.length !== cov.cells.length) return `${codes.length} 個編號・原 ${cov.cells.length} 個 ${lv} 格`;
         return `${lv} 格・${cov.cells.length} 格`;
-    }
-    function garsSetMerge(on) {
-        garsMergeOn = !!on;
-        try { localStorage.setItem(GARS_MERGE_KEY, on ? '1' : '0'); } catch (e) {}
-        if (garsZoneShown) { const id = garsZoneShown; garsZoneShown = null; garsToggleZoneCells(id, true); }
-        else garsRenderZoneList();
-        showToast(on ? '已改成合併成大格' : '已改成全部列最細格子');
     }
 
     // 一行裡是一串 GARS 碼（逗號、頓號、空白分隔；前面可以有「禁航區 #1（…）：」這類標題）
@@ -6482,18 +6475,15 @@ ${coords}
     function garsRenderZoneList() {
         const box = document.getElementById('garsZoneList');
         const zones = garsZoneEntries();
-        const mergeToggle = `<label class="switch-label gars-merge-toggle"><input type="checkbox" id="garsMergeToggle" ${garsMergeOn ? 'checked' : ''} onchange="garsSetMerge(this.checked)"> 合併成大格</label>` +
-            `<div class="gars-note">勾選：整格都涵蓋就寫大格編號（例如 603KM），清單比較短、範圍不變；不勾：全部列最細的格子。目標標定的區域清單也適用。</div>`;
         if (!zones.length) {
-            box.innerHTML = mergeToggle + '<div class="gars-note">地圖上還沒有禁航區。先切回「禁航區」畫好禁航區，這裡會列出每個禁航區涵蓋的 GARS 格；在地圖上點禁航區也看得到。</div>';
+            box.innerHTML = '<div class="gars-note">地圖上還沒有禁航區。先切回「禁航區」畫好禁航區，這裡會列出每個禁航區涵蓋的 GARS 格；在地圖上點禁航區也看得到。</div>';
             return;
         }
         // 最上面：一鍵複製全部禁航區涵蓋的格子（合併、去掉重複）
         const all = new Set();
         zones.forEach(z => garsZoneCoverage(z.id).cells.forEach(c => all.add(c.code)));
-        const allCodes = garsMergeOn ? garsMergeCodes([...all]) : [...all];
-        const head = mergeToggle +
-            (all.size ? `<button type="button" class="zx-btn-primary gars-btn gars-copy-all" onclick="garsCopyUnion()">一鍵複製全部（${allCodes.length} 個 GARS 碼）</button>` : '');
+        const allCodes = garsMergeCodes([...all]);
+        const head = (all.size ? `<button type="button" class="zx-btn-primary gars-btn gars-copy-all" onclick="garsCopyUnion()">一鍵複製全部（${allCodes.length} 個 GARS 碼）</button>` : '');
         box.innerHTML = head + zones.map(z => {
             const cov = garsZoneCoverage(z.id);
             const sub = garsCoverSummary(cov, garsCoverCodes(cov.cells));
@@ -6519,7 +6509,7 @@ ${coords}
         const all = new Set();
         garsZoneEntries().forEach(z => garsZoneCoverage(z.id).cells.forEach(c => all.add(c.code)));
         if (!all.size) { showToast('沒有可複製的 GARS 格'); return; }
-        const list = garsMergeOn ? garsMergeCodes([...all]) : [...all].sort();
+        const list = garsMergeCodes([...all]);
         copyTextToClipboard(list.join(', '), `已複製全部 ${list.length} 個 GARS 碼`);
     }
 
@@ -6660,15 +6650,16 @@ ${coords}
     }
 
     function setAppMode(mode) {
-        try { localStorage.setItem(APP_MODE_KEY, mode === 'gars' ? 'gars' : 'zone'); } catch (e) {}
-        try { history.replaceState(null, '', location.pathname + location.search + (mode === 'gars' ? '#gars' : '')); } catch (e) {}
+        // 切回禁航區時把網址的 #gars 拿掉，重新整理才不會又進 GARS
+        if (mode !== 'gars' && (location.hash || '').toLowerCase() === '#gars') {
+            try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+        }
         applyAppMode(mode);
     }
 
+    // 每次打開網站都從「禁航區」開始；只有網址後面加 #gars 才直接進 GARS
     function getInitialAppMode() {
-        if ((location.hash || '').toLowerCase() === '#gars') return 'gars';
-        try { if (localStorage.getItem(APP_MODE_KEY) === 'gars') return 'gars'; } catch (e) {}
-        return 'zone';
+        return (location.hash || '').toLowerCase() === '#gars' ? 'gars' : 'zone';
     }
 
     map.on('resize', () => { if (appMode === 'gars') garsOnMoveEnd(); });
