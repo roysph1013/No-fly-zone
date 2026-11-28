@@ -1391,7 +1391,7 @@
                 <summary>ℹ️ 版本與其他</summary>
                 <ul>
                     <li>「說明」按鈕在標題列第二排（手機要展開面板才看得到），按一下打開這份使用說明。</li>
-                    <li>ZONE X 標誌旁的版本號（例如 v38；手機要展開面板才看得到）是目前版本；有更新時，打開網站會在歡迎卡上列出更新重點。</li>
+                    <li>ZONE X 標誌旁的版本號（例如 v39；手機要展開面板才看得到）是目前版本；有更新時，打開網站會在歡迎卡上列出更新重點。</li>
                     <li>如果版本號沒變，可能是瀏覽器快取：電腦按 Ctrl+F5，手機重新整理一次。</li>
                     <li>圖資與航路點資料僅供參考，不是官方航行資料。使用 Esri 衛星圖時，圖資來源為 Esri、Maxar、Earthstar Geographics。</li>
                 </ul>
@@ -1557,10 +1557,11 @@
 <script>
     // 版本號：每次更新網頁都要遞增（v1 → v2 → …），顯示在網頁分頁標題與側邊欄標題後面，
     // 讓使用者能確認拿到的是最新版
-    const APP_VERSION = 'v38';
+    const APP_VERSION = 'v39';
 
     // 更新紀錄：每次改版在最前面加一筆，用淺顯的口語條列重點；使用者打開新版時會跳出比上次看到的版本更新的項目
     const CHANGELOG = [
+        { version: 'v39', items: ['GARS 的粉紅色 5 分小格提早一級出現（大約一個 15 分格占手機半個畫面寬時就看得到），左上角也同時顯示 7 碼編號。'] },
         { version: 'v38', items: ['使用說明全面檢查更新：外觀、說明按鈕的新位置，以及 GARS 模式下的復原、截圖、測量差異都補上說明。'] },
         { version: 'v37', items: [
             'GARS 格子清單一律自動合併成大格（整格都涵蓋就寫大格編號），拿掉「合併成大格」開關。',
@@ -6056,7 +6057,7 @@ ${coords}
         grid: {
             30: { color: '#5b6b80', minZoom: 5 },
             15: { color: '#2b6cb0', minZoom: 8 },
-            5:  { color: '#d53f8c', minZoom: 11 }
+            5:  { color: '#d53f8c', minZoom: 10 }
         },
         // 線寬依「目前看得到的最細格」決定：越大的格子線越粗，一眼分得出細格屬於哪個大格
         gridWeight: {
@@ -6107,7 +6108,7 @@ ${coords}
     // 瀏覽器在版面變動時會送出「沒有真的移動」的假滑鼠事件，只有滑鼠真的移動才切到電腦模式
     document.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' && (e.movementX || e.movementY)) garsSetTouchInput(false); }, true);
 
-    function garsLevelForZoom(z) { return z > 10 ? 5 : (z >= 8 ? 15 : 30); }
+    function garsLevelForZoom(z) { return z >= GARS_CFG.grid[5].minZoom ? 5 : (z >= GARS_CFG.grid[15].minZoom ? 15 : 30); }  // 看得到哪一層格子，就顯示到那一層的編碼
 
     function garsDrawGrid() {
         garsGridLayer.clearLayers();
